@@ -11,11 +11,11 @@ import com.cashback.gold.service.OtpService;
 import com.cashback.gold.service.email.EmailService;
 import com.cashback.gold.service.jwt.JwtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Random;
@@ -32,18 +32,53 @@ public class AuthService {
     private final OtpService otpService;
 
     public ApiResponse register(RegisterRequest request) {
-        String identifier = request.getEmail() != null ? request.getEmail() : request.getMobile();
+        String identifier = request.getEmail();
 
-        // ✅ Prevent duplicate user registration
-        if (request.getEmail() != null && userRepo.findByEmail(request.getEmail()).isPresent()) {
-            throw new RuntimeException("Email already registered.");
+        // Validate required fields
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new InvalidArgumentException("Name is required");
+        }
+        if (request.getGender() == null || request.getGender().trim().isEmpty()) {
+            throw new InvalidArgumentException("Gender is required");
+        }
+        if (request.getDob() == null) {
+            throw new InvalidArgumentException("Date of birth is required");
+        }
+        if (request.getEmail() == null || !request.getEmail().matches("^\\S+@\\S+\\.\\S+$")) {
+            throw new InvalidArgumentException("Valid email is required");
+        }
+        if (request.getMobile() == null || request.getMobile().length() < 8 || request.getMobile().length() > 15) {
+            throw new InvalidArgumentException("Valid phone number (8-15 digits) is required");
+        }
+        if (request.getCountryCode() == null || request.getCountryCode().trim().isEmpty()) {
+            throw new InvalidArgumentException("Country code is required");
+        }
+        if (request.getCity() == null || request.getCity().trim().isEmpty()) {
+            throw new InvalidArgumentException("City is required");
+        }
+        if (request.getTown() == null || request.getTown().trim().isEmpty()) {
+            throw new InvalidArgumentException("Town is required");
+        }
+        if (request.getState() == null || request.getState().trim().isEmpty()) {
+            throw new InvalidArgumentException("State is required");
+        }
+        if (request.getCountry() == null || request.getCountry().trim().isEmpty()) {
+            throw new InvalidArgumentException("Country is required");
+        }
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+            throw new InvalidArgumentException("Password must be at least 6 characters");
         }
 
-        if (request.getMobile() != null && userRepo.findByMobile(request.getMobile()).isPresent()) {
-            throw new RuntimeException("Mobile number already registered.");
+        // Prevent duplicate user registration
+        if (userRepo.findByEmail(request.getEmail()).isPresent()) {
+            throw new InvalidArgumentException("Email already registered");
+        }
+        String fullMobile = request.getCountryCode() + request.getMobile();
+        if (userRepo.findByMobile(fullMobile).isPresent()) {
+            throw new InvalidArgumentException("Mobile number already registered");
         }
 
-        // ✅ Delete existing unverified OTP (if any)
+        // Delete existing unverified OTP (if any)
         otpRepo.findTopByIdentifierAndVerifiedFalseOrderByIdDesc(identifier)
                 .ifPresent(otpRepo::delete);
 
@@ -60,16 +95,10 @@ public class AuthService {
 
         otpRepo.save(otpRecord);
 
-        if (request.getEmail() != null) {
-            emailService.sendOtpEmail(request.getEmail(), otp);
-        } else {
-            otpService.sendOtp(request.getMobile());
-        }
+        emailService.sendOtpEmail(request.getEmail(), otp);
 
         return new ApiResponse(true, "OTP sent successfully");
     }
-
-
 
     private String generateOtp() {
         return String.valueOf(new Random().nextInt(900000) + 100000); // 6-digit OTP
@@ -80,9 +109,41 @@ public class AuthService {
         String identifier = request.getIdentifier();
         String otp = request.getOtp();
 
-        // ✅ Find latest unverified OTP
+        // Validate required fields
+        if (request.getFullName() == null || request.getFullName().trim().isEmpty()) {
+            throw new InvalidArgumentException("Name is required");
+        }
+        if (request.getGender() == null || request.getGender().trim().isEmpty()) {
+            throw new InvalidArgumentException("Gender is required");
+        }
+        if (request.getDob() == null) {
+            throw new InvalidArgumentException("Date of birth is required");
+        }
+        if (request.getMobile() == null || request.getMobile().length() < 8 || request.getMobile().length() > 15) {
+            throw new InvalidArgumentException("Valid phone number (8-15 digits) is required");
+        }
+        if (request.getCountryCode() == null || request.getCountryCode().trim().isEmpty()) {
+            throw new InvalidArgumentException("Country code is required");
+        }
+        if (request.getCity() == null || request.getCity().trim().isEmpty()) {
+            throw new InvalidArgumentException("City is required");
+        }
+        if (request.getTown() == null || request.getTown().trim().isEmpty()) {
+            throw new InvalidArgumentException("Town is required");
+        }
+        if (request.getState() == null || request.getState().trim().isEmpty()) {
+            throw new InvalidArgumentException("State is required");
+        }
+        if (request.getCountry() == null || request.getCountry().trim().isEmpty()) {
+            throw new InvalidArgumentException("Country is required");
+        }
+        if (request.getPassword() == null || request.getPassword().length() < 6) {
+            throw new InvalidArgumentException("Password must be at least 6 characters");
+        }
+
+        // Find latest unverified OTP
         OtpVerification otpVerification = otpRepo.findTopByIdentifierAndVerifiedFalseOrderByIdDesc(identifier)
-                .orElseThrow(() -> new RuntimeException("OTP not found or already verified"));
+                .orElseThrow(() -> new InvalidArgumentException("OTP not found or already verified"));
 
         if (!otpVerification.getOtp().equals(otp)) {
             return new ApiResponse(false, "Invalid OTP");
@@ -92,23 +153,29 @@ public class AuthService {
             return new ApiResponse(false, "OTP has expired");
         }
 
-        // ✅ Prevent duplicate registration after OTP if someone tried skipping the first check
-        if (identifier.contains("@") && userRepo.findByEmail(identifier).isPresent()) {
-            return new ApiResponse(false, "Email already registered.");
+        // Prevent duplicate registration
+        if (userRepo.findByEmail(identifier).isPresent()) {
+            return new ApiResponse(false, "Email already registered");
+        }
+        String fullMobile = request.getCountryCode() + request.getMobile();
+        if (userRepo.findByMobile(fullMobile).isPresent()) {
+            return new ApiResponse(false, "Mobile number already registered");
         }
 
-        if (!identifier.contains("@") && userRepo.findByMobile(identifier).isPresent()) {
-            return new ApiResponse(false, "Mobile already registered.");
-        }
-
-        // ✅ Save new user
+        // Save new user
         User user = User.builder()
-                .firstName(request.getFirstName())
-                .lastName(request.getLastName())
-                .email(identifier.contains("@") ? identifier : null)
-                .mobile(!identifier.contains("@") ? identifier : null)
+                .fullName(request.getFullName())
+                .gender(request.getGender())
+                .dob(request.getDob())
+                .email(identifier)
+                .mobile(fullMobile)
+                .countryCode(request.getCountryCode())
+                .city(request.getCity())
+                .town(request.getTown())
+                .state(request.getState())
+                .country(request.getCountry())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(request.getRole())
+                .role(request.getRole() != null ? request.getRole() : "USER")
                 .status("PENDING")
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -116,13 +183,12 @@ public class AuthService {
 
         userRepo.save(user);
 
-        // ✅ Mark OTP verified
+        // Mark OTP verified
         otpVerification.setVerified(true);
         otpRepo.save(otpVerification);
 
         return new ApiResponse(true, "User registered successfully. Awaiting admin approval.");
     }
-
 
     public ApiResponse resendOtp(ResendOtpRequest request) {
         String identifier = request.getIdentifier();
@@ -144,61 +210,9 @@ public class AuthService {
 
         otpRepo.save(otpRecord);
 
-        // Send OTP via email or log (for mobile)
-        if (identifier.contains("@")) {
-            emailService.sendOtpEmail(identifier, otp);
-        } else {
-            System.out.println("Resent OTP for mobile " + identifier + ": " + otp);
-        }
+        emailService.sendOtpEmail(identifier, otp);
 
         return new ApiResponse(true, "OTP resent successfully");
-    }
-
-    public LoginResponse loginWithOtp(OtpLoginRequest request) {
-        String identifier = request.getIdentifier();
-        String otp = request.getOtp();
-
-        OtpVerification otpVerification = otpRepo.findByIdentifierAndVerifiedFalse(identifier)
-                .orElseThrow(() -> new RuntimeException("OTP not found or already verified"));
-
-        if (!otpVerification.getOtp().equals(otp)) {
-            throw new RuntimeException("Invalid OTP");
-        }
-
-        if (otpVerification.getExpiresAt().isBefore(LocalDateTime.now())) {
-            throw new RuntimeException("OTP has expired");
-        }
-
-        // Find user
-        Optional<User> optionalUser = identifier.contains("@")
-                ? userRepo.findByEmail(identifier)
-                : userRepo.findByMobile(identifier);
-
-        User user = optionalUser
-                .orElseThrow(() -> new RuntimeException("User not registered"));
-
-        if (!user.getStatus().equalsIgnoreCase("approved")) {
-            throw new RuntimeException("Account not approved by admin");
-        }
-
-        // Mark OTP as verified
-        otpVerification.setVerified(true);
-        otpRepo.save(otpVerification);
-
-        String token = jwtService.generateToken(user);
-
-        return LoginResponse.builder()
-                .success(true)
-                .message("Login successful")
-                .token(token)
-                .user(LoginResponse.UserInfo.builder()
-                        .id(user.getId())
-                        .email(user.getEmail())
-                        .mobile(user.getMobile())
-                        .role(user.getRole())
-                        .status(user.getStatus())
-                        .build())
-                .build();
     }
 
     public LoginResponse loginWithEmailPassword(LoginRequest request) {
@@ -256,19 +270,13 @@ public class AuthService {
     }
 
     public ApiResponse logout(String authHeader) {
-        // Optional: log logout event or store token in a blacklist
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
-            return new ApiResponse(false, "Invalid token header.");
+            return new ApiResponse(false, "Invalid token header");
         }
 
         String token = authHeader.substring(7);
-
-        // Optional: extract user for logging purposes
         String userId = jwtService.extractUserId(token);
 
-        // ✅ Since JWT is stateless, no actual "logout" action needed
-        return new ApiResponse(true, "Logout successful.");
+        return new ApiResponse(true, "Logout successful");
     }
-
-
 }

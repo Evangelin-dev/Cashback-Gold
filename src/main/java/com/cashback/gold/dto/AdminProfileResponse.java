@@ -5,8 +5,7 @@ import lombok.Data;
 @Data
 @Builder
 public class AdminProfileResponse {
-    private String firstName; // ✅ NEW
-    private String lastName;  // ✅ NEW
+    private String fullName;
     private String email;
     private String phone;
     private String role;

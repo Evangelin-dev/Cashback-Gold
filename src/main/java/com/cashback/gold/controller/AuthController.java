@@ -5,7 +5,6 @@ import com.cashback.gold.dto.common.ApiResponse;
 import com.cashback.gold.service.OtpService;
 import com.cashback.gold.service.auth.AuthService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -33,11 +32,6 @@ public class AuthController {
         return ResponseEntity.ok(authService.resendOtp(request));
     }
 
-//    @PostMapping("/login-otp")
-//    public ResponseEntity<LoginResponse> loginWithOtp(@RequestBody OtpLoginRequest request) {
-//        return ResponseEntity.ok(authService.loginWithOtp(request));
-//    }
-
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> loginWithEmailPassword(@RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.loginWithEmailPassword(request));
@@ -57,5 +51,5 @@ public class AuthController {
     @PostMapping("/logout")
     public ResponseEntity<ApiResponse> logout(@RequestHeader("Authorization") String authHeader) {
         return ResponseEntity.ok(authService.logout(authHeader));
-    }}
-
+    }
+}

@@ -22,8 +22,7 @@ public class AdminProfileService {
     public AdminProfileResponse getProfile() {
         User user = getLoggedInAdmin();
         return AdminProfileResponse.builder()
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
+                .fullName(user.getFullName())
                 .email(user.getEmail())
                 .phone(user.getMobile())
                 .role(user.getRole())
@@ -32,8 +31,7 @@ public class AdminProfileService {
 
     public ApiResponse updateProfile(AdminProfileUpdateRequest req, MultipartFile avatar) {
         User user = getLoggedInAdmin();
-        user.setFirstName(req.getFirstName());
-        user.setLastName(req.getLastName());
+        user.setFullName(req.getFullName());
         user.setEmail(req.getEmail());
         user.setMobile(req.getPhone());
         user.setRole(req.getRole());
