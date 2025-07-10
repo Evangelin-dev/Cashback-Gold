@@ -1,0 +1,305 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.8.xsd">
+
+    <!-- Temporary OTP Table -->
+    <changeSet id="1" author="azeem">
+        <createTable tableName="otp_verification">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="identifier" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="otp" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="expires_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="verified" type="BOOLEAN" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Users Table -->
+    <changeSet id="2" author="azeem">
+        <createTable tableName="users">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="first_name" type="varchar(100)"/>
+            <column name="last_name" type="varchar(100)"/>
+            <column name="email" type="VARCHAR(255)">
+                <constraints nullable="true" unique="true"/>
+            </column>
+            <column name="mobile" type="VARCHAR(20)">
+                <constraints nullable="true" unique="true"/>
+            </column>
+            <column name="password" type="VARCHAR(255)"/>
+            <column name="role" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="3" author="cseazeem">
+        <sql>
+            ALTER TABLE users ADD CONSTRAINT chk_user_role
+                CHECK (role IN ('ADMIN', 'PARTNER', 'B2B', 'USER'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="3-add-user-status-check-constraint" author="cseazeem">
+        <sql>
+            ALTER TABLE users ADD CONSTRAINT chk_user_status
+                CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="4" author="azeem">
+        <insert tableName="users">
+            <column name="first_name" value="Admin"/>
+            <column name="last_name" value="User"/>
+            <column name="email" value="admin@example.com"/>
+            <column name="mobile" value="9999999999"/>
+            <column name="password" value="$2a$10$2FW0Fob1PaYrgoR6h0/8EeTmVr.fgMI4n04Pqba7crwFPSFb.Kgzm"/> <!-- password: password123 -->
+            <column name="role" value="ADMIN"/>
+            <column name="status" value="APPROVED"/>
+            <column name="created_at" valueDate="NOW()"/>
+            <column name="updated_at" valueDate="NOW()"/>
+        </insert>
+    </changeSet>
+
+
+
+    <changeSet id="5" author="azeem">
+        <createTable tableName="ornaments">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="category" type="VARCHAR(100)"/>
+            <column name="sub_category" type="VARCHAR(100)"/>
+            <column name="gender" type="VARCHAR(20)"/>
+            <column name="description1" type="TEXT"/>
+            <column name="description2" type="TEXT"/>
+            <column name="description3" type="TEXT"/>
+            <column name="main_image" type="TEXT"/>
+            <column name="sub_image1" type="TEXT"/>
+            <column name="sub_image2" type="TEXT"/>
+            <column name="sub_image3" type="TEXT"/>
+            <column name="sub_image4" type="TEXT"/>
+            <column name="material" type="VARCHAR(100)"/>
+            <column name="purity" type="VARCHAR(100)"/>
+            <column name="quality" type="VARCHAR(100)"/>
+            <column name="details" type="TEXT"/>
+            <column name="description" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="6" author="azeem">
+        <createTable tableName="kyc_documents">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+            <column name="type" type="VARCHAR(20)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING"/>
+            <column name="aadhar_or_gst_url" type="TEXT"/>
+            <column name="pan_or_agreement_url" type="TEXT"/>
+            <column name="submitted_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="6-1" author="azeem">
+        <sql>
+            ALTER TABLE kyc_documents ADD CONSTRAINT chk_kyc_documents_status
+                CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="7" author="azeem">
+        <createTable tableName="marketing_resources">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="title" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_type" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_url" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="upload_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="download_count" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="7-1" author="azeem">
+        <sql>
+            ALTER TABLE marketing_resources ADD CONSTRAINT chk_marketing_resources_status
+                CHECK (status IN ('ACTIVE','INACTIVE'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="8" author="azeem">
+        <createTable tableName="sip_plans">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" />
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="tenure" type="VARCHAR(100)"/>
+            <column name="monthly_amount" type="VARCHAR(100)"/>
+            <column name="description" type="TEXT"/>
+            <column name="status" type="VARCHAR(50)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="8-1" author="azeem">
+        <sql>
+            ALTER TABLE sip_plans ADD CONSTRAINT chk_sip_plans_status
+                CHECK (status IN ('ACTIVE','CLOSED'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="9" author="azeem">
+        <createTable tableName="saving_plans">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="description" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="9-1" author="azeem">
+        <sql>
+            ALTER TABLE sip_plans ADD CONSTRAINT chk_saving_plans_status
+                CHECK (status IN ('ACTIVE','CLOSED'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="10" author="azeem">
+        <createTable tableName="gold_plant_schemes">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration" type="VARCHAR(100)"/>
+            <column name="min_invest" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="description" type="TEXT"/>
+
+        </createTable>
+    </changeSet>
+
+    <changeSet id="10-1" author="azeem">
+        <sql>
+            ALTER TABLE sip_plans ADD CONSTRAINT chk_gold_plant_schemes_status
+                CHECK (status IN ('ACTIVE','CLOSED'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="10-2" author="azeem">
+        <addColumn tableName="gold_plant_schemes">
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+
+    <changeSet id="11" author="azeem">
+        <createTable tableName="campaigns">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="name" type="VARCHAR(255)"/>
+            <column name="description" type="TEXT"/>
+            <column name="start_date" type="DATE"/>
+            <column name="end_date" type="DATE"/>
+            <column name="multiplier" type="VARCHAR(50)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="11-1" author="azeem">
+        <sql>
+            ALTER TABLE campaigns ADD CONSTRAINT chk_campaigns_status
+                CHECK (status IN ('ACTIVE','INACTIVE','SCHEDULED'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="12" author="azeem">
+        <createTable tableName="bank_accounts">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="bank" type="VARCHAR(255)"/>
+            <column name="account" type="VARCHAR(255)"/>
+            <column name="ifsc" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="description" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="12-1" author="azeem">
+        <sql>
+            ALTER TABLE bank_accounts ADD CONSTRAINT chk_bank_accounts_status
+                CHECK (status IN ('ACTIVE','INACTIVE'));
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
