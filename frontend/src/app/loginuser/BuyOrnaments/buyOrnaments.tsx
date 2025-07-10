@@ -2,7 +2,6 @@ import { Award, Crown, Eye, Filter, Heart, ShoppingCart, Sparkles, Star } from '
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 
-
 import { products } from '../../../../constants'; // Assuming products is an array of product objects
 
 // Type for CustomImage props (if not already present)
@@ -29,97 +28,22 @@ const CustomImage = ({ src, alt, width, height, style, className }: CustomImageP
 const LBuyOrnamentsPage = () => {
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
-  const [openCategory, setOpenCategory] = useState<string | null>(null);
-  const [openSubCategory, setOpenSubCategory] = useState<string | null>(null);
-  const [openGender, setOpenGender] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<{ [cat: string]: Set<string> }>({
-    Men: new Set(),
-    Women: new Set(),
-    Kids: new Set(),
-    Unisex: new Set()
+
+  const [likedItems, setLikedItems] = useState<Set<number>>(() => {
+    const stored = localStorage.getItem("wishlist");
+    return stored ? new Set(JSON.parse(stored)) : new Set();
   });
-  const [openMain, setOpenMain] = useState<string | null>(null);
-  const [openSub, setOpenSub] = useState<string | null>(null);
-  const [selectedDropdown, setSelectedDropdown] = useState<{
-    main: string;
-    sub: string;
-    item: string;
-  }[]>([]);
-  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [cartItems, setCartItems] = useState<number[]>(() => {
+    const stored = localStorage.getItem("cart");
+    return stored ? JSON.parse(stored) : [];
+  });
   const navigate = useNavigate();
 
-  const CATEGORY_TREE = [
-    {
-      name: "All",
-      children: []
-    },
-    {
-      name: "Indian Gold",
-      children: [
-        {
-          name: "Men",
-          items: ["Bracelets", "Rings", "Necklaces", "Cufflinks", "Earrings", "Tie"]
-        },
-        {
-          name: "Women",
-          items: ["Earrings", "Rings", "Necklaces", "Bracelets", "Bangles"]
-        },
-        {
-          name: "Kid",
-          items: ["Earrings", "Rings", "Necklaces", "Bracelets", "Bangles"]
-        },
-        {
-          name: "Unisex",
-          items: ["Earrings", "Rings", "Necklaces", "Bracelets", "Bangles", "Cufflinks", "Tie"]
-        }
-      ]
-    },
-    {
-      name: "Dubai Gold",
-      children: [
-        {
-          name: "Men",
-          items: ["Bracelets", "Rings", "Necklaces", "Cufflinks", "Earrings", "Tie"]
-        },
-        {
-          name: "Women",
-          items: ["Earrings", "Rings", "Necklaces", "Bracelets", "Bangles"]
-        },
-        {
-          name: "Kid",
-          items: ["Earrings", "Rings", "Necklaces", "Bracelets", "Bangles"]
-        },
-        {
-          name: "Unisex",
-          items: ["Earrings", "Rings", "Necklaces", "Bracelets", "Bangles", "Cufflinks", "Tie"]
-        }
-      ]
-    }
-  ];
+  const categories = ['All', 'Necklaces', 'Earrings', 'Bangles', 'Rings', 'Chains', 'Pendants'];
 
-  const toggleFilter = (cat: string, sub: string) => {
-    setSelectedFilters(prev => {
-      const updated = { ...prev };
-      if (!updated[cat]) updated[cat] = new Set();
-      if (updated[cat].has(sub)) {
-        updated[cat].delete(sub);
-      } else {
-        updated[cat].add(sub);
-      }
-      return { ...updated };
-    });
-  };
-
-  const isAnyFilterSelected = Object.values(selectedFilters).some(set => set.size > 0);
-  const filteredProducts = isAnyFilterSelected
-    ? products.filter(product => {
-        // Use 'details' as subcategory field
-        return Object.entries(selectedFilters).some(([cat, set]) =>
-          product.category === cat && (set.size === 0 || set.has(product.details))
-        );
-      })
-    : products;
+  const filteredProducts = selectedCategory === 'All' 
+    ? products 
+    : products.filter(product => product.category === selectedCategory);
 
   // Add types for parameters
   const toggleLike = (productId: number, e: React.MouseEvent<HTMLButtonElement>) => {
@@ -131,80 +55,14 @@ const LBuyOrnamentsPage = () => {
       newLikedItems.add(productId);
     }
     setLikedItems(newLikedItems);
+    localStorage.setItem("wishlist", JSON.stringify(Array.from(newLikedItems)));
   };
 
-  // If lodash is not available, use this shuffle function:
-  function simpleShuffle<T>(array: T[]): T[] {
-    const arr = [...array];
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-    return arr;
-  }
-
-  const getRandomProducts = (count: number) => simpleShuffle(products).slice(0, count);
-
-  // If your products do not have a 'subcategory' property, map it from another field, e.g. 'details' or similar.
-  // For demonstration, let's assume 'details' holds the subcategory name.
-  const getCategoryProducts = (cat: string, sub: string) =>
-    products.filter(
-      (p: any) => p.category === cat && p.details === sub // Use 'details' as subcategory
-    ).slice(0, 5);
-
-  // Handle dropdown selection
-  const handleDropdownSelect = (main: string, sub: string, item: string) => {
-    setSelectedDropdown(prev => {
-      const exists = prev.some(sel => sel.main === main && sel.sub === sub && sel.item === item);
-      if (exists) {
-        return prev.filter(sel => !(sel.main === main && sel.sub === sub && sel.item === item));
-      } else {
-        return [...prev, { main, sub, item }];
-      }
-    });
+  const addToCart = (productId: number) => {
+    const updated = [...cartItems, productId];
+    setCartItems(updated);
+    localStorage.setItem("cart", JSON.stringify(updated));
   };
-
-  // Remove unused openMain/openSub and multi-level dropdown below the search bar
-
-  // --- Replace the Filter/Search Bar Row and remove the old multi-level dropdown below it ---
-
-  // State for dropdowns
-  const [mainDropdownOpen, setMainDropdownOpen] = useState(false);
-  const [mainCategory, setMainCategory] = useState<string>("All");
-  const [subDropdownOpen, setSubDropdownOpen] = useState(false);
-  const [subCategory, setSubCategory] = useState<string>("");
-  const [itemDropdownOpen, setItemDropdownOpen] = useState(false);
-  const [itemCategory, setItemCategory] = useState<string>("");
-
-  // Helper: get subcategories for selected main
-  const getSubCategories = () => {
-    const found = CATEGORY_TREE.find(cat => cat.name === mainCategory);
-    return found && found.children ? found.children : [];
-  };
-
-  // Helper: get items for selected subcategory
-  const getItems = () => {
-    const subs = getSubCategories();
-    const found = subs.find((s: any) => s.name === subCategory);
-    return found && found.items ? found.items : [];
-  };
-
-  // Filter products based on main/sub/item selection
-  const filteredProductsDropdown =
-    mainCategory === "All"
-      ? products
-      : products.filter(product =>
-          product.category === mainCategory &&
-          (subCategory ? product.details === subCategory : true) &&
-          (itemCategory ? product.details === itemCategory : true)
-        );
-
-  const finalFilteredProducts = searchTerm.trim()
-    ? filteredProductsDropdown.filter(product =>
-        product.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        product.details?.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-    : filteredProductsDropdown;
 
   return (
     <div style={{ backgroundColor: '#fafbfc', minHeight: '100vh', fontFamily: "'Inter', sans-serif" }}>
@@ -344,914 +202,394 @@ const LBuyOrnamentsPage = () => {
         </div>
       </div>
 
-      {/* --- Filter/Search Bar Row --- */}
+      {/* Modern Filter Section */}
       <div style={{
         backgroundColor: '#ffffff',
-        padding: '32px 20px',
+        padding: '48px 20px',
         borderBottom: '1px solid #f0f0f3'
       }}>
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: 24,
-          flexWrap: 'wrap'
-        }}>
-          {/* Left: Multi-level Dropdown */}
-          <div style={{ minWidth: 220, position: 'relative', display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {/* Main Category Dropdown */}
-            <div style={{ position: 'relative' }}>
-              <button
-                style={{
-                  fontWeight: 700,
-                  fontSize: 16,
-                  color: "#7a1335",
-                  background: "none",
-                  border: "1px solid #eee",
-                  borderRadius: 8,
-                  padding: "10px 24px",
-                  cursor: "pointer",
-                  width: "100%",
-                  textAlign: "left"
-                }}
-                onClick={() => setMainDropdownOpen(!mainDropdownOpen)}
-              >
-                {mainCategory}
-              </button>
-              {mainDropdownOpen && (
-                <div style={{
-                  position: "absolute",
-                  top: "110%",
-                  left: 0,
-                  background: "#fff",
-                  border: "1px solid #eee",
-                  borderRadius: 10,
-                  minWidth: 180,
-                  zIndex: 20,
-                  boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                  padding: 8
-                }}>
-                  {CATEGORY_TREE.map(main => (
-                    <div key={main.name}>
-                      <button
-                        style={{
-                          fontWeight: 600,
-                          color: "#8a2342",
-                          fontSize: 15,
-                          background: "none",
-                          border: "none",
-                          cursor: "pointer",
-                          width: "100%",
-                          textAlign: "left",
-                          padding: "6px 8px",
-                          borderRadius: 6
-                        }}
-                        onClick={() => {
-                          setMainCategory(main.name);
-                          setSubCategory("");
-                          setItemCategory("");
-                          setMainDropdownOpen(false);
-                        }}
-                      >
-                        {main.name}
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-            {/* Subcategory Dropdown */}
-            {mainCategory !== "All" && (
-              <div style={{ position: 'relative' }}>
-                <button
-                  style={{
-                    fontWeight: 600,
-                    fontSize: 15,
-                    color: "#8a2342",
-                    background: "none",
-                    border: "1px solid #eee",
-                    borderRadius: 8,
-                    padding: "8px 24px",
-                    cursor: "pointer",
-                    width: "100%",
-                    textAlign: "left"
-                  }}
-                  onClick={() => setSubDropdownOpen(!subDropdownOpen)}
-                >
-                  {subCategory || "Select Subcategory"}
-                </button>
-                {subDropdownOpen && (
-                  <div style={{
-                    position: "absolute",
-                    top: "110%",
-                    left: 0,
-                    background: "#fff",
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    minWidth: 180,
-                    zIndex: 21,
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                    padding: 8
-                  }}>
-                    {getSubCategories().map((sub: any) => (
-                      <div key={sub.name}>
-                        <button
-                          style={{
-                            fontWeight: 500,
-                            color: "#7a1335",
-                            fontSize: 14,
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            width: "100%",
-                            textAlign: "left",
-                            padding: "6px 8px",
-                            borderRadius: 6
-                          }}
-                          onClick={() => {
-                            setSubCategory(sub.name);
-                            setItemCategory("");
-                            setSubDropdownOpen(false);
-                          }}
-                        >
-                          {sub.name}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            {/* Item Dropdown */}
-            {mainCategory !== "All" && subCategory && (
-              <div style={{ position: 'relative' }}>
-                <button
-                  style={{
-                    fontWeight: 500,
-                    fontSize: 14,
-                    color: "#374151",
-                    background: "none",
-                    border: "1px solid #eee",
-                    borderRadius: 8,
-                    padding: "8px 24px",
-                    cursor: "pointer",
-                    width: "100%",
-                    textAlign: "left"
-                  }}
-                  onClick={() => setItemDropdownOpen(!itemDropdownOpen)}
-                >
-                  {itemCategory || "Select Item"}
-                </button>
-                {itemDropdownOpen && (
-                  <div style={{
-                    position: "absolute",
-                    top: "110%",
-                    left: 0,
-                    background: "#fff",
-                    border: "1px solid #eee",
-                    borderRadius: 10,
-                    minWidth: 180,
-                    zIndex: 22,
-                    boxShadow: "0 4px 16px rgba(0,0,0,0.08)",
-                    padding: 8
-                  }}>
-                    {getItems().map((item: string) => (
-                      <div key={item}>
-                        <button
-                          style={{
-                            fontWeight: 400,
-                            color: "#374151",
-                            fontSize: 13,
-                            background: "none",
-                            border: "none",
-                            cursor: "pointer",
-                            width: "100%",
-                            textAlign: "left",
-                            padding: "6px 8px",
-                            borderRadius: 6
-                          }}
-                          onClick={() => {
-                            setItemCategory(item);
-                            setItemDropdownOpen(false);
-                          }}
-                        >
-                          {item}
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Center: Search Bar */}
+        <div style={{ maxWidth: '1400px', margin: '0 auto' }}>
           <div style={{
-            flex: 1,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            minWidth: 220
+            marginBottom: '40px'
           }}>
-            <input
-              type="text"
-              placeholder="Search ornaments..."
-              value={searchTerm}
-              onChange={e => setSearchTerm(e.target.value)}
-              style={{
-                width: "100%",
-                maxWidth: 400,
-                padding: "12px 16px",
-                borderRadius: 8,
-                border: "1px solid #eee",
-                fontSize: 16,
-                outline: "none"
-              }}
-            />
+            <Filter size={24} color="#7a1335" style={{ marginRight: '12px' }} />
+            <h2 style={{
+              fontSize: '1.8rem',
+              fontWeight: '700',
+              color: '#1a1d29',
+              margin: 0
+            }}>
+              Browse Collections
+            </h2>
           </div>
-
-          {/* Right: Search Button */}
-          <div>
-            <button
-              style={{
-                background: "#7a1335",
-                color: "#fff",
-                border: "none",
-                borderRadius: 8,
-                padding: "12px 28px",
-                fontWeight: 600,
-                fontSize: 16,
-                cursor: "pointer",
-                display: "flex",
-                alignItems: "center",
-                gap: 8
-              }}
-              onClick={() => {/* Optionally trigger search/filter here */}}
-            >
-              <Filter size={20} />
-              Search
-            </button>
+          
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: '12px',
+            flexWrap: 'wrap'
+          }}>
+            {categories.map(category => (
+              <button
+                key={category}
+                onClick={() => setSelectedCategory(category)}
+                style={{
+                  padding: '14px 28px',
+                  border: selectedCategory === category ? 'none' : '1px solid #e2e8f0',
+                  backgroundColor: selectedCategory === category ? '#7a1335' : 'transparent',
+                  color: selectedCategory === category ? '#ffffff' : '#64748b',
+                  borderRadius: '16px',
+                  fontWeight: '600',
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  if (selectedCategory !== category) {
+                    const btn = e.currentTarget as HTMLButtonElement;
+                    btn.style.backgroundColor = 'rgba(122, 19, 53, 0.05)';
+                    btn.style.color = '#7a1335';
+                    btn.style.transform = 'translateY(-2px)';
+                    btn.style.borderColor = '#7a1335';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (selectedCategory !== category) {
+                    const btn = e.currentTarget as HTMLButtonElement;
+                    btn.style.backgroundColor = 'transparent';
+                    btn.style.color = '#64748b';
+                    btn.style.transform = 'translateY(0)';
+                    btn.style.borderColor = '#e2e8f0';
+                  }
+                }}
+              >
+                {category}
+              </button>
+            ))}
           </div>
         </div>
       </div>
 
-      {/* --- Product Listing Structure --- */}
-      <div style={{ padding: '40px 20px', maxWidth: '1400px', margin: '0 auto' }}>
-        {/* Common Section */}
-        <section style={{ marginBottom: 48 }}>
-          <h2 style={{
-            fontSize: '2rem', fontWeight: 800, color: '#7a1335', marginBottom: 24, textAlign: 'center'
-          }}>
-            Featured Ornaments
-          </h2>
-          <div className="grid-responsive" style={{
-            display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
-            gap: '28px'
-          }}>
-            {getRandomProducts(10).map((product: any, idx: number) => (
-              <div
-                key={product.id}
-                onMouseEnter={() => setHoveredCard(idx)}
-                onMouseLeave={() => setHoveredCard(null)}
+      {/* Modern Product Grid */}
+      <div style={{ padding: '80px 20px', maxWidth: '1400px', margin: '0 auto' }}>
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(380px, 1fr))',
+          gap: '32px'
+        }}>
+          {filteredProducts.map((product, idx) => (
+            <div
+              key={product.id}
+              onMouseEnter={() => setHoveredCard(idx)}
+              onMouseLeave={() => setHoveredCard(null)}
+              style={{
+                backgroundColor: '#ffffff',
+                borderRadius: '24px',
+                overflow: 'hidden',
+                boxShadow: hoveredCard === idx 
+                  ? '0 32px 64px rgba(122, 19, 53, 0.15)' 
+                  : '0 4px 24px rgba(0, 0, 0, 0.04)',
+                transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                transform: hoveredCard === idx ? 'translateY(-12px)' : 'translateY(0)',
+                cursor: 'pointer',
+                position: 'relative',
+                border: '1px solid #f7f8fc',
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100%',
+                minHeight: 540 // ensure enough height for bottom actions
+              }}
+            >
+              {/* Discount Badge */}
+              {product.discount && (
+                <div style={{
+                  position: 'absolute',
+                  top: '20px',
+                  left: '20px',
+                  backgroundColor: '#7a1335',
+                  color: '#ffffff',
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  fontSize: '0.8rem',
+                  fontWeight: '700',
+                  zIndex: 3,
+                  boxShadow: '0 4px 12px rgba(122, 19, 53, 0.3)'
+                }}>
+                  {product.discount}
+                </div>
+              )}
+
+              {/* Heart Icon */}
+              <button
+                onClick={(e) => toggleLike(product.id, e)}
                 style={{
-                  backgroundColor: '#ffffff',
-                  borderRadius: '24px',
-                  overflow: 'hidden',
-                  boxShadow: hoveredCard === idx 
-                    ? '0 32px 64px rgba(122, 19, 53, 0.15)' 
-                    : '0 4px 24px rgba(0, 0, 0, 0.04)',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  transform: hoveredCard === idx ? 'translateY(-12px)' : 'translateY(0)',
+                  position: 'absolute',
+                  top: '20px',
+                  right: '20px',
+                  width: '44px',
+                  height: '44px',
+                  backgroundColor: likedItems.has(product.id) ? '#7a1335' : 'rgba(255, 255, 255, 0.9)',
+                  border: 'none',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
                   cursor: 'pointer',
-                  position: 'relative',
-                  border: '1px solid #f7f8fc'
+                  zIndex: 3,
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
+                }}
+                onMouseEnter={(e) => {
+                  (e.target as HTMLButtonElement).style.transform = 'scale(1.1)';
+                }}
+                onMouseLeave={(e) => {
+                  (e.target as HTMLButtonElement).style.transform = 'scale(1)';
                 }}
               >
-                {/* Discount Badge */}
-                {product.discount && (
-                  <div style={{
-                    position: 'absolute',
-                    top: '20px',
-                    left: '20px',
-                    backgroundColor: '#7a1335',
-                    color: '#ffffff',
-                    padding: '8px 16px',
-                    borderRadius: '20px',
-                    fontSize: '0.8rem',
-                    fontWeight: '700',
-                    zIndex: 3,
-                    boxShadow: '0 4px 12px rgba(122, 19, 53, 0.3)'
-                  }}>
-                    {product.discount}
-                  </div>
-                )}
+                <Heart 
+                  size={20} 
+                  fill={likedItems.has(product.id) ? '#ffffff' : 'none'} 
+                  color={likedItems.has(product.id) ? '#ffffff' : '#7a1335'} 
+                />
+              </button>
 
-                {/* Heart Icon */}
-                <button
-                  onClick={(e) => toggleLike(product.id, e)}
-                  style={{
-                    position: 'absolute',
-                    top: '20px',
-                    right: '20px',
-                    width: '44px',
-                    height: '44px',
-                    backgroundColor: likedItems.has(product.id) ? '#7a1335' : 'rgba(255, 255, 255, 0.9)',
-                    border: 'none',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    cursor: 'pointer',
-                    zIndex: 3,
-                    transition: 'all 0.3s ease',
-                    backdropFilter: 'blur(10px)',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                  }}
-                  onMouseEnter={(e) => {
-                    (e.target as HTMLButtonElement).style.transform = 'scale(1.1)';
-                  }}
-                  onMouseLeave={(e) => {
-                    (e.target as HTMLButtonElement).style.transform = 'scale(1)';
-                  }}
-                >
-                  <Heart 
-                    size={20} 
-                    fill={likedItems.has(product.id) ? '#ffffff' : 'none'} 
-                    color={likedItems.has(product.id) ? '#ffffff' : '#7a1335'} 
-                  />
-                </button>
-
-                {/* Image Container */}
+              {/* Image Container */}
+              <div style={{
+                position: 'relative',
+                padding: '40px 32px 24px 32px',
+                background: 'linear-gradient(135deg, #fafbfc 0%, #ffffff 100%)',
+                textAlign: 'center'
+              }}>
                 <div style={{
                   position: 'relative',
-                  padding: '40px 32px 24px 32px',
-                  background: 'linear-gradient(135deg, #fafbfc 0%, #ffffff 100%)',
-                  textAlign: 'center'
+                  display: 'inline-block'
                 }}>
+                  <CustomImage
+                    src={product.img}
+                    alt={product.title}
+                    width={220}
+                    height={220}
+                    style={{
+                      objectFit: 'contain',
+                      borderRadius: '20px',
+                      transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                      transform: hoveredCard === idx ? 'scale(1.05) rotate(2deg)' : 'scale(1) rotate(0deg)'
+                    }}
+                  />
+                  {/* Modern shine effect */}
                   <div style={{
-                    position: 'relative',
-                    display: 'inline-block'
-                  }}>
-                    <CustomImage
-                      src={product.img}
-                      alt={product.title}
-                      width={220}
-                      height={220}
-                      style={{
-                        objectFit: 'contain',
-                        borderRadius: '20px',
-                        transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                        transform: hoveredCard === idx ? 'scale(1.05) rotate(2deg)' : 'scale(1) rotate(0deg)'
-                      }}
-                    />
-                    {/* Modern shine effect */}
-                    <div style={{
-                      position: 'absolute',
-                      top: '0',
-                      left: '-100%',
-                      width: '100%',
-                      height: '100%',
-                      background: 'linear-gradient(90deg, transparent, rgba(122, 19, 53, 0.1), transparent)',
-                      transform: hoveredCard === idx ? 'translateX(300%)' : 'translateX(-100%)',
-                      transition: 'transform 0.8s ease',
-                      borderRadius: '20px'
-                    }} />
-                  </div>
-                </div>
-
-                {/* Content */}
-                <div style={{ padding: '0 32px 32px 32px' }}>
-                  {/* Rating */}
-                  <div style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    marginBottom: '16px'
-                  }}>
-                    <div style={{ display: 'flex', gap: '3px', marginRight: '12px' }}>
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          size={16}
-                          fill={i < Math.floor(product.rating) ? '#7a1335' : 'none'}
-                          color={i < Math.floor(product.rating) ? '#7a1335' : '#cbd5e1'}
-                          style={{ transition: 'all 0.2s ease' }}
-                        />
-                      ))}
-                    </div>
-                    <span style={{
-                      fontSize: '0.9rem',
-                      color: '#64748b',
-                      fontWeight: '500'
-                    }}>
-                      {product.rating} Rating
-                    </span>
-                  </div>
-
-                  {/* Title */}
-                  <h3 style={{
-                    fontSize: '1.4rem',
-                    fontWeight: '700',
-                    color: '#1a1d29',
-                    textAlign: 'center',
-                    marginBottom: '20px',
-                    lineHeight: '1.3',
-                    letterSpacing: '-0.01em'
-                  }}>
-                    {product.title}
-                  </h3>
-
-                  {/* Product Details */}
-                  <div style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    marginBottom: '24px',
-                    padding: '16px',
-                    backgroundColor: '#f8fafc',
-                    borderRadius: '12px',
-                    border: '1px solid #f1f5f9'
-                  }}>
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ 
-                        fontSize: '0.8rem', 
-                        color: '#64748b', 
-                        marginBottom: '4px',
-                        fontWeight: '500'
-                      }}>
-                        PURITY
-                      </div>
-                      <div style={{ 
-                        fontSize: '0.95rem', 
-                        fontWeight: '700', 
-                        color: '#7a1335' 
-                      }}>
-                        {product.purity}
-                      </div>
-                    </div>
-                    <div style={{ 
-                      width: '1px', 
-                      backgroundColor: '#e2e8f0' 
-                    }} />
-                    <div style={{ textAlign: 'center' }}>
-                      <div style={{ 
-                        fontSize: '0.8rem', 
-                        color: '#64748b', 
-                        marginBottom: '4px',
-                        fontWeight: '500'
-                      }}>
-                        WEIGHT
-                      </div>
-                      <div style={{ 
-                        fontSize: '0.95rem', 
-                        fontWeight: '700', 
-                        color: '#7a1335' 
-                      }}>
-                        {product.weight}
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Price */}
-                  <div style={{
-                    textAlign: 'center',
-                    marginBottom: '28px'
-                  }}>
-                    <div style={{
-                      fontSize: '2rem',
-                      fontWeight: '800',
-                      color: '#7a1335',
-                      letterSpacing: '-0.02em'
-                    }}>
-                      {product.price}
-                    </div>
-                    <div style={{
-                      fontSize: '0.85rem',
-                      color: '#64748b',
-                      marginTop: '4px'
-                    }}>
-                      Inclusive of all taxes
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div style={{
-                    display: 'flex',
-                    gap: '12px'
-                  }}>
-                    <button
-                      style={{
-                        flex: 1,
-                        padding: '16px 24px',
-                        background: '#7a1335',
-                        color: '#ffffff',
-                        border: 'none',
-                        borderRadius: '16px',
-                        fontWeight: '600',
-                        fontSize: '0.95rem',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '10px',
-                        position: 'relative',
-                        overflow: 'hidden'
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.target as HTMLButtonElement).style.transform = 'scale(1.05)';
-                        (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(122, 19, 53, 0.9)';
-                        (e.target as HTMLButtonElement).style.boxShadow = '0 8px 24px rgba(122, 19, 53, 0.4)';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.target as HTMLButtonElement).style.transform = 'scale(1)';
-                        (e.target as HTMLButtonElement).style.backgroundColor = '#7a1335';
-                        (e.target as HTMLButtonElement).style.boxShadow = 'none';
-                      }}
-                      onClick={() => navigate(`/buyornaments/${product.id}`)}
-                    >
-                      <Eye size={18} />
-                      View Details
-                    </button>
-                    
-                    <button
-                      style={{
-                        width: '56px',
-                        height: '56px',
-                        backgroundColor: 'rgba(122, 19, 53, 0.1)',
-                        color: '#7a1335',
-                        border: '2px solid rgba(122, 19, 53, 0.2)',
-                        borderRadius: '16px',
-                        cursor: 'pointer',
-                        transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                      }}
-                      onMouseEnter={(e) => {
-                        (e.target as HTMLButtonElement).style.backgroundColor = '#7a1335';
-                        (e.target as HTMLButtonElement).style.color = '#ffffff';
-                        (e.target as HTMLButtonElement).style.transform = 'scale(1.1)';
-                        (e.target as HTMLButtonElement).style.borderColor = '#7a1335';
-                      }}
-                      onMouseLeave={(e) => {
-                        (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(122, 19, 53, 0.1)';
-                        (e.target as HTMLButtonElement).style.color = '#7a1335';
-                       (e.target as HTMLButtonElement).style.transform = 'scale(1)';
-                        (e.target as HTMLButtonElement).style.borderColor = 'rgba(122, 19, 53, 0.2)';
-                      }}
-                    >
-                      <ShoppingCart size={20} />
-                    </button>
-                  </div>
+                    position: 'absolute',
+                    top: '0',
+                    left: '-100%',
+                    width: '100%',
+                    height: '100%',
+                    background: 'linear-gradient(90deg, transparent, rgba(122, 19, 53, 0.1), transparent)',
+                    transform: hoveredCard === idx ? 'translateX(300%)' : 'translateX(-100%)',
+                    transition: 'transform 0.8s ease',
+                    borderRadius: '20px'
+                  }} />
                 </div>
               </div>
-            ))}
-          </div>
-        </section>
 
-        {/* Category-wise Sections */}
-        {CATEGORY_TREE.filter(cat => cat.children && cat.children.length > 0).map(cat => (
-          <section key={cat.name} style={{ marginBottom: 48 }}>
-            <h2 style={{
-              fontSize: '1.6rem', fontWeight: 700, color: '#1a1d29', margin: '32px 0 16px 0'
-            }}>
-              {cat.name}
-            </h2>
-            <div>
-              {(cat.children as { name: string; items: string[] }[]).map((sub: { name: string; items: string[] }) => {
-                const subProducts = getCategoryProducts(cat.name, sub.name);
-                if (subProducts.length === 0) return null;
-                return (
-                  <div key={sub.name} style={{ marginBottom: 32 }}>
-                    <div style={{
-                      display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12
+              {/* Content */}
+              <div style={{ padding: '0 32px 32px 32px', flex: 1, display: 'flex', flexDirection: 'column' }}>
+                {/* Rating */}
+                <div style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px'
+                }}>
+                  <div style={{ display: 'flex', gap: '3px', marginRight: '12px' }}>
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        size={16}
+                        fill={i < Math.floor(product.rating) ? '#7a1335' : 'none'}
+                        color={i < Math.floor(product.rating) ? '#7a1335' : '#cbd5e1'}
+                        style={{ transition: 'all 0.2s ease' }}
+                      />
+                    ))}
+                  </div>
+                  <span style={{
+                    fontSize: '0.9rem',
+                    color: '#64748b',
+                    fontWeight: '500'
+                  }}>
+                    {product.rating} Rating
+                  </span>
+                </div>
+
+                {/* Title */}
+                <h3 style={{
+                  fontSize: '1.4rem',
+                  fontWeight: '700',
+                  color: '#1a1d29',
+                  textAlign: 'center',
+                  marginBottom: '20px',
+                  lineHeight: '1.3',
+                  letterSpacing: '-0.01em'
+                }}>
+                  {product.title}
+                </h3>
+
+                {/* Product Details */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  marginBottom: '24px',
+                  padding: '16px',
+                  backgroundColor: '#f8fafc',
+                  borderRadius: '12px',
+                  border: '1px solid #f1f5f9'
+                }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ 
+                      fontSize: '0.8rem', 
+                      color: '#64748b', 
+                      marginBottom: '4px',
+                      fontWeight: '500'
                     }}>
-                      <h3 style={{
-                        fontSize: '1.15rem', fontWeight: 600, color: '#7a1335', margin: 0
-                      }}>{sub.name}</h3>
-                      <button
-                        style={{
-                          background: 'none', border: 'none', color: '#7a1335', fontWeight: 600,
-                          cursor: 'pointer', fontSize: 14, textDecoration: 'underline'
-                        }}
-                        onClick={() => navigate(`/category/${cat.name.toLowerCase()}/${sub.name.toLowerCase()}`)}
-                      >
-                        See More
-                      </button>
+                      PURITY
                     </div>
-                    <div className="grid-responsive" style={{
-                      display: 'grid',
-                      gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
-                      gap: '20px'
+                    <div style={{ 
+                      fontSize: '0.95rem', 
+                      fontWeight: '700', 
+                      color: '#7a1335' 
                     }}>
-                      {subProducts.map((product: any, idx: number) => (
-                        <div
-                          key={product.id}
-                          onMouseEnter={() => setHoveredCard(idx)}
-                          onMouseLeave={() => setHoveredCard(null)}
-                          style={{
-                            backgroundColor: '#ffffff',
-                            borderRadius: '24px',
-                            overflow: 'hidden',
-                            boxShadow: hoveredCard === idx 
-                              ? '0 32px 64px rgba(122, 19, 53, 0.15)' 
-                              : '0 4px 24px rgba(0, 0, 0, 0.04)',
-                            transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                            transform: hoveredCard === idx ? 'translateY(-12px)' : 'translateY(0)',
-                            cursor: 'pointer',
-                            position: 'relative',
-                            border: '1px solid #f7f8fc'
-                          }}
-                        >
-                          {/* Discount Badge */}
-                          {product.discount && (
-                            <div style={{
-                              position: 'absolute',
-                              top: '20px',
-                              left: '20px',
-                              backgroundColor: '#7a1335',
-                              color: '#ffffff',
-                              padding: '8px 16px',
-                              borderRadius: '20px',
-                              fontSize: '0.8rem',
-                              fontWeight: '700',
-                              zIndex: 3,
-                              boxShadow: '0 4px 12px rgba(122, 19, 53, 0.3)'
-                            }}>
-                              {product.discount}
-                            </div>
-                          )}
-
-                          {/* Heart Icon */}
-                          <button
-                            onClick={(e) => toggleLike(product.id, e)}
-                            style={{
-                              position: 'absolute',
-                              top: '20px',
-                              right: '20px',
-                              width: '44px',
-                              height: '44px',
-                              backgroundColor: likedItems.has(product.id) ? '#7a1335' : 'rgba(255, 255, 255, 0.9)',
-                              border: 'none',
-                              borderRadius: '50%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              cursor: 'pointer',
-                              zIndex: 3,
-                              transition: 'all 0.3s ease',
-                              backdropFilter: 'blur(10px)',
-                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)'
-                            }}
-                            onMouseEnter={(e) => {
-                              (e.target as HTMLButtonElement).style.transform = 'scale(1.1)';
-                            }}
-                            onMouseLeave={(e) => {
-                              (e.target as HTMLButtonElement).style.transform = 'scale(1)';
-                            }}
-                          >
-                            <Heart 
-                              size={20} 
-                              fill={likedItems.has(product.id) ? '#ffffff' : 'none'} 
-                              color={likedItems.has(product.id) ? '#ffffff' : '#7a1335'} 
-                            />
-                          </button>
-
-                          {/* Image Container */}
-                          <div style={{
-                            position: 'relative',
-                            padding: '40px 32px 24px 32px',
-                            background: 'linear-gradient(135deg, #fafbfc 0%, #ffffff 100%)',
-                            textAlign: 'center'
-                          }}>
-                            <div style={{
-                              position: 'relative',
-                              display: 'inline-block'
-                            }}>
-                              <CustomImage
-                                src={product.img}
-                                alt={product.title}
-                                width={220}
-                                height={220}
-                                style={{
-                                  objectFit: 'contain',
-                                  borderRadius: '20px',
-                                  transition: 'transform 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                                  transform: hoveredCard === idx ? 'scale(1.05) rotate(2deg)' : 'scale(1) rotate(0deg)'
-                                }}
-                              />
-                              {/* Modern shine effect */}
-                              <div style={{
-                                position: 'absolute',
-                                top: '0',
-                                left: '-100%',
-                                width: '100%',
-                                height: '100%',
-                                background: 'linear-gradient(90deg, transparent, rgba(122, 19, 53, 0.1), transparent)',
-                                transform: hoveredCard === idx ? 'translateX(300%)' : 'translateX(-100%)',
-                                transition: 'transform 0.8s ease',
-                                borderRadius: '20px'
-                              }} />
-                            </div>
-                          </div>
-
-                          {/* Content */}
-                          <div style={{ padding: '0 32px 32px 32px' }}>
-                            {/* Rating */}
-                            <div style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              marginBottom: '16px'
-                            }}>
-                              <div style={{ display: 'flex', gap: '3px', marginRight: '12px' }}>
-                                {[...Array(5)].map((_, i) => (
-                                  <Star
-                                    key={i}
-                                    size={16}
-                                    fill={i < Math.floor(product.rating) ? '#7a1335' : 'none'}
-                                    color={i < Math.floor(product.rating) ? '#7a1335' : '#cbd5e1'}
-                                    style={{ transition: 'all 0.2s ease' }}
-                                  />
-                                ))}
-                              </div>
-                              <span style={{
-                                fontSize: '0.9rem',
-                                color: '#64748b',
-                                fontWeight: '500'
-                              }}>
-                                {product.rating} Rating
-                              </span>
-                            </div>
-
-                            {/* Title */}
-                            <h3 style={{
-                              fontSize: '1.4rem',
-                              fontWeight: '700',
-                              color: '#1a1d29',
-                              textAlign: 'center',
-                              marginBottom: '20px',
-                              lineHeight: '1.3',
-                              letterSpacing: '-0.01em'
-                            }}>
-                              {product.title}
-                            </h3>
-
-                            {/* Product Details */}
-                            <div style={{
-                              display: 'flex',
-                              justifyContent: 'space-between',
-                              marginBottom: '24px',
-                              padding: '16px',
-                              backgroundColor: '#f8fafc',
-                              borderRadius: '12px',
-                              border: '1px solid #f1f5f9'
-                            }}>
-                              <div style={{ textAlign: 'center' }}>
-                                <div style={{ 
-                                  fontSize: '0.8rem', 
-                                  color: '#64748b', 
-                                  marginBottom: '4px',
-                                  fontWeight: '500'
-                                }}>
-                                  PURITY
-                                </div>
-                                <div style={{ 
-                                  fontSize: '0.95rem', 
-                                  fontWeight: '700', 
-                                  color: '#7a1335' 
-                                }}>
-                                  {product.purity}
-                                </div>
-                              </div>
-                              <div style={{ 
-                                width: '1px', 
-                                backgroundColor: '#e2e8f0' 
-                              }} />
-                              <div style={{ textAlign: 'center' }}>
-                                <div style={{ 
-                                  fontSize: '0.8rem', 
-                                  color: '#64748b', 
-                                  marginBottom: '4px',
-                                  fontWeight: '500'
-                                }}>
-                                  WEIGHT
-                                </div>
-                                <div style={{ 
-                                  fontSize: '0.95rem', 
-                                  fontWeight: '700', 
-                                  color: '#7a1335' 
-                                }}>
-                                  {product.weight}
-                                </div>
-                              </div>
-                            </div>
-
-                            {/* Price */}
-                            <div style={{
-                              textAlign: 'center',
-                              marginBottom: '28px'
-                            }}>
-                              <div style={{
-                                fontSize: '2rem',
-                                fontWeight: '800',
-                                color: '#7a1335',
-                                letterSpacing: '-0.02em'
-                              }}>
-                                {product.price}
-                              </div>
-                              <div style={{
-                                fontSize: '0.85rem',
-                                color: '#64748b',
-                                marginTop: '4px'
-                              }}>
-                                Inclusive of all taxes
-                              </div>
-                            </div>
-
-                            {/* Action Buttons */}
-                            <div style={{
-                              display: 'flex',
-                              gap: '12px'
-                            }}>
-                              <button
-                                style={{
-                                  flex: 1,
-                                  padding: '16px 24px',
-                                  background: '#7a1335',
-                                  color: '#ffffff',
-                                  border: 'none',
-                                  borderRadius: '16px',
-                                  fontWeight: '600',
-                                  fontSize: '0.95rem',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center',
-                                  gap: '10px',
-                                  position: 'relative',
-                                  overflow: 'hidden'
-                                }}
-                                onMouseEnter={(e) => {
-                                  (e.target as HTMLButtonElement).style.transform = 'scale(1.05)';
-                                  (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(122, 19, 53, 0.9)';
-                                  (e.target as HTMLButtonElement).style.boxShadow = '0 8px 24px rgba(122, 19, 53, 0.4)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  (e.target as HTMLButtonElement).style.transform = 'scale(1)';
-                                  (e.target as HTMLButtonElement).style.backgroundColor = '#7a1335';
-                                  (e.target as HTMLButtonElement).style.boxShadow = 'none';
-                                }}
-                                onClick={() => navigate(`/buyornaments/${product.id}`)}
-                              >
-                                <Eye size={18} />
-                                View Details
-                              </button>
-                              
-                              <button
-                                style={{
-                                  width: '56px',
-                                  height: '56px',
-                                  backgroundColor: 'rgba(122, 19, 53, 0.1)',
-                                  color: '#7a1335',
-                                  border: '2px solid rgba(122, 19, 53, 0.2)',
-                                  borderRadius: '16px',
-                                  cursor: 'pointer',
-                                  transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'center'
-                                }}
-                                onMouseEnter={(e) => {
-                                  (e.target as HTMLButtonElement).style.backgroundColor = '#7a1335';
-                                  (e.target as HTMLButtonElement).style.color = '#ffffff';
-                                  (e.target as HTMLButtonElement).style.transform = 'scale(1.1)';
-                                  (e.target as HTMLButtonElement).style.borderColor = '#7a1335';
-                                }}
-                                onMouseLeave={(e) => {
-                                  (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(122, 19, 53, 0.1)';
-                                  (e.target as HTMLButtonElement).style.color = '#7a1335';
-                                 (e.target as HTMLButtonElement).style.transform = 'scale(1)';
-                                  (e.target as HTMLButtonElement).style.borderColor = 'rgba(122, 19, 53, 0.2)';
-                                }}
-                              >
-                                <ShoppingCart size={20} />
-                              </button>
-                            </div>
-                          </div>
-                        </div>
-                      ))}
+                      {product.purity}
                     </div>
                   </div>
-                );
-              })}
+                  <div style={{ 
+                    width: '1px', 
+                    backgroundColor: '#e2e8f0' 
+                  }} />
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ 
+                      fontSize: '0.8rem', 
+                      color: '#64748b', 
+                      marginBottom: '4px',
+                      fontWeight: '500'
+                    }}>
+                      WEIGHT
+                    </div>
+                    <div style={{ 
+                      fontSize: '0.95rem', 
+                      fontWeight: '700', 
+                      color: '#7a1335' 
+                    }}>
+                      {product.weight}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Price */}
+                <div style={{
+                  textAlign: 'center',
+                  marginBottom: '28px'
+                }}>
+                  <div style={{
+                    fontSize: '2rem',
+                    fontWeight: '800',
+                    color: '#7a1335',
+                    letterSpacing: '-0.02em'
+                  }}>
+                    {product.price}
+                  </div>
+                  <div style={{
+                    fontSize: '0.85rem',
+                    color: '#64748b',
+                    marginTop: '4px'
+                  }}>
+                    Inclusive of all taxes
+                  </div>
+                </div>
+
+                {/* Spacer to push actions to bottom */}
+                <div style={{ flex: 1 }}></div>
+
+                {/* Action Buttons at bottom */}
+                <div style={{
+                  display: 'flex',
+                  gap: '12px',
+                  marginTop: 'auto'
+                }}>
+                  <button
+                    style={{
+                      flex: 1,
+                      padding: '16px 24px',
+                      background: '#7a1335',
+                      color: '#ffffff',
+                      border: 'none',
+                      borderRadius: '16px',
+                      fontWeight: '600',
+                      fontSize: '0.95rem',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '10px',
+                      position: 'relative',
+                      overflow: 'hidden'
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.target as HTMLButtonElement).style.transform = 'scale(1.05)';
+                      (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(122, 19, 53, 0.9)';
+                      (e.target as HTMLButtonElement).style.boxShadow = '0 8px 24px rgba(122, 19, 53, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.target as HTMLButtonElement).style.transform = 'scale(1)';
+                      (e.target as HTMLButtonElement).style.backgroundColor = '#7a1335';
+                      (e.target as HTMLButtonElement).style.boxShadow = 'none';
+                    }}
+                    onClick={() => navigate(`/lbuyornaments/${product.id}`)}
+                  >
+                    <Eye size={18} />
+                    View Details
+                  </button>
+                  
+                  <button
+                    style={{
+                      width: '56px',
+                      height: '56px',
+                      backgroundColor: 'rgba(122, 19, 53, 0.1)',
+                      color: '#7a1335',
+                      border: '2px solid rgba(122, 19, 53, 0.2)',
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}
+                    onMouseEnter={(e) => {
+                      (e.target as HTMLButtonElement).style.backgroundColor = '#7a1335';
+                      (e.target as HTMLButtonElement).style.color = '#ffffff';
+                      (e.target as HTMLButtonElement).style.transform = 'scale(1.1)';
+                      (e.target as HTMLButtonElement).style.borderColor = '#7a1335';
+                    }}
+                    onMouseLeave={(e) => {
+                      (e.target as HTMLButtonElement).style.backgroundColor = 'rgba(122, 19, 53, 0.1)';
+                      (e.target as HTMLButtonElement).style.color = '#7a1335';
+                      (e.target as HTMLButtonElement).style.transform = 'scale(1)';
+                      (e.target as HTMLButtonElement).style.borderColor = 'rgba(122, 19, 53, 0.2)';
+                    }}
+                    onClick={() => addToCart(product.id)}
+                  >
+                    <ShoppingCart size={20} />
+                  </button>
+                </div>
+              </div>
             </div>
-          </section>
-        ))}
+          ))}
+        </div>
       </div>
 
       {/* Modern Footer CTA */}
@@ -1380,18 +718,11 @@ const LBuyOrnamentsPage = () => {
             0%, 100% { transform: translateY(0px) rotate(0deg); }
             50% { transform: translateY(-20px) rotate(5deg); }
           }
-          .grid-responsive {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 20px;
-          }
+          
           @media (max-width: 768px) {
             .grid-responsive {
               grid-template-columns: 1fr !important;
             }
-          }
-          label:hover {
-            background: #f7f2f5;
           }
         `}
       </style>

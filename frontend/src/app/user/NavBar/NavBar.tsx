@@ -1,6 +1,7 @@
-import { ChevronDown } from "lucide-react";
-import { useEffect, useState } from "react";
+import React, { useState, useEffect } from "react";
+import CustomButton from "../../components/custom/CustomButton";
 import CustomImage from "../../components/custom/Image";
+import { ChevronDown } from "lucide-react";
 
 export const MENU = [
 	{ name: "Home", link: "/" },
@@ -359,7 +360,7 @@ const NavBar = () => {
 										style={{
 											padding: "24px",
 											display: "grid",
-											gridTemplateColumns: "1fr 1fr 1fr 1fr",
+											gridTemplateColumns: "1fr 1fr 1fr",
 											gap: "24px"
 										}}
 									>
@@ -379,18 +380,11 @@ const NavBar = () => {
 												subcategories: ["Men", "Women", "Kids", "Unisex"]
 											},
 											{
-												name: "Diamond",
+												name: "Platinum",
 												icon: "",
 												color: "#E5E4E2",
 												bgColor: "rgba(229, 228, 226, 0.1)",
 												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Gold coin",
-												icon: "",
-												color: "#FFD700",
-												bgColor: "rgba(229, 228, 226, 0.1)",
-												subcategories: ["22k coin", "24k coin"]
 											}
 										].map((category, index) => (
 											<div

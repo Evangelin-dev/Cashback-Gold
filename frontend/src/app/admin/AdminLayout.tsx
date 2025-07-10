@@ -17,7 +17,6 @@ const menuItems = [
   { label: 'Gold Plant Scheme', icon: '🌱', path: '/plantscheme' },
   { label: 'Market Resource', icon: '📊', path: '/resource' },
   { label: 'Campaigns', icon: '📋', path: '/campaigns' },
-  { label: 'Manage FAQ', icon: '📋', path: '/faq' },
   { label: 'My Bank Accounts', icon: '🏦', path: '/mybankaccounts' },
   { label: 'Logout', icon: '🚪', path: '/' }
 ];
