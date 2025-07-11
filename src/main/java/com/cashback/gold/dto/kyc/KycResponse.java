@@ -8,8 +8,13 @@ import lombok.Data;
 public class KycResponse {
     private Long id;
     private Long userId;
-    private String type; // User, B2B, Partner
-    private String doc1Url;
-    private String doc2Url;
+    private String userType;
+    private String aadharUrl;
+    private String panUrl;
+    private String gstCertificateUrl;
+    private String panCardUrl;
+    private String addressProofUrl;
+    private String bankStatementUrl;
     private String status;
+    private String submittedAt; // Added for frontend
 }

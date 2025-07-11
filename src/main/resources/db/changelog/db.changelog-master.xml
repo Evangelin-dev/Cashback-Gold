@@ -27,6 +27,70 @@
         </createTable>
     </changeSet>
 
+<!--    &lt;!&ndash; Users Table &ndash;&gt;-->
+<!--    <changeSet id="2" author="azeem">-->
+<!--        <createTable tableName="users">-->
+<!--            <column name="id" type="BIGSERIAL">-->
+<!--                <constraints primaryKey="true"/>-->
+<!--            </column>-->
+<!--            <column name="full_name" type="VARCHAR(100)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="gender" type="VARCHAR(20)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="dob" type="DATE">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="email" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false" unique="true"/>-->
+<!--            </column>-->
+<!--            <column name="mobile" type="VARCHAR(20)">-->
+<!--                <constraints nullable="false" unique="true"/>-->
+<!--            </column>-->
+<!--            <column name="country_code" type="VARCHAR(10)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="city" type="VARCHAR(100)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="town" type="VARCHAR(100)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="state" type="VARCHAR(100)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="country" type="VARCHAR(100)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="password" type="VARCHAR(255)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="role" type="VARCHAR(50)">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">-->
+<!--                <constraints nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>-->
+<!--            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="3" author="cseazeem">-->
+<!--        <sql>-->
+<!--            ALTER TABLE users ADD CONSTRAINT chk_user_role-->
+<!--                CHECK (role IN ('ADMIN', 'PARTNER', 'B2B', 'USER'));-->
+<!--        </sql>-->
+<!--    </changeSet>-->
+
+<!--    <changeSet id="3-1" author="cseazeem">-->
+<!--        <sql>-->
+<!--            ALTER TABLE users ADD CONSTRAINT chk_user_status-->
+<!--                CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'));-->
+<!--        </sql>-->
+<!--    </changeSet>-->
+
     <!-- Users Table -->
     <changeSet id="2" author="azeem">
         <createTable tableName="users">
@@ -72,11 +136,16 @@
             <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
                 <constraints nullable="false"/>
             </column>
-            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
-            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
         </createTable>
     </changeSet>
 
+    <!-- Add role constraint -->
     <changeSet id="3" author="cseazeem">
         <sql>
             ALTER TABLE users ADD CONSTRAINT chk_user_role
@@ -84,6 +153,7 @@
         </sql>
     </changeSet>
 
+    <!-- Add status constraint -->
     <changeSet id="3-1" author="cseazeem">
         <sql>
             ALTER TABLE users ADD CONSTRAINT chk_user_status
@@ -91,6 +161,76 @@
         </sql>
     </changeSet>
 
+    <!-- KYC Documents Table -->
+    <changeSet id="3-2" author="azeem">
+        <createTable tableName="kyc_documents">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_kyc_user" references="users(id)"/>
+            </column>
+            <column name="user_type" type="VARCHAR(20)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="aadhar_url" type="TEXT"/>
+            <column name="pan_url" type="TEXT"/>
+            <column name="gst_certificate_url" type="TEXT"/>
+            <column name="pan_card_url" type="TEXT"/>
+            <column name="address_proof_url" type="TEXT"/>
+            <column name="bank_statement_url" type="TEXT"/>
+            <column name="submitted_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Add status constraint for kyc_documents -->
+    <changeSet id="3-3" author="azeem">
+        <sql>
+            ALTER TABLE kyc_documents ADD CONSTRAINT chk_kyc_status
+                CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'));
+        </sql>
+    </changeSet>
+
+    <!-- Add indexes for performance -->
+    <changeSet id="3-4" author="azeem">
+        <createIndex tableName="users" indexName="idx_users_email">
+            <column name="email"/>
+        </createIndex>
+        <createIndex tableName="users" indexName="idx_users_mobile">
+            <column name="mobile"/>
+        </createIndex>
+        <createIndex tableName="kyc_documents" indexName="idx_kyc_user_id">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex tableName="kyc_documents" indexName="idx_kyc_user_type">
+            <column name="user_type"/>
+        </createIndex>
+    </changeSet>
+
+<!--    <changeSet id="4" author="azeem">-->
+<!--        <insert tableName="users">-->
+<!--            <column name="full_name" value="Admin User"/>-->
+<!--            <column name="gender" value="male"/>-->
+<!--            <column name="dob" value="1990-01-01"/>-->
+<!--            <column name="email" value="admin@example.com"/>-->
+<!--            <column name="mobile" value="+919999999999"/>-->
+<!--            <column name="country_code" value="+91"/>-->
+<!--            <column name="city" value="Admin City"/>-->
+<!--            <column name="town" value="Admin Town"/>-->
+<!--            <column name="state" value="Admin State"/>-->
+<!--            <column name="country" value="Admin Country"/>-->
+<!--            <column name="password" value="$2a$10$2FW0Fob1PaYrgoR6h0/8EeTmVr.fgMI4n04Pqba7crwFPSFb.Kgzm"/> &lt;!&ndash; password: password123 &ndash;&gt;-->
+<!--            <column name="role" value="ADMIN"/>-->
+<!--            <column name="status" value="APPROVED"/>-->
+<!--            <column name="created_at" valueDate="NOW()"/>-->
+<!--            <column name="updated_at" valueDate="NOW()"/>-->
+<!--        </insert>-->
+<!--    </changeSet>-->
+
+    <!-- Insert Admin User -->
     <changeSet id="4" author="azeem">
         <insert tableName="users">
             <column name="full_name" value="Admin User"/>
@@ -103,11 +243,11 @@
             <column name="town" value="Admin Town"/>
             <column name="state" value="Admin State"/>
             <column name="country" value="Admin Country"/>
-            <column name="password" value="$2a$10$2FW0Fob1PaYrgoR6h0/8EeTmVr.fgMI4n04Pqba7crwFPSFb.Kgzm"/> <!-- password: password123 -->
+            <column name="password" value="$2a$10$2FW0Fob1PaYrgoR6h0/8EeTmVr.fgMI4n04Pqba7crwFPSFb.Kgzm"/>
             <column name="role" value="ADMIN"/>
             <column name="status" value="APPROVED"/>
-            <column name="created_at" valueDate="NOW()"/>
-            <column name="updated_at" valueDate="NOW()"/>
+            <column name="created_at" valueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" valueComputed="CURRENT_TIMESTAMP"/>
         </insert>
     </changeSet>
 
@@ -171,26 +311,26 @@
         </createTable>
     </changeSet>
 
-    <changeSet id="6" author="azeem">
-        <createTable tableName="kyc_documents">
-            <column name="id" type="BIGSERIAL">
-                <constraints primaryKey="true" nullable="false"/>
-            </column>
-            <column name="user_id" type="BIGINT"/>
-            <column name="type" type="VARCHAR(20)"/>
-            <column name="status" type="VARCHAR(20)" defaultValue="PENDING"/>
-            <column name="aadhar_or_gst_url" type="TEXT"/>
-            <column name="pan_or_agreement_url" type="TEXT"/>
-            <column name="submitted_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
-        </createTable>
-    </changeSet>
+<!--    <changeSet id="6" author="azeem">-->
+<!--        <createTable tableName="kyc_documents">-->
+<!--            <column name="id" type="BIGSERIAL">-->
+<!--                <constraints primaryKey="true" nullable="false"/>-->
+<!--            </column>-->
+<!--            <column name="user_id" type="BIGINT"/>-->
+<!--            <column name="type" type="VARCHAR(20)"/>-->
+<!--            <column name="status" type="VARCHAR(20)" defaultValue="PENDING"/>-->
+<!--            <column name="aadhar_or_gst_url" type="TEXT"/>-->
+<!--            <column name="pan_or_agreement_url" type="TEXT"/>-->
+<!--            <column name="submitted_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>-->
+<!--        </createTable>-->
+<!--    </changeSet>-->
 
-    <changeSet id="6-1" author="azeem">
-        <sql>
-            ALTER TABLE kyc_documents ADD CONSTRAINT chk_kyc_documents_status
-                CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'));
-        </sql>
-    </changeSet>
+<!--    <changeSet id="6-1" author="azeem">-->
+<!--        <sql>-->
+<!--            ALTER TABLE kyc_documents ADD CONSTRAINT chk_kyc_documents_status-->
+<!--                CHECK (status IN ('PENDING', 'APPROVED', 'REJECTED'));-->
+<!--        </sql>-->
+<!--    </changeSet>-->
 
     <changeSet id="7" author="azeem">
         <createTable tableName="marketing_resources">
@@ -370,6 +510,31 @@
             <column name="type" type="VARCHAR(50)"/>
             <column name="created_at" type="TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <!-- B2B Profiles Table -->
+    <changeSet id="14" author="azeem">
+        <createTable tableName="b2b_profiles">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" unique="true" foreignKeyName="fk_b2b_user" references="users(id)"/>
+            </column>
+            <column name="company_name" type="VARCHAR(255)"/>
+            <column name="gstin" type="VARCHAR(15)"/>
+            <column name="pan" type="VARCHAR(10)"/>
+            <column name="address" type="TEXT"/>
+            <column name="bank_account" type="VARCHAR(100)"/>
+            <column name="upi" type="VARCHAR(100)"/>
+            <column name="team_email" type="VARCHAR(255)"/>
+            <column name="gst_certificate_url" type="TEXT"/>
+            <column name="pan_card_url" type="TEXT"/>
+            <column name="address_proof_url" type="TEXT"/>
+            <column name="bank_statement_url" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
     </changeSet>
 

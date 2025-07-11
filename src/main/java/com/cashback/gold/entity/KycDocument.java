@@ -15,22 +15,51 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @Builder
 public class KycDocument {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(name = "user_id", nullable = false)
     private Long userId;
 
-    private String type;
+    @Column(name = "user_type")
+    private String userType;
 
-    @Column(name = "aadhar_or_gst_url")
-    private String doc1Url;
+    @Column(name = "aadhar_url")
+    private String aadharUrl;
 
-    @Column(name = "pan_or_agreement_url")
-    private String doc2Url;
+    @Column(name = "pan_url")
+    private String panUrl;
 
-    private String status; // PENDING, APPROVED, REJECTED
+    @Column(name = "gst_certificate_url")
+    private String gstCertificateUrl;
 
-    private LocalDateTime submittedAt;
+    @Column(name = "pan_card_url")
+    private String panCardUrl;
+
+    @Column(name = "address_proof_url")
+    private String addressProofUrl;
+
+    @Column(name = "bank_statement_url")
+    private String bankStatementUrl;
+
+    @Column(name = "status", nullable = false)
+    @Builder.Default
+    private String status = "PENDING";
+
+    @Column(name = "submitted_at", nullable = false)
+    @Builder.Default
+    private LocalDateTime submittedAt = LocalDateTime.now();
+
+    @ManyToOne
+    @JoinColumn(name = "user_id", insertable = false, updatable = false)
+    private User user;
+
+    @PrePersist
+    @PreUpdate
+    private void validateStatus() {
+        if (!"PENDING".equals(status) && !"APPROVED".equals(status) && !"REJECTED".equals(status)) {
+            throw new IllegalArgumentException("Status must be PENDING, APPROVED, or REJECTED");
+        }
+    }
 }
