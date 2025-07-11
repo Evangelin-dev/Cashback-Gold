@@ -12,6 +12,7 @@ import com.cashback.gold.service.aws.S3Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Page;
@@ -30,12 +31,13 @@ public class OrnamentService {
     private final ObjectMapper objectMapper;
 
     public List<OrnamentResponse> getAll(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return repo.findAll(pageable)
                 .stream()
                 .map(this::toResponse)
                 .toList();
     }
+
 
     public OrnamentResponse create(MultipartFile mainImage, List<MultipartFile> subImages, String dataJson) {
         OrnamentRequest req = parse(dataJson);
