@@ -5,6 +5,7 @@ import com.cashback.gold.dto.ornament.OrnamentResponse;
 import com.cashback.gold.dto.ornament.PriceBreakupDTO;
 import com.cashback.gold.entity.Ornament;
 import com.cashback.gold.entity.PriceBreakup;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.OrnamentRepository;
 import com.cashback.gold.repository.PriceBreakupRepository;
 import com.cashback.gold.service.aws.S3Service;
@@ -94,7 +95,7 @@ public class OrnamentService {
         try {
             return objectMapper.readValue(json, OrnamentRequest.class);
         } catch (Exception e) {
-            throw new RuntimeException("Invalid JSON: " + e.getMessage());
+            throw new InvalidArgumentException("Invalid JSON: " + e.getMessage());
         }
     }
 

@@ -3,6 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.MarketingResourceRequest;
 import com.cashback.gold.dto.MarketingResourceResponse;
 import com.cashback.gold.entity.MarketingResource;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.MarketingResourceRepository;
 import com.cashback.gold.service.aws.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -50,14 +51,14 @@ public class MarketingResourceService {
 
     public void toggleStatus(Long id) {
         MarketingResource resource = resourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Resource not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Resource not found"));
         resource.setStatus(resource.getStatus().equals("ACTIVE") ? "INACTIVE" : "ACTIVE");
         resourceRepository.save(resource);
     }
 
     public MarketingResourceResponse update(Long id, MarketingResourceRequest request) {
         MarketingResource resource = resourceRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Resource not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Resource not found"));
         resource.setTitle(request.getTitle());
         resource.setDescription(request.getDescription());
         return toResponse(resourceRepository.save(resource));

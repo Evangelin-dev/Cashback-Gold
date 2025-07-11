@@ -2,6 +2,7 @@ package com.cashback.gold.service;
 
 import com.cashback.gold.dto.GoldPlantSchemeRequest;
 import com.cashback.gold.entity.GoldPlantScheme;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.GoldPlantSchemeRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -33,7 +34,7 @@ public class GoldPlantSchemeService {
 
     public GoldPlantScheme update(Long id, GoldPlantSchemeRequest req) {
         GoldPlantScheme scheme = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Scheme not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Scheme not found"));
         scheme.setName(req.getName());
         scheme.setDuration(req.getDuration());
         scheme.setMinInvest(req.getMinInvest());

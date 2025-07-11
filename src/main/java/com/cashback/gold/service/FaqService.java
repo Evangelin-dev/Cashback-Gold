@@ -3,6 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.FaqRequest;
 import com.cashback.gold.entity.Faq;
 import com.cashback.gold.enums.FaqType;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.FaqRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -32,7 +33,7 @@ public class FaqService {
 
     public Faq update(Long id, FaqRequest request) {
         Faq faq = faqRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("FAQ not found"));
+                .orElseThrow(() -> new InvalidArgumentException("FAQ not found"));
         faq.setQuestion(request.getQuestion());
         faq.setAnswer(request.getAnswer());
         faq.setType(request.getType());
