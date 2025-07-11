@@ -36,6 +36,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/gold-plants").hasAuthority("ADMIN")
                         .requestMatchers("/api/admin/campaigns").hasAuthority("ADMIN")
                         .requestMatchers("/api/bank-accounts").hasAuthority("ADMIN")
+                        .requestMatchers("/api/faqs").hasAuthority("ADMIN")
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

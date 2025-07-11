@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.sql.Timestamp;
+import java.util.List;
 
 @Entity
 @Table(name = "ornaments")
@@ -15,7 +16,6 @@ import java.sql.Timestamp;
 @AllArgsConstructor
 @Builder
 public class Ornament {
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -53,6 +53,9 @@ public class Ornament {
     private String purity;
     private String quality;
     private String details;
+
+    @OneToMany(mappedBy = "ornament", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<PriceBreakup> priceBreakups; // New field
 
     @Column(name = "created_at", updatable = false, insertable = false)
     private Timestamp createdAt;

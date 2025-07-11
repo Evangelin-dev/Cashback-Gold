@@ -2,6 +2,8 @@ package com.cashback.gold.dto.ornament;
 
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class OrnamentRequest {
     private String name;
@@ -17,5 +19,5 @@ public class OrnamentRequest {
     private String purity;
     private String quality;
     private String details;
+    private List<PriceBreakupDTO> priceBreakups; // New field
 }
-

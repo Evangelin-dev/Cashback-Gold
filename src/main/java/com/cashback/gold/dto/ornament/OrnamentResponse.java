@@ -24,5 +24,5 @@ public class OrnamentResponse {
     private String purity;
     private String quality;
     private String details;
+    private List<PriceBreakupDTO> priceBreakups;
 }
-

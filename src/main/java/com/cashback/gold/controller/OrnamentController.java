@@ -20,17 +20,20 @@ public class OrnamentController {
     @GetMapping
     public ResponseEntity<List<OrnamentResponse>> all(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
+            @RequestParam(defaultValue = "5") int size) { // Changed size to match frontend (5 items per page)
         return ResponseEntity.ok(service.getAll(page, size));
     }
-
 
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<OrnamentResponse> create(
             @RequestPart("mainImage") MultipartFile mainImage,
-            @RequestPart("subImages") List<MultipartFile> subImages,
+            @RequestPart(value = "subImages", required = false) List<MultipartFile> subImages,
             @RequestPart("data") String dataJson
     ) {
+        // Validate mainImage
+        if (mainImage == null || mainImage.isEmpty()) {
+            return ResponseEntity.badRequest().body(null);
+        }
         return ResponseEntity.ok(service.create(mainImage, subImages, dataJson));
     }
 
@@ -50,4 +53,3 @@ public class OrnamentController {
         return ResponseEntity.ok().body("Deleted");
     }
 }
-

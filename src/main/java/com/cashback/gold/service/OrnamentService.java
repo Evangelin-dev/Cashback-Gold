@@ -2,8 +2,11 @@ package com.cashback.gold.service;
 
 import com.cashback.gold.dto.ornament.OrnamentRequest;
 import com.cashback.gold.dto.ornament.OrnamentResponse;
+import com.cashback.gold.dto.ornament.PriceBreakupDTO;
 import com.cashback.gold.entity.Ornament;
+import com.cashback.gold.entity.PriceBreakup;
 import com.cashback.gold.repository.OrnamentRepository;
+import com.cashback.gold.repository.PriceBreakupRepository;
 import com.cashback.gold.service.aws.S3Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
@@ -13,14 +16,15 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class OrnamentService {
 
     private final OrnamentRepository repo;
+    private final PriceBreakupRepository priceBreakupRepo;
     private final S3Service s3Service;
     private final ObjectMapper objectMapper;
 
@@ -32,7 +36,6 @@ public class OrnamentService {
                 .toList();
     }
 
-
     public OrnamentResponse create(MultipartFile mainImage, List<MultipartFile> subImages, String dataJson) {
         OrnamentRequest req = parse(dataJson);
 
@@ -43,6 +46,14 @@ public class OrnamentService {
 
         // Upload and assign sub images (max 4)
         assignSubImages(ornament, subImages);
+
+        // Set price breakups
+        if (req.getPriceBreakups() != null) {
+            List<PriceBreakup> priceBreakups = req.getPriceBreakups().stream()
+                    .map(dto -> toPriceBreakupEntity(dto, ornament))
+                    .collect(Collectors.toList());
+            ornament.setPriceBreakups(priceBreakups);
+        }
 
         return toResponse(repo.save(ornament));
     }
@@ -61,18 +72,29 @@ public class OrnamentService {
             assignSubImages(ornament, subImages);
         }
 
+        // Update price breakups
+        if (req.getPriceBreakups() != null) {
+            // Clear existing price breakups
+            ornament.getPriceBreakups().clear();
+            // Add new price breakups
+            List<PriceBreakup> priceBreakups = req.getPriceBreakups().stream()
+                    .map(dto -> toPriceBreakupEntity(dto, ornament))
+                    .collect(Collectors.toList());
+            ornament.setPriceBreakups(priceBreakups);
+        }
+
         return toResponse(repo.save(ornament));
     }
 
     public void delete(Long id) {
-        repo.deleteById(id);
+        repo.deleteById(id); // Price breakups are deleted automatically due to cascade
     }
 
     private OrnamentRequest parse(String json) {
         try {
             return objectMapper.readValue(json, OrnamentRequest.class);
         } catch (Exception e) {
-            throw new RuntimeException("Invalid JSON");
+            throw new RuntimeException("Invalid JSON: " + e.getMessage());
         }
     }
 
@@ -109,8 +131,39 @@ public class OrnamentService {
                 .category(o.getCategory()).subCategory(o.getSubCategory()).gender(o.getGender())
                 .description1(o.getDescription1()).description2(o.getDescription2()).description3(o.getDescription3())
                 .description(o.getDescription()).mainImage(o.getMainImage())
-                .subImages(List.of(o.getSubImage1(), o.getSubImage2(), o.getSubImage3(), o.getSubImage4()))
+                .subImages(List.of(
+                        o.getSubImage1(),
+                        o.getSubImage2(),
+                        o.getSubImage3(),
+                        o.getSubImage4()
+                ).stream().filter(url -> url != null).collect(Collectors.toList()))
                 .material(o.getMaterial()).purity(o.getPurity()).quality(o.getQuality()).details(o.getDetails())
+                .priceBreakups(o.getPriceBreakups().stream()
+                        .map(this::toPriceBreakupDTO)
+                        .collect(Collectors.toList()))
+                .build();
+    }
+
+    private PriceBreakup toPriceBreakupEntity(PriceBreakupDTO dto, Ornament ornament) {
+        return PriceBreakup.builder()
+                .id(dto.getId())
+                .ornament(ornament)
+                .component(dto.getComponent())
+                .goldRate18kt(dto.getGoldRate18kt())
+                .weightG(dto.getWeightG())
+                .discount(dto.getDiscount())
+                .finalValue(dto.getFinalValue())
+                .build();
+    }
+
+    private PriceBreakupDTO toPriceBreakupDTO(PriceBreakup entity) {
+        return PriceBreakupDTO.builder()
+                .id(entity.getId())
+                .component(entity.getComponent())
+                .goldRate18kt(entity.getGoldRate18kt())
+                .weightG(entity.getWeightG())
+                .discount(entity.getDiscount())
+                .finalValue(entity.getFinalValue())
                 .build();
     }
 }

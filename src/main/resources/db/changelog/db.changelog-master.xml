@@ -128,6 +128,7 @@
             <column name="description1" type="TEXT"/>
             <column name="description2" type="TEXT"/>
             <column name="description3" type="TEXT"/>
+            <column name="description" type="TEXT"/>
             <column name="main_image" type="TEXT"/>
             <column name="sub_image1" type="TEXT"/>
             <column name="sub_image2" type="TEXT"/>
@@ -137,7 +138,34 @@
             <column name="purity" type="VARCHAR(100)"/>
             <column name="quality" type="VARCHAR(100)"/>
             <column name="details" type="TEXT"/>
-            <column name="description" type="TEXT"/>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="5-1" author="azeem">
+        <createTable tableName="price_breakups">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="ornament_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_price_breakup_ornament" references="ornaments(id)"/>
+            </column>
+            <column name="component" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gold_rate_18kt" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="weight_g" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="discount" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="final_value" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
@@ -330,6 +358,19 @@
             ALTER TABLE bank_accounts ADD CONSTRAINT chk_bank_accounts_status
                 CHECK (status IN ('ACTIVE','INACTIVE'));
         </sql>
+    </changeSet>
+
+    <changeSet id="13" author="azeem">
+        <createTable tableName="faqs">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="question" type="TEXT"/>
+            <column name="answer" type="TEXT"/>
+            <column name="type" type="VARCHAR(50)"/>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
     </changeSet>
 
 </databaseChangeLog>
