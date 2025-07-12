@@ -1,13 +1,15 @@
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import type { 
-  LoginCredentials, 
-  RegistrationData, 
-  VerificationData, 
+import type {
+  VerifyLoginOtpData,
+  LoginOtpData,
+  RegistrationData,
+  VerificationData,
   LoginResponse,
   ResendOtpData,
-  ApiResponse 
+  ApiResponse
 } from '../../types/type';
+
 
 const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/auth`;
 
@@ -22,15 +24,31 @@ const getErrorMessage = (error: unknown): string => {
 };
 
 
-export const loginUser = createAsyncThunk<LoginResponse, LoginCredentials>(
-  'auth/login',
-  async (credentials, { rejectWithValue }) => {
+export const sendLoginOtp = createAsyncThunk<ApiResponse, LoginOtpData>(
+  'auth/sendLoginOtp',
+  async (loginData, { rejectWithValue }) => {
     try {
-    
-      const response = await axios.post<LoginResponse>(`${API_BASE_URL}/login`, {
-        email: credentials.email,
-        password: credentials.password,
+      const response = await axios.post<ApiResponse>(`${API_BASE_URL}/login-otp`, {
+        identifier: loginData.identifier,
       });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const verifyLoginOtp = createAsyncThunk<LoginResponse, VerifyLoginOtpData>(
+  'auth/verifyLoginOtp',
+  async (verificationData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post<LoginResponse>(`${API_BASE_URL}/verify-otp2`, {
+        identifier: verificationData.identifier,
+        otp: verificationData.otp,
+      });
+      if (!response.data.success) {
+        return rejectWithValue(response.data.message);
+      }
       return response.data;
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
@@ -74,7 +92,7 @@ export const verifyOtpAndRegister = createAsyncThunk<LoginResponse, Verification
   'auth/verifyOtpAndRegister',
   async (verificationData, { rejectWithValue }) => {
     try {
-       const response = await axios.post<any>(`${API_BASE_URL}/verify-otp`, {
+      const response = await axios.post<any>(`${API_BASE_URL}/verify-otp`, {
         identifier: verificationData.email,
         otp: verificationData.otp,
         fullName: verificationData.fullName,
@@ -101,16 +119,16 @@ export const verifyOtpAndRegister = createAsyncThunk<LoginResponse, Verification
 
 
 export const resendOtp = createAsyncThunk<ApiResponse, ResendOtpData>(
-    'auth/resendOtp',
-    async (resendData, { rejectWithValue }) => {
-        try {
-            const response = await axios.post<ApiResponse>(`${API_BASE_URL}/resend-otp`, {
-                identifier: resendData.email,
-                role: 'USER',
-            });
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(getErrorMessage(error));
-        }
+  'auth/resendOtp',
+  async (resendData, { rejectWithValue }) => {
+    try {
+      const response = await axios.post<ApiResponse>(`${API_BASE_URL}/resend-otp`, {
+        identifier: resendData.email,
+        role: 'USER',
+      });
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
     }
+  }
 );
