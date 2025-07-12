@@ -4,6 +4,5 @@ import lombok.Data;
 
 @Data
 public class OtpLoginRequest {
-    private String identifier;
-    private String otp;
+    private String identifier; // Can be either email or mobile
 }

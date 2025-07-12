@@ -17,6 +17,7 @@ public class OtpService {
 
     private final OtpVerificationRepository otpRepo;
     private final EmailService emailService;
+    private final SmsService smsService;
 
     @Transactional
     public void sendOtp(String identifier) {
@@ -36,8 +37,13 @@ public class OtpService {
         otpVerification.setCreatedAt(LocalDateTime.now());
         otpRepo.save(otpVerification);
 
-        emailService.sendOtpEmail(identifier, otp);
+        if (identifier.contains("@")) {
+            emailService.sendOtpEmail(identifier, otp);
+        } else {
+            smsService.sendOtpSms(identifier, otp);
+        }
     }
+
 
     public boolean verifyOtp(String identifier, String otp) {
         OtpVerification record = otpRepo.findTopByIdentifierOrderByIdDesc(identifier)
