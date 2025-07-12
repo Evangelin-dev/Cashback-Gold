@@ -53,6 +53,18 @@ public class SecurityConfig {
                         .requestMatchers("/api/b2b/profile").hasAuthority("B2B")
                         // Original KYC endpoint (optional, if still used)
                         .requestMatchers(HttpMethod.POST, "/api/kyc").hasAnyAuthority("USER", "B2B", "PARTNER")
+                        .requestMatchers("/wallet/**").hasAnyAuthority("B2B")
+                        .requestMatchers("/api/gold/admin/**").hasAuthority("ADMIN") // ✅ Gold admin APIs
+                        .requestMatchers("/api/b2b/support").hasAuthority("B2B")
+                        .requestMatchers(HttpMethod.POST,"/api/b2b/support").hasAuthority("B2B")
+                        .requestMatchers(HttpMethod.GET,"/api/b2b/support/**").hasAuthority("ADMIN")
+                        .requestMatchers("/api/sips").hasAnyAuthority("B2B")
+
+                        // ✅ Gold Purchase APIs for Users and B2B
+                        .requestMatchers("/api/gold/purchase").hasAnyAuthority("USER", "B2B")
+                        .requestMatchers("/api/gold/user").hasAnyAuthority("USER", "B2B")
+                        .requestMatchers("/api/gold/orders/my").hasAnyAuthority("USER", "B2B")
+                        .requestMatchers("/api/gold/rate").permitAll()
                         // All other requests require authentication
                         .anyRequest().authenticated()
                 )

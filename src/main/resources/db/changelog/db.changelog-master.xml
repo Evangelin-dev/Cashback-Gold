@@ -538,4 +538,222 @@
         </createTable>
     </changeSet>
 
+    <!-- Wallets Table -->
+    <changeSet id="15" author="azeem">
+        <createTable tableName="wallets">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="balance" type="DECIMAL(15,2)" defaultValue="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="credit_limit" type="DECIMAL(15,2)" defaultValue="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="used_credit" type="DECIMAL(15,2)" defaultValue="0.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                constraintName="fk_wallet_user"
+                baseTableName="wallets"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Wallet Transactions Table -->
+    <changeSet id="16" author="azeem">
+        <createTable tableName="wallet_transactions">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="wallet_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DECIMAL(15,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payment_method" type="VARCHAR(50)"/>
+            <column name="status" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <addForeignKeyConstraint
+                constraintName="fk_transaction_wallet"
+                baseTableName="wallet_transactions"
+                baseColumnNames="wallet_id"
+                referencedTableName="wallets"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+    <!-- Add constraints for wallet_transactions -->
+    <changeSet id="17" author="azeem">
+        <sql>
+            ALTER TABLE wallet_transactions ADD CONSTRAINT chk_transaction_type
+                CHECK (type IN ('TOPUP', 'PURCHASE'));
+            ALTER TABLE wallet_transactions ADD CONSTRAINT chk_transaction_status
+                CHECK (status IN ('PENDING', 'COMPLETED', 'FAILED'));
+        </sql>
+    </changeSet>
+
+    <!-- Gold Purchase Table -->
+    <changeSet id="18" author="azeem">
+        <createTable tableName="gold_purchase">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="rate_per_gram" type="NUMERIC(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="NUMERIC(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="delivery_type" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payment_method" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_price" type="NUMERIC(14,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="19" author="cseazeem">
+        <createTable tableName="gold_purchase_orders">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="customer_type" type="VARCHAR(10)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="quantity" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="price_per_gram" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_amount" type="DECIMAL(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="delivery_method" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="payment_method" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="PENDING">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="19-1" author="cseazeem">
+        <sql>
+            ALTER TABLE gold_purchase_orders
+                ADD CONSTRAINT chk_customer_type
+                    CHECK (customer_type IN ('USER', 'B2B'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="20-2" author="cseazeem">
+        <sql>
+            ALTER TABLE gold_purchase_orders
+                ADD CONSTRAINT chk_order_status
+                    CHECK (status IN ('PENDING', 'PROCESSING', 'COMPLETED', 'CANCELLED'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="21" author="azeem">
+        <createTable tableName="support_tickets">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT"/>
+            <column name="subject" type="VARCHAR(255)"/>
+            <column name="message" type="TEXT"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="OPEN"/>
+            <column name="submitted_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <!-- Create sips table -->
+    <changeSet id="22" author="cseazeem">
+        <createTable tableName="sips">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_sip_user" references="users(id)"/>
+            </column>
+            <column name="start_date" type="DATE">
+                <constraints nullable="false"/>
+            </column>
+            <column name="amount" type="DOUBLE PRECISION">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration" type="INTEGER">
+                <constraints nullable="false"/>
+            </column>
+            <column name="plan" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="plan_name" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="Active">
+                <constraints nullable="false"/>
+            </column>
+            <column name="commission" type="VARCHAR(20)" defaultValue="₹0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <!-- Add status constraint -->
+    <changeSet id="23" author="cseazeem">
+        <sql>
+            ALTER TABLE sips ADD CONSTRAINT chk_sip_status
+                CHECK (STATUS IN ('ACTIVE', 'CANCELLED', 'COMPLETED'));
+        </sql>
+    </changeSet>
 </databaseChangeLog>

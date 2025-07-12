@@ -1,10 +1,13 @@
 package com.cashback.gold;
 
+import com.cashback.gold.config.MetalApiProperties;
 import io.github.cdimascio.dotenv.Dotenv;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.context.properties.EnableConfigurationProperties;
 
 @SpringBootApplication(scanBasePackages = "com.cashback.gold")
+@EnableConfigurationProperties(MetalApiProperties.class)
 public class CashbackGoldApplication {
 
 	public static void main(String[] args) {
