@@ -92,7 +92,7 @@ import SIPPlanDisclaimer from "./src/app/user/SIPDisclaimer/sipdisclaimer";
 import ShippingPolicy from "./src/app/user/ShippingPolicy/shippingpolicy";
 import LSIPPlanDisclaimer from "./src/app/loginuser/SIPDisclaimer/sipdisclaimer";
 import LShippingPolicy from "./src/app/loginuser/ShippingPolicy/shippingpolicy";
-import SchemesFlyer from "./src/app/admin/SchemesFlyer/Schemesflyer.tsx";
+import SchemesFlyer from "./src/app/admin/Schemes-Flyer/Schemeflyer";
 
 const AppRoutes: React.FC = () => {
   return (
