@@ -1,382 +1,310 @@
-import { ChevronLeft, ChevronRight, Edit, Plus, Save, Search, Trash2, X } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import axiosInstance from '../../../utils/axiosInstance';
+
 
 interface FAQ {
   id: number;
   question: string;
   answer: string;
-  createdAt: string;
-  updatedAt: string;
-  type?: 'home' | 'chit' | 'sip' | 'scheme';
+  type: string;
 }
 
-const FAQManagement = () => {
+const faqTypes = ['HOME', 'CHIT', 'SIP', 'SCHEME'];
+
+const ManageFaq: React.FC = () => {
   const [faqs, setFaqs] = useState<FAQ[]>([]);
-  const [showModal, setShowModal] = useState(false);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(0);
+  const [totalPages, setTotalPages] = useState<number>(0);
+  const [totalElements, setTotalElements] = useState<number>(0);
+  const [searchTerm, setSearchTerm] = useState<string>('');
+  const [filterType, setFilterType] = useState<string>('All');
+  const [isModalOpen, setIsModalOpen] = useState<boolean>(false);
   const [editingFaq, setEditingFaq] = useState<FAQ | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(5);
-  const [faqType, setFaqType] = useState<'home' | 'chit' | 'sip' | 'scheme' | ''>('');
-  const [filterType, setFilterType] = useState<'home' | 'chit' | 'sip' | 'scheme' | 'all'>('all');
-  
-  // Form states
-  const [formData, setFormData] = useState({
-    question: '',
-    answer: ''
-  });
+  const [formData, setFormData] = useState({ question: '', answer: '', type: 'SIP' });
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState<boolean>(false);
+  const [faqToDelete, setFaqToDelete] = useState<number | null>(null);
 
-  // Initialize with sample data
+  const pageSize = 5;
+
+
+  const fetchFaqs = useCallback(async () => {
+    setLoading(true);
+
+    try {
+      const searchParam = searchTerm ? searchTerm : 'reset';
+      const typeParam = filterType === 'All' ? '' : `&type=${filterType}`;
+      const url = `/api/faqs?${typeParam}&page=${currentPage}&size=${pageSize}`;
+      const response = await axiosInstance.get(url);
+      setFaqs(response.data.content);
+      setTotalPages(response.data.totalPages);
+      setTotalElements(response.data.totalElements);
+      setError(null);
+    } catch (err) {
+      setError('Failed to fetch FAQs. Please try again later.');
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  }, [currentPage, searchTerm, filterType]);
+
   useEffect(() => {
-    const sampleFaqs: FAQ[] = [
-      {
-        id: 1,
-        question: "How do I reset my password?",
-        answer: "You can reset your password by clicking on the 'Forgot Password' link on the login page and following the instructions sent to your email.",
-        createdAt: "2024-01-15",
-        updatedAt: "2024-01-15",
-        type: 'home'
-      },
-      {
-        id: 2,
-        question: "What are the system requirements?",
-        answer: "Our system works on all modern web browsers including Chrome, Firefox, Safari, and Edge. You need an internet connection and JavaScript enabled.",
-        createdAt: "2024-01-16",
-        updatedAt: "2024-01-16",
-        type: 'chit'
-      },
-      {
-        id: 3,
-        question: "How do I contact support?",
-        answer: "You can contact our support team through the help desk, email at support@example.com, or by calling our toll-free number 1-800-HELP.",
-        createdAt: "2024-01-17",
-        updatedAt: "2024-01-17",
-        type: 'sip'
-      }
-    ];
-    setFaqs(sampleFaqs);
-  }, []);
+    fetchFaqs();
+  }, [fetchFaqs]);
 
-  // Filter FAQs based on search term and type
-  const filteredFaqs = faqs.filter(faq => {
-    const matchesSearch = faq.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      faq.answer.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = filterType === 'all' || faq.type === filterType;
-    return matchesSearch && matchesType;
-  });
 
-  // Pagination logic
-  const indexOfLastItem = currentPage * itemsPerPage;
-  const indexOfFirstItem = indexOfLastItem - itemsPerPage;
-  const currentItems = filteredFaqs.slice(indexOfFirstItem, indexOfLastItem);
-  const totalPages = Math.ceil(filteredFaqs.length / itemsPerPage);
-
-  const handleSubmit = () => {
-    if (!formData.question.trim() || !formData.answer.trim() || !faqType) {
-      alert('Please fill in all required fields and select a type');
-      return;
-    }
-    
-    if (editingFaq) {
-      // Update existing FAQ
-      setFaqs(faqs.map(faq => 
-        faq.id === editingFaq.id 
-          ? { ...faq, ...formData, type: faqType, updatedAt: new Date().toISOString().split('T')[0] }
-          : faq
-      ));
-    } else {
-      // Add new FAQ
-      const newFaq: FAQ = {
-        id: Date.now(),
-        ...formData,
-        type: faqType,
-        createdAt: new Date().toISOString().split('T')[0],
-        updatedAt: new Date().toISOString().split('T')[0]
-      } as any;
-      setFaqs([...faqs, newFaq]);
-    }
-    
-    resetForm();
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
 
-  const resetForm = () => {
-    setFormData({ question: '', answer: '' });
+
+  const handleAddNew = () => {
     setEditingFaq(null);
-    setShowModal(false);
-    setFaqType('');
+    setFormData({ question: '', answer: '', type: 'SIP' });
+    setIsModalOpen(true);
   };
+
 
   const handleEdit = (faq: FAQ) => {
     setEditingFaq(faq);
-    setFormData({ question: faq.question, answer: faq.answer });
-    setFaqType(faq.type || '');
-    setShowModal(true);
+    setFormData({ question: faq.question, answer: faq.answer, type: faq.type });
+    setIsModalOpen(true);
   };
+
+
+    const handleCreateFaq = async () => {
+    const payload = {
+      question: formData.question,
+      answer: formData.answer,
+      type: formData.type,
+    };
+
+
+    try {
+      await axiosInstance.post('/api/faqs', payload);
+      setIsModalOpen(false);
+      fetchFaqs();
+    } catch (err: any) {
+      console.error('CREATE operation failed:', err.response || err);
+      alert(`Failed to create FAQ. Server responded with status: ${err.response?.status}`);
+    }
+  };
+
+    const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (editingFaq) {
+      handleUpdateFaq();
+    } else {
+      handleCreateFaq();
+    }
+  };
+
+    const handleUpdateFaq = async () => {
+    if (!editingFaq) return; 
+
+    const payload = {
+      question: formData.question,
+      answer: formData.answer,
+      type: formData.type,
+    };
+
+    console.log(`Attempting to UPDATE FAQ ${editingFaq.id} with payload:`, payload);
+
+    try {
+      await axiosInstance.put(`/api/faqs/${editingFaq.id}`, payload);
+      setIsModalOpen(false);
+      fetchFaqs();
+    } catch (err: any) {
+      console.error('UPDATE operation failed:', err.response || err);
+      alert(`Failed to update FAQ. Server responded with status: ${err.response?.status}`);
+    }
+  };
+
 
   const handleDelete = (id: number) => {
-    setFaqs(faqs.filter(faq => faq.id !== id));
+    setFaqToDelete(id);
+    setIsDeleteConfirmOpen(true);
   };
 
-  const handlePageChange = (page: number) => {
-    setCurrentPage(page);
+
+  const confirmDelete = async () => {
+    if (!faqToDelete) return;
+    try {
+      await axiosInstance.delete(`/api/faqs/${faqToDelete}`);
+      setIsDeleteConfirmOpen(false);
+      setFaqToDelete(null);
+
+      if (faqs.length === 1 && currentPage > 0) {
+        setCurrentPage(prev => prev - 1);
+      } else {
+        fetchFaqs();
+      }
+    } catch (err) {
+      setError('Failed to delete FAQ.');
+      console.error(err);
+    }
   };
 
-  // Admin Dashboard Component
-  const AdminDashboard = () => (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg">
-        <div
-          className="p-6 rounded-t-lg"
-          style={{ background: "#7a1335", color: "#fff" }}
-        >
-          <h1 className="text-3xl font-bold">FAQ Management System</h1>
-          <p className="mt-2" style={{ color: "#ffe6ef" }}>Manage frequently asked questions for your users</p>
-        </div>
-        
-        <div className="p-6">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center space-x-4">
-              {/* Removed "View User Dashboard" button */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search FAQs..."
-                  className="pl-10 pr-4 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                  style={{ borderColor: "#7a1335", boxShadow: "none" }}
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                />
-              </div>
-              {/* Filter Dropdown */}
-              <select
-                className="ml-4 px-3 py-2 border rounded-lg focus:outline-none focus:ring-2"
-                style={{ borderColor: "#7a1335", boxShadow: "none" }}
-                value={filterType}
-                onChange={e => setFilterType(e.target.value as any)}
-              >
-                <option value="all">All</option>
-                <option value="home">Home</option>
-                <option value="chit">Chit</option>
-                <option value="sip">SIP</option>
-                <option value="scheme">Scheme</option>
-              </select>
-            </div>
-            <button
-              onClick={() => { setShowModal(true); setFaqType(''); }}
-              className="px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-              style={{
-                background: "#7a1335",
-                color: "#fff"
-              }}
-            >
-              <Plus className="w-4 h-4" />
-              <span>Add New FAQ</span>
-            </button>
-          </div>
 
-          <div className="overflow-x-auto">
-            <table className="w-full border-collapse border border-gray-200">
-              <thead>
-                <tr className="bg-gray-50">
-                  <th className="border border-gray-200 px-4 py-3 text-left font-semibold">Question</th>
-                  <th className="border border-gray-200 px-4 py-3 text-left font-semibold">Answer</th>
-                  <th className="border border-gray-200 px-4 py-3 text-left font-semibold">Type</th>
-                  <th className="border border-gray-200 px-4 py-3 text-left font-semibold">Last Updated</th>
-                  <th className="border border-gray-200 px-4 py-3 text-center font-semibold">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                {currentItems.map((faq) => (
-                  <tr key={faq.id} className="hover:bg-gray-50">
-                    <td className="border border-gray-200 px-4 py-3 max-w-xs">
-                      <div className="font-medium text-gray-900 truncate">{faq.question}</div>
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 max-w-md">
-                      <div className="text-gray-600 truncate">{faq.answer}</div>
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm text-gray-700">
-                      {faq.type ? faq.type.charAt(0).toUpperCase() + faq.type.slice(1) : ''}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-sm text-gray-500">
-                      {faq.updatedAt}
-                    </td>
-                    <td className="border border-gray-200 px-4 py-3 text-center">
-                      <div className="flex justify-center space-x-2">
-                        <button
-                          onClick={() => handleEdit(faq)}
-                          className="text-blue-600 hover:text-blue-800 p-1 rounded transition-colors"
-                        >
-                          <Edit className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => handleDelete(faq.id)}
-                          className="text-red-600 hover:text-red-800 p-1 rounded transition-colors"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex justify-center items-center space-x-2 mt-6">
-              <button
-                onClick={() => handlePageChange(currentPage - 1)}
-                disabled={currentPage === 1}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <ChevronLeft className="w-4 h-4 mr-1" />
-                Previous
-              </button>
-              
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-                <button
-                  key={page}
-                  onClick={() => handlePageChange(page)}
-                  className={`px-3 py-2 text-sm font-medium rounded-lg ${
-                    currentPage === page
-                      ? 'bg-blue-500 text-white'
-                      : 'text-gray-500 bg-white border border-gray-300 hover:bg-gray-100 hover:text-gray-700'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
-              
-              <button
-                onClick={() => handlePageChange(currentPage + 1)}
-                disabled={currentPage === totalPages}
-                className="flex items-center px-3 py-2 text-sm font-medium text-gray-500 bg-white border border-gray-300 rounded-lg hover:bg-gray-100 hover:text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                Next
-                <ChevronRight className="w-4 h-4 ml-1" />
-              </button>
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
+  useEffect(() => {
+    setCurrentPage(0);
+  }, [searchTerm, filterType]);
 
   return (
-    <div className="min-h-screen bg-gray-100">
-      <AdminDashboard />
-      
-      {/* Modal for Add/Edit FAQ */}
-      {showModal && (
-        <div
-          style={{
-            position: "fixed",
-            inset: 0,
-            zIndex: 50,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            background: "rgba(0,0,0,0.5)"
-          }}
-        >
-          <div
-            style={{
-              background: "#fff",
-              borderRadius: "1rem",
-              boxShadow: "0 10px 40px rgba(0,0,0,0.2)",
-              maxWidth: 600,
-              width: "100%",
-              margin: "0 1rem",
-              overflow: "hidden"
-            }}
+    <div className="p-6 bg-gray-50 min-h-screen font-sans">
+      <div className="max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold text-gray-800">Manage FAQs</h1>
+          <button
+            onClick={handleAddNew}
+            className="px-4 py-2 bg-[#7a1335] text-white rounded-md hover:bg-[#630f2a] transition-colors"
           >
-            <div
-              className="p-6 rounded-t-lg"
-              style={{ background: "#7a1335", color: "#fff" }}
-            >
-              <div className="flex justify-between items-center">
-                <h2 className="text-2xl font-bold">
-                  {editingFaq ? 'Edit FAQ' : 'Add New FAQ'}
-                </h2>
+            + Add New FAQ
+          </button>
+        </div>
+
+        <div className="flex gap-4 mb-4 p-4 bg-white rounded-lg shadow-sm">
+          <input
+            type="text"
+            placeholder="Search by question..."
+            value={searchTerm}
+            onChange={e => setSearchTerm(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7a1335]"
+          />
+          <select
+            value={filterType}
+            onChange={e => setFilterType(e.target.value)}
+            className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-[#7a1335]"
+          >
+            <option value="All">All Types</option>
+            {faqTypes.map(type => (
+              <option key={type} value={type}>{type}</option>
+            ))}
+          </select>
+        </div>
+
+        {loading ? (
+          <div className="text-center py-10">Loading...</div>
+        ) : error ? (
+          <div className="text-center py-10 text-red-500">{error}</div>
+        ) : (
+          <>
+            <div className="bg-white rounded-lg shadow-md overflow-hidden">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Question</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Answer</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {faqs.map((faq) => (
+                    <tr key={faq.id}>
+                      <td className="px-6 py-4 whitespace-normal w-1/3 font-medium text-gray-900">{faq.question}</td>
+                      <td className="px-6 py-4 whitespace-normal w-1/2 text-gray-600">{faq.answer}</td>
+                      <td className="px-6 py-4 whitespace-nowrap"><span className="px-2 py-1 text-xs font-semibold bg-blue-100 text-blue-800 rounded-full">{faq.type}</span></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                        <button onClick={() => handleEdit(faq)} className="text-indigo-600 hover:text-indigo-900 mr-4">Edit</button>
+                        <button onClick={() => handleDelete(faq.id)} className="text-red-600 hover:text-red-900">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+
+            <div className="flex justify-between items-center mt-4 p-4 bg-white rounded-lg shadow-sm">
+              <span className="text-sm text-gray-700">
+                Showing page {currentPage + 1} of {totalPages} ({totalElements} total results)
+              </span>
+              <div className="flex gap-2">
                 <button
-                  onClick={resetForm}
-                  className="text-white hover:text-gray-200 transition-colors"
+                  onClick={() => setCurrentPage(prev => prev - 1)}
+                  disabled={currentPage === 0}
+                  className="px-4 py-2 text-sm bg-gray-200 rounded-md disabled:opacity-50"
                 >
-                  <X className="w-6 h-6" />
+                  Previous
+                </button>
+                <button
+                  onClick={() => setCurrentPage(prev => prev + 1)}
+                  disabled={currentPage >= totalPages - 1}
+                  className="px-4 py-2 text-sm bg-gray-200 rounded-md disabled:opacity-50"
+                >
+                  Next
                 </button>
               </div>
             </div>
-            
-            <div className="p-6">
+          </>
+        )}
+      </div>
+
+      {isModalOpen && (
+        <div className="fixed inset-0 top-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white p-8 rounded-lg shadow-xl w-full max-w-2xl">
+            <h2 className="text-2xl font-bold mb-6">{editingFaq ? 'Edit FAQ' : 'Add New FAQ'}</h2>
+            <form onSubmit={handleSubmit}>
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Question *
-                </label>
+                <label htmlFor="question" className="block text-sm font-medium text-gray-700 mb-1">Question</label>
                 <input
                   type="text"
+                  id="question"
+                  name="question"
                   value={formData.question}
-                  onChange={(e) => setFormData({...formData, question: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-                  style={{ borderColor: "#7a1335", boxShadow: "none" }}
-                  placeholder="Enter your question here..."
+                  onChange={handleFormChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
                 />
               </div>
-              
               <div className="mb-4">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Type *
-                </label>
+                <label htmlFor="answer" className="block text-sm font-medium text-gray-700 mb-1">Answer</label>
+                <textarea
+                  id="answer"
+                  name="answer"
+                  value={formData.answer}
+                  onChange={handleFormChange}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md"
+                  required
+                ></textarea>
+              </div>
+              <div className="mb-6">
+                <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                 <select
-                  value={faqType}
-                  onChange={e => setFaqType(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-                  style={{ borderColor: "#7a1335", boxShadow: "none" }}
+                  id="type"
+                  name="type"
+                  value={formData.type}
+                  onChange={handleFormChange}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md bg-white focus:outline-none focus:ring-2 focus:ring-[#7a1335]"
+                  required
                 >
-                  <option value="">Select type</option>
-                  <option value="home">Home</option>
-                  <option value="chit">Chit</option>
-                  <option value="sip">SIP</option>
-                  <option value="scheme">Scheme</option>
+                  {faqTypes.map(type => (
+                    <option key={type} value={type}>
+                      {type}
+                    </option>
+                  ))}
                 </select>
               </div>
-              
-              <div className="mb-6">
-                <label className="block text-gray-700 text-sm font-bold mb-2">
-                  Answer *
-                </label>
-                <textarea
-                  value={formData.answer}
-                  onChange={(e) => setFormData({...formData, answer: e.target.value})}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2"
-                  style={{ borderColor: "#7a1335", boxShadow: "none" }}
-                  rows={4}
-                  placeholder="Enter your answer here..."
-                />
+              <div className="flex justify-end gap-4">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 bg-gray-200 rounded-md">Cancel</button>
+                <button type="submit" className="px-4 py-2 bg-[#7a1335] text-white rounded-md">Save Changes</button>
               </div>
-              
-              <div className="flex justify-end space-x-3">
-                <button
-                  type="button"
-                  onClick={resetForm}
-                  className="px-4 py-2 text-gray-600 bg-gray-200 rounded-lg hover:bg-gray-300 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSubmit}
-                  className="px-4 py-2 rounded-lg flex items-center space-x-2 transition-colors"
-                  style={{
-                    background: "#7a1335",
-                    color: "#fff"
-                  }}
-                >
-                  <Save className="w-4 h-4" />
-                  <span>{editingFaq ? 'Update' : 'Create'} FAQ</span>
-                </button>
-              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {isDeleteConfirmOpen && (
+        <div className="fixed inset-0 top-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+          <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md text-center">
+            <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
+            <p className="text-gray-600 mb-6">Are you sure you want to delete this FAQ? This action cannot be undone.</p>
+            <div className="flex justify-center gap-4">
+              <button onClick={() => setIsDeleteConfirmOpen(false)} className="px-6 py-2 bg-gray-200 rounded-md">Cancel</button>
+              <button onClick={confirmDelete} className="px-6 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">Delete</button>
             </div>
           </div>
         </div>
@@ -385,4 +313,4 @@ const FAQManagement = () => {
   );
 };
 
-export default FAQManagement;
+export default ManageFaq;
