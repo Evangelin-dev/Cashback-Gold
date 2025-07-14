@@ -12,4 +12,8 @@ public class SIPPlanResponse {
     private String monthlyAmount;
     private String description;
     private String status;
+    private String keyPoint1;
+    private String keyPoint2;
+    private String keyPoint3;
 }
+

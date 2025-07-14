@@ -391,6 +391,14 @@
         </sql>
     </changeSet>
 
+    <changeSet id="8-2" author="azeem">
+        <addColumn tableName="sip_plans">
+            <column name="key_point1" type="VARCHAR(255)"/>
+            <column name="key_point2" type="VARCHAR(255)"/>
+            <column name="key_point3" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
     <changeSet id="9" author="azeem">
         <createTable tableName="saving_plans">
             <column name="id" type="BIGINT" autoIncrement="true">

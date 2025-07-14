@@ -9,6 +9,7 @@ import lombok.*;
 @AllArgsConstructor
 @Builder
 public class SIPPlan {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -20,6 +21,10 @@ public class SIPPlan {
 
     @Enumerated(EnumType.STRING)
     private Status status;
+
+    private String keyPoint1;
+    private String keyPoint2;
+    private String keyPoint3;
 
     public enum Status {
         ACTIVE, CLOSED
