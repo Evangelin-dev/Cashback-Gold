@@ -36,5 +36,12 @@ public class GoldPlantSchemeController {
         service.delete(id);
         return ResponseEntity.noContent().build();
     }
+
+    @PatchMapping("/{id}/status")
+    public ResponseEntity<Void> changeStatus(@PathVariable Long id, @RequestParam String status) {
+        service.changeStatus(id, status);
+        return ResponseEntity.ok().build();
+    }
+
 }
 

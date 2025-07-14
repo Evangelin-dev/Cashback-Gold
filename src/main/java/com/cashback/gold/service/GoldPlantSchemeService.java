@@ -53,5 +53,14 @@ public class GoldPlantSchemeService {
     public void delete(Long id) {
         repository.deleteById(id);
     }
+
+    public void changeStatus(Long id, String status) {
+        GoldPlantScheme scheme = repository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Gold Plant Scheme not found"));
+
+        scheme.setStatus(status.toUpperCase()); // Ensures consistent status values
+        repository.save(scheme);
+    }
+
 }
 
