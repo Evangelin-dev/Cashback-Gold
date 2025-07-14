@@ -75,19 +75,21 @@ public class OrnamentService {
             assignSubImages(ornament, subImages);
         }
 
-        // Update price breakups
+        // ✅ Update price breakups safely (to avoid orphan removal issue)
         if (req.getPriceBreakups() != null) {
-            // Clear existing price breakups
+            // First clear the existing collection
             ornament.getPriceBreakups().clear();
-            // Add new price breakups
-            List<PriceBreakup> priceBreakups = req.getPriceBreakups().stream()
-                    .map(dto -> toPriceBreakupEntity(dto, ornament))
-                    .collect(Collectors.toList());
-            ornament.setPriceBreakups(priceBreakups);
+
+            // Then add new ones into the *same* collection instance
+            for (PriceBreakupDTO dto : req.getPriceBreakups()) {
+                PriceBreakup breakup = toPriceBreakupEntity(dto, ornament);
+                ornament.getPriceBreakups().add(breakup);
+            }
         }
 
         return toResponse(repo.save(ornament));
     }
+
 
     public void delete(Long id) {
         repo.deleteById(id); // Price breakups are deleted automatically due to cascade
