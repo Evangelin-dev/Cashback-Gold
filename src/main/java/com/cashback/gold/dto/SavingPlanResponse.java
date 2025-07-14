@@ -12,5 +12,7 @@ public class SavingPlanResponse {
     private String amount;
     private String description;
     private String status;
+    private String keyPoint1;
+    private String keyPoint2;
+    private String keyPoint3;
 }
-

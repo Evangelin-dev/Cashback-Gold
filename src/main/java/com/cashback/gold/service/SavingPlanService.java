@@ -24,6 +24,9 @@ public class SavingPlanService {
                         .amount(plan.getAmount())
                         .description(plan.getDescription())
                         .status(plan.getStatus().name())
+                        .keyPoint1(plan.getKeyPoint1())
+                        .keyPoint2(plan.getKeyPoint2())
+                        .keyPoint3(plan.getKeyPoint3())
                         .build())
                 .toList();
     }
@@ -35,6 +38,9 @@ public class SavingPlanService {
                 .amount(request.getAmount())
                 .description(request.getDescription())
                 .status(SavingPlan.PlanStatus.valueOf(request.getStatus()))
+                .keyPoint1(request.getKeyPoint1())
+                .keyPoint2(request.getKeyPoint2())
+                .keyPoint3(request.getKeyPoint3())
                 .build();
         repository.save(plan);
         return SavingPlanResponse.builder()
@@ -44,6 +50,9 @@ public class SavingPlanService {
                 .amount(plan.getAmount())
                 .description(plan.getDescription())
                 .status(plan.getStatus().name())
+                .keyPoint1(plan.getKeyPoint1())
+                .keyPoint2(plan.getKeyPoint2())
+                .keyPoint3(plan.getKeyPoint3())
                 .build();
     }
 
@@ -54,6 +63,9 @@ public class SavingPlanService {
         plan.setAmount(request.getAmount());
         plan.setDescription(request.getDescription());
         plan.setStatus(SavingPlan.PlanStatus.valueOf(request.getStatus()));
+        plan.setKeyPoint1(request.getKeyPoint1());
+        plan.setKeyPoint2(request.getKeyPoint2());
+        plan.setKeyPoint3(request.getKeyPoint3());
         repository.save(plan);
         return SavingPlanResponse.builder()
                 .id(plan.getId())
@@ -62,6 +74,9 @@ public class SavingPlanService {
                 .amount(plan.getAmount())
                 .description(plan.getDescription())
                 .status(plan.getStatus().name())
+                .keyPoint1(plan.getKeyPoint1())
+                .keyPoint2(plan.getKeyPoint2())
+                .keyPoint3(plan.getKeyPoint3())
                 .build();
     }
 

@@ -15,19 +15,21 @@ public class SavingPlan {
     private Long id;
 
     private String name;
-
     private String duration; // e.g., "12 months"
-
     private String amount; // e.g., "₹1000/mo"
-
     private String description;
 
     @Enumerated(EnumType.STRING)
     private PlanStatus status; // ACTIVE or CLOSED
+
+    private String keyPoint1;
+    private String keyPoint2;
+    private String keyPoint3;
 
     public enum PlanStatus {
         ACTIVE,
         CLOSED
     }
 }
+
 

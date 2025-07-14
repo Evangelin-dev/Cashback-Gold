@@ -8,6 +8,8 @@ public class SavingPlanRequest {
     private String duration;
     private String amount;
     private String description;
-    private String status; // "ACTIVE" or "CLOSED"
+    private String status;
+    private String keyPoint1;
+    private String keyPoint2;
+    private String keyPoint3;
 }
-

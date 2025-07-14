@@ -416,9 +416,17 @@
 
     <changeSet id="9-1" author="azeem">
         <sql>
-            ALTER TABLE sip_plans ADD CONSTRAINT chk_saving_plans_status
+            ALTER TABLE saving_plans ADD CONSTRAINT chk_saving_plans_status
                 CHECK (status IN ('ACTIVE','CLOSED'));
         </sql>
+    </changeSet>
+
+    <changeSet id="9-2" author="azeem">
+        <addColumn tableName="saving_plans">
+            <column name="key_point1" type="VARCHAR(255)"/>
+            <column name="key_point2" type="VARCHAR(255)"/>
+            <column name="key_point3" type="VARCHAR(255)"/>
+        </addColumn>
     </changeSet>
 
     <changeSet id="10" author="azeem">
@@ -439,7 +447,7 @@
 
     <changeSet id="10-1" author="azeem">
         <sql>
-            ALTER TABLE sip_plans ADD CONSTRAINT chk_gold_plant_schemes_status
+            ALTER TABLE gold_plant_schemes ADD CONSTRAINT chk_gold_plant_schemes_status
                 CHECK (status IN ('ACTIVE','CLOSED'));
         </sql>
     </changeSet>
