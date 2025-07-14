@@ -70,5 +70,10 @@ public class SIPPlanService {
                 .keyPoint3(plan.getKeyPoint3())
                 .build();
     }
+
+    public void deletePlan(Long id) {
+        SIPPlan plan = repository.findById(id).orElseThrow();
+        repository.delete(plan);
+    }
 }
 

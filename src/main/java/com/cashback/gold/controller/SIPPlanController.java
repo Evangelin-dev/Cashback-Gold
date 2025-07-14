@@ -35,5 +35,11 @@ public class SIPPlanController {
         service.updateStatus(id, status);
         return ResponseEntity.ok().build();
     }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> deletePlan(@PathVariable Long id) {
+        service.deletePlan(id);
+        return ResponseEntity.noContent().build();
+    }
 }
 
