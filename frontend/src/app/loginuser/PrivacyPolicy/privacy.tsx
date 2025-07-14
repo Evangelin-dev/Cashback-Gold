@@ -1,5 +1,3 @@
-import TitleBanner from "../../components/custom/TitleBanner";
-import styles from "./styles.module.css";
 
 const LPrivacyPlicyPage = () => {
   return (
@@ -43,8 +41,7 @@ const LPrivacyPlicyPage = () => {
       </div>
       {/* Terms Content Section */}
       <section
-       
-      >
+       >
         <div
           style={{
             flex: 1,
@@ -61,121 +58,64 @@ const LPrivacyPlicyPage = () => {
             position: "relative",
           }}
         >
-         
-          <div
-            style={{
-              color: "#222",
-              fontSize: 18,
-              lineHeight: 1.8,
-              fontWeight: 500,
-              fontFamily: "'Red Hat Display', 'DM Sans', Arial, sans-serif",
-              padding: "0 8px",
-            }}
-          >
-            <ul
-              style={{
-                paddingLeft: 0,
-                listStyle: "none",
-                margin: 0,
-              }}
-            >
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Users can choose a monthly investment amount between <b>₹100</b> and <b>₹15,00,000</b>.
-                </span>
+          <h2 style={{ color: "#7a1335", fontWeight: 700, fontSize: 28, marginBottom: 18, textAlign: "center" }}>Privacy Policy</h2>
+          <div style={{ color: "#222", fontSize: 17, lineHeight: 1.8, fontWeight: 500, fontFamily: "'Red Hat Display', 'DM Sans', Arial, sans-serif", padding: "0 8px" }}>
+            <p>At Greenheap Gold, your privacy is our priority. This Privacy Policy outlines how we collect, use, protect, and disclose your personal information when you visit our website <b>www.greenheapgold.com</b> or use our services.</p>
+            <ol style={{ paddingLeft: 18, marginTop: 18 }}>
+              <li style={{ marginBottom: 14 }}><b>Information We Collect</b><br />
+                We may collect the following types of information:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li><b>Personal Details:</b> Name, email address, phone number, date of birth, and address.</li>
+                  <li><b>Financial Information:</b> Payment details, transaction history, bank account numbers (for chit fund schemes).</li>
+                  <li><b>Identity Verification:</b> PAN card, Aadhaar number, or other official IDs for KYC compliance.</li>
+                  <li><b>Device & Usage Info:</b> IP address, browser type, pages visited, time spent, and cookies.</li>
+                </ul>
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Investments in this scheme start from <b>₹100</b>.
-                </span>
+              <li style={{ marginBottom: 14 }}><b>How We Use Your Information</b><br />
+                We use your information to:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>Facilitate gold purchases and manage chit fund participation</li>
+                  <li>Process payments securely</li>
+                  <li>Communicate offers, updates, and alerts</li>
+                  <li>Comply with legal obligations (e.g., KYC, AML guidelines)</li>
+                  <li>Improve our website performance and customer experience</li>
+                </ul>
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  The plan will activate once the user’s cumulative investment
-                  reaches an amount equivalent to <b>1 gram of gold</b>.
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Sharing of Information</b><br />
+                We do not sell your data. However, we may share your information with:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>Trusted partners for payment processing and identity verification</li>
+                  <li>Government authorities when required by law or regulation</li>
+                  <li>Technology providers who help us operate the platform (under strict confidentiality)</li>
+                </ul>
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Users will earn a return in Greenheap Gold based on their
-                  investment tenure.
-                  <br />
-                  <span style={{ color: "#991313" }}>
-                    For example, at 3 months, a return of <b>₹7.50</b> is given,
-                    calculated at <b>0.25% per month</b> on an investment of{" "}
-                    <b>₹1000</b>.
-                  </span>
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Data Security</b><br />
+                We implement industry-standard encryption, firewalls, and secure access protocols to protect your information. However, no online platform is 100% secure, and we encourage users to practice safe browsing.
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  An additional bonus in the form of Silver is provided for each
-                  period.
-                  <br />
-                  <span style={{ color: "#991313" }}>
-                    For example, after 3 months, the bonus is <b>₹24</b>,
-                    calculated at <b>0.8% per month</b> for an investment of{" "}
-                    <b>₹1000</b>.
-                  </span>
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Your Rights</b><br />
+                You have the right to:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>Access, update, or delete your personal information</li>
+                  <li>Opt-out of promotional emails and SMS</li>
+                  <li>Request a copy of the data we hold</li>
+                </ul>
+                To exercise these rights, please contact us at <b>[insert email address]</b>.
               </li>
-              <li style={{ display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  If the user cancels the plan after making 5 payments out of a
-                  6-month plan, the plan will be adjusted to reflect a 3-month
-                  duration. The user will receive the corresponding returns for
-                  the 3-month period, minus a <b>6% service charge</b>.
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Cookies</b><br />
+                We use cookies to improve user experience and analyze traffic. You can control cookie settings through your browser.
               </li>
-            </ul>
+              <li style={{ marginBottom: 14 }}><b>Third-Party Links</b><br />
+                Our website may contain links to third-party sites. We are not responsible for their privacy practices.
+              </li>
+              <li style={{ marginBottom: 14 }}><b>Updates to Policy</b><br />
+                We may update this Privacy Policy periodically. Changes will be reflected on this page with a revised "Effective Date."
+              </li>
+              <li style={{ marginBottom: 14 }}><b>Contact Us</b><br />
+                For any privacy-related questions or requests, contact:<br />
+                Email: <b>support@greenheapgold.com</b><br />
+                Phone: <b>81900 59995</b>
+              </li>
+            </ol>
           </div>
         </div>
         {/* Spacer for horizontal layout */}
@@ -187,9 +127,5 @@ const LPrivacyPlicyPage = () => {
   );
 };
 
-
-       
-
-
 export default LPrivacyPlicyPage;
-       
+

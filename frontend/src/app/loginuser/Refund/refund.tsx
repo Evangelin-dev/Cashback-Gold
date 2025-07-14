@@ -1,5 +1,3 @@
-import TitleBanner from "../../components/custom/TitleBanner";
-import styles from "./styles.module.css";
 
 const LRefund = () => {
   return (
@@ -42,9 +40,7 @@ const LRefund = () => {
         </h1>
       </div>
       {/* Terms Content Section */}
-      <section
-       
-      >
+      <section>
         <div
           style={{
             flex: 1,
@@ -61,121 +57,47 @@ const LRefund = () => {
             position: "relative",
           }}
         >
-         
-          <div
-            style={{
-              color: "#222",
-              fontSize: 18,
-              lineHeight: 1.8,
-              fontWeight: 500,
-              fontFamily: "'Red Hat Display', 'DM Sans', Arial, sans-serif",
-              padding: "0 8px",
-            }}
-          >
-            <ul
-              style={{
-                paddingLeft: 0,
-                listStyle: "none",
-                margin: 0,
-              }}
-            >
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Users can choose a monthly investment amount between <b>₹100</b> and <b>₹15,00,000</b>.
-                </span>
+          <h2 style={{ color: "#7a1335", fontWeight: 700, fontSize: 28, marginBottom: 18, textAlign: "center" }}>Refund & Return Policy</h2>
+          <div style={{ color: "#222", fontSize: 17, lineHeight: 1.8, fontWeight: 500, fontFamily: "'Red Hat Display', 'DM Sans', Arial, sans-serif", padding: "0 8px" }}>
+            <p>At Greenheap Gold, we strive to provide high-quality gold products and exceptional customer service. If you are not fully satisfied with your purchase, our refund and return policy is designed to be simple and transparent.</p>
+            <ol style={{ paddingLeft: 18, marginTop: 18 }}>
+              <li style={{ marginBottom: 14 }}><b>7-Day Return Policy</b><br />
+                If for any reason you are not satisfied with the gold item you purchased:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>You may return the product within 7 days from the date of delivery.</li>
+                  <li>The gold must be unused, untampered, and returned in its original packaging with the invoice.</li>
+                  <li>Once the item is received and inspected, a refund will be processed to your original payment method within 7–10 working days.</li>
+                </ul>
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Investments in this scheme start from <b>₹100</b>.
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Delivery-Related Damage</b><br />
+                If your product arrives damaged or tampered during transit:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>You must report the issue within 7 days of delivery by contacting our customer support at <b>support@greenheapgold.com</b> with photo or video proof.</li>
+                  <li>Upon validation, we will initiate a refund or replacement at no additional cost.</li>
+                </ul>
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  The plan will activate once the user’s cumulative investment
-                  reaches an amount equivalent to <b>1 gram of gold</b>.
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Important Notes</b><br />
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>Return shipping charges (if applicable) will be borne by the customer unless the product was delivered damaged.</li>
+                  <li>Customized gold orders or special schemes (like chit fund redemptions) may not be eligible for return unless defective.</li>
+                  <li>Partial refunds may be issued if items show signs of use or damage not related to delivery.</li>
+                </ul>
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Users will earn a return in Greenheap Gold based on their
-                  investment tenure.
-                  <br />
-                  <span style={{ color: "#991313" }}>
-                    For example, at 3 months, a return of <b>₹7.50</b> is given,
-                    calculated at <b>0.25% per month</b> on an investment of{" "}
-                    <b>₹1000</b>.
-                  </span>
-                </span>
+              <li style={{ marginBottom: 14 }}><b>How to Initiate a Return</b><br />
+                To initiate a return or report delivery damage, please:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>Email us at <b>support@greenheapgold.com</b></li>
+                  <li>Mention your Order ID, contact number, and reason for return</li>
+                  <li>Attach relevant photos/videos (for damaged items)</li>
+                  <li>Our team will guide you through the process</li>
+                </ul>
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  An additional bonus in the form of Silver is provided for each
-                  period.
-                  <br />
-                  <span style={{ color: "#991313" }}>
-                    For example, after 3 months, the bonus is <b>₹24</b>,
-                    calculated at <b>0.8% per month</b> for an investment of{" "}
-                    <b>₹1000</b>.
-                  </span>
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Contact Us</b><br />
+                For any refund or return-related questions:<br />
+                <span role="img" aria-label="email">📧</span> Email: <b>support@greenheapgold.com</b><br />
+                <span role="img" aria-label="phone">📞</span> Phone: <b>81900 59995</b>
               </li>
-              <li style={{ display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  If the user cancels the plan after making 5 payments out of a
-                  6-month plan, the plan will be adjusted to reflect a 3-month
-                  duration. The user will receive the corresponding returns for
-                  the 3-month period, minus a <b>6% service charge</b>.
-                </span>
-              </li>
-            </ul>
+            </ol>
           </div>
         </div>
         {/* Spacer for horizontal layout */}
@@ -188,4 +110,4 @@ const LRefund = () => {
 };
 
 export default LRefund;
-       
+

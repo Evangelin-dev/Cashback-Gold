@@ -63,6 +63,29 @@ function useScrollFadeIn(direction: "left" | "right" | "up" | "down" = "up", dur
 }
 
 const LUserHome = () => {
+
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    const checkScreenSize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    checkScreenSize();
+    window.addEventListener('resize', checkScreenSize);
+
+    return () => window.removeEventListener('resize', checkScreenSize);
+  }, []);
+
+  const partners = [
+    { src: "/assets/amazon.png", alt: "Amazon Pay" },
+    { src: "/assets/axis.png", alt: "Axis Bank" },
+    { src: "/assets/cart.png", alt: "CaratLane" },
+    { src: "/assets/tanis.png", alt: "Tanishq" },
+    { src: "/assets/phonepe.png", alt: "PhonePe" }
+  ];
+
+
   const navigate = useNavigate();
   // refs for scroll animation
   const schemeRef = useScrollFadeIn("up", 700, 0);
@@ -208,7 +231,7 @@ const LUserHome = () => {
         style={{
           fontSize: "2rem",
           fontWeight: 700,
-          marginTop: "60px",
+          marginTop: "180px",
           marginBottom: "24px",
           position: "relative",
           zIndex: 2,
@@ -845,6 +868,75 @@ const LUserHome = () => {
           <FAQList />
         </div>
       </section>
+       <section className="py-12 bg-white text-center">
+             <div className="mb-6">
+               <div className="flex justify-center items-center gap-2">
+                 <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
+                 <h2 className="text-2xl font-semibold">Our Trusted Partners</h2>
+                 <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
+               </div>
+             </div>
+             
+             {/* Desktop View - Normal Layout */}
+             <div className="hidden md:block">
+               <div className="mt-8 flex justify-center flex-wrap gap-32 px-4">
+                 {partners.map((partner, index) => (
+                   <img 
+                     key={index}
+                     src={partner.src} 
+                     alt={partner.alt} 
+                     className="h-20 object-contain hover:scale-105 transition-transform duration-300" 
+                   />
+                 ))}
+               </div>
+             </div>
+       
+             {/* Mobile View - Marquee Slider */}
+             <div className="md:hidden mt-8 overflow-hidden">
+               <div className="flex animate-marquee whitespace-nowrap">
+                 {/* First set of partners */}
+                 {partners.map((partner, index) => (
+                   <div key={index} className="flex-shrink-0 mx-8">
+                     <img 
+                       src={partner.src} 
+                       alt={partner.alt} 
+                       className="h-16 object-contain" 
+                     />
+                   </div>
+                 ))}
+                 {/* Duplicate set for seamless loop */}
+                 {partners.map((partner, index) => (
+                   <div key={`duplicate-${index}`} className="flex-shrink-0 mx-8">
+                     <img 
+                       src={partner.src} 
+                       alt={partner.alt} 
+                       className="h-16 object-contain" 
+                     />
+                   </div>
+                 ))}
+               </div>
+             </div>
+       
+             <style >{`
+               @keyframes marquee {
+                 0% {
+                   transform: translateX(0%);
+                 }
+                 100% {
+                   transform: translateX(-50%);
+                 }
+               }
+               
+               .animate-marquee {
+                 animation: marquee 15s linear infinite;
+               }
+               
+               /* Pause animation on hover */
+               .animate-marquee:hover {
+                 animation-play-state: paused;
+               }
+             `}</style>
+           </section>
     </div>
   );
 };

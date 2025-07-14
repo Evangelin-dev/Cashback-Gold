@@ -81,12 +81,29 @@ const Footer = () => {
               </li>
               <li>
                 <a
+                  href="/shippingpolicy"
+                  className="text-dark text-decoration-none"
+                >
+                 Shipping Policy
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/SIPplandisclaimer"
+                  className="text-dark text-decoration-none"
+                >
+                  SIPPlan Disclaimer
+                </a>
+              </li>
+              <li>
+                <a
                   href="/contactus"
                   className="text-dark text-decoration-none"
                 >
                   Contact Us
                 </a>
               </li>
+              
             </ul>
           </div>
           {/* Contact Us */}

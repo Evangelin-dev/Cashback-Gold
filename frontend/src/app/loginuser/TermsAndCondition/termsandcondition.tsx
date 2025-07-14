@@ -1,5 +1,3 @@
-import TitleBanner from "../../components/custom/TitleBanner";
-import styles from "./styles.module.css";
 
 const LTerms = () => {
   return (
@@ -42,9 +40,7 @@ const LTerms = () => {
         </h1>
       </div>
       {/* Terms Content Section */}
-      <section
-       
-      >
+      <section>
         <div
           style={{
             flex: 1,
@@ -61,121 +57,67 @@ const LTerms = () => {
             position: "relative",
           }}
         >
-         
-          <div
-            style={{
-              color: "#222",
-              fontSize: 18,
-              lineHeight: 1.8,
-              fontWeight: 500,
-              fontFamily: "'Red Hat Display', 'DM Sans', Arial, sans-serif",
-              padding: "0 8px",
-            }}
-          >
-            <ul
-              style={{
-                paddingLeft: 0,
-                listStyle: "none",
-                margin: 0,
-              }}
-            >
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Users can choose a monthly investment amount between <b>₹100</b> and <b>₹15,00,000</b>.
-                </span>
+          <h2 style={{ color: "#7a1335", fontWeight: 700, fontSize: 28, marginBottom: 18, textAlign: "center" }}>Terms and Conditions</h2>
+          <div style={{ color: "#222", fontSize: 17, lineHeight: 1.8, fontWeight: 500, fontFamily: "'Red Hat Display', 'DM Sans', Arial, sans-serif", padding: "0 8px" }}>
+            <p>Welcome to Greenheap Gold. By accessing or using our website <b>www.greenheapgold.com</b> and services, you agree to comply with and be bound by the following Terms and Conditions. Please read them carefully.</p>
+            <ol style={{ paddingLeft: 18, marginTop: 18 }}>
+              <li style={{ marginBottom: 14 }}><b>Definitions</b><br />
+                “We,” “Us,” “Our” refers to Greenheap Gold, its owners, and operators.<br />
+                “You,” “User,” “Customer” refers to any person accessing or using our website or services.<br />
+                “Services” includes gold purchasing, chit fund schemes, and other offerings listed on our website.
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Investments in this scheme start from <b>₹100</b>.
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Eligibility</b><br />
+                You must be at least 18 years old and capable of entering into a legally binding contract. By using our services, you confirm that all provided information is accurate and complete.
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  The plan will activate once the user’s cumulative investment
-                  reaches an amount equivalent to <b>1 gram of gold</b>.
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Gold Purchase Policy</b><br />
+                Prices of gold are subject to market fluctuations and may change at any time without notice.<br />
+                Orders once placed and confirmed are non-refundable and non-cancellable.<br />
+                Gold will be delivered physically or held in secure digital lockers depending on your selected plan.
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  Users will earn a return in Greenheap Gold based on their
-                  investment tenure.
-                  <br />
-                  <span style={{ color: "#991313" }}>
-                    For example, at 3 months, a return of <b>₹7.50</b> is given,
-                    calculated at <b>0.25% per month</b> on an investment of{" "}
-                    <b>₹1000</b>.
-                  </span>
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Chit Fund Scheme</b><br />
+                Participation in our chit fund is subject to verification through valid KYC documents.<br />
+                Monthly contributions are mandatory. Failure to contribute on time may lead to penalties or disqualification.<br />
+                Payouts and winnings are governed by internal draw procedures and government regulations.
               </li>
-              <li style={{ marginBottom: 22, display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  An additional bonus in the form of Silver is provided for each
-                  period.
-                  <br />
-                  <span style={{ color: "#991313" }}>
-                    For example, after 3 months, the bonus is <b>₹24</b>,
-                    calculated at <b>0.8% per month</b> for an investment of{" "}
-                    <b>₹1000</b>.
-                  </span>
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Payments and Transactions</b><br />
+                All payments must be made via approved payment gateways or bank transfers.<br />
+                Greenheap Gold is not responsible for delays due to third-party payment processors.<br />
+                Transaction history and receipts will be accessible via your user dashboard.
               </li>
-              <li style={{ display: "flex", alignItems: "flex-start" }}>
-                <span style={{
-                  color: "#bf7e1a",
-                  fontWeight: 700,
-                  fontSize: 22,
-                  marginRight: 12,
-                  marginTop: 2,
-                  display: "inline-block"
-                }}>•</span>
-                <span>
-                  If the user cancels the plan after making 5 payments out of a
-                  6-month plan, the plan will be adjusted to reflect a 3-month
-                  duration. The user will receive the corresponding returns for
-                  the 3-month period, minus a <b>6% service charge</b>.
-                </span>
+              <li style={{ marginBottom: 14 }}><b>Account Security</b><br />
+                You are responsible for maintaining the confidentiality of your login credentials. Any activity under your account will be deemed your responsibility.
               </li>
-            </ul>
+              <li style={{ marginBottom: 14 }}><b>Intellectual Property</b><br />
+                All content on this website—logos, graphics, texts, and layouts—are the property of Greenheap Gold and may not be used without permission.
+              </li>
+              <li style={{ marginBottom: 14 }}><b>Prohibited Use</b><br />
+                You agree not to:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>Engage in fraudulent or unlawful activity</li>
+                  <li>Attempt to hack, tamper, or access restricted areas</li>
+                  <li>Reproduce or redistribute content without permission</li>
+                </ul>
+              </li>
+              <li style={{ marginBottom: 14 }}><b>Limitation of Liability</b><br />
+                Greenheap Gold will not be liable for:
+                <ul style={{ marginTop: 6, marginBottom: 6 }}>
+                  <li>Losses due to market fluctuations in gold prices</li>
+                  <li>Delay or failure in services due to force majeure events</li>
+                  <li>Any indirect, incidental, or consequential damages</li>
+                </ul>
+              </li>
+              <li style={{ marginBottom: 14 }}><b>Termination</b><br />
+                We reserve the right to suspend or terminate your account at our discretion, without notice, for violation of these Terms or suspected fraudulent activity.
+              </li>
+              <li style={{ marginBottom: 14 }}><b>Governing Law</b><br />
+                These Terms are governed by the laws of India. Any dispute arising from these terms will be subject to the jurisdiction of the courts in <b>[Insert City, e.g., Chennai]</b>.
+              </li>
+              <li style={{ marginBottom: 14 }}><b>Contact Information</b><br />
+                For questions or concerns, please contact:<br />
+                <span role="img" aria-label="email">📧</span> Email: <b>support@greenheapgold.com</b><br />
+                <span role="img" aria-label="phone">📞</span> Phone: <b>81900 59995</b>
+              </li>
+            </ol>
           </div>
         </div>
         {/* Spacer for horizontal layout */}
@@ -187,6 +129,4 @@ const LTerms = () => {
   );
 };
 
-
 export default LTerms;
-

@@ -87,6 +87,10 @@ import LGoldPlantSchemes from "./src/app/loginuser/GoldSchemes/goldschemes.tsx";
 import GoldPlantSchemes from "./src/app/user/GoldSchemes/goldschemes.tsx";
 import BCommission from "./src/app/b2b/commission/Commission";
 import AdminProtectedRoute from './src/app/protectedRoutes/AdminProtectedRoute';
+import SIPPlanDisclaimer from "./src/app/user/SIPDisclaimer/sipdisclaimer";
+import ShippingPolicy from "./src/app/user/ShippingPolicy/shippingpolicy";
+import LSIPPlanDisclaimer from "./src/app/loginuser/SIPDisclaimer/sipdisclaimer";
+import LShippingPolicy from "./src/app/loginuser/ShippingPolicy/shippingpolicy";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -171,6 +175,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/chit" element={<ChitJewelsPlans />} />
         <Route path="/goldsip" element={<GoldSIPPlans />} />
         <Route path="/schemes" element={<GoldPlantSchemes />} />
+        <Route path="/shippingpolicy" element={<ShippingPolicy/>} />
+        <Route path="/SIPplandisclaimer" element={<SIPPlanDisclaimer />} />
       </Route >
 
 
@@ -201,6 +207,8 @@ const AppRoutes: React.FC = () => {
         <Route path="/lchit" element={<LChitJewelsPlans />} />
         <Route path="/lgoldsip" element={<LGoldSIPPlans />} />
         <Route path="/lschemes" element={<LGoldPlantSchemes />} />
+        <Route path="/lSIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
+        <Route path="/lshippingpolicy" element={<LShippingPolicy/>} />
 
 
 

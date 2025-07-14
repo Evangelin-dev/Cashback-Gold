@@ -78,6 +78,22 @@ const LFooter = () => {
                   Refund & Cancellation Policy
                 </a>
               </li>
+               <li>
+                <a
+                  href="/lshippingpolicy"
+                  className="text-dark text-decoration-none"
+                >
+                 Shipping Policy
+                </a>
+              </li>
+              <li>
+                <a
+                  href="/lSIPplandisclaimer"
+                  className="text-dark text-decoration-none"
+                >
+                  SIPPlan Disclaimer
+                </a>
+              </li>
               <li>
                 <a
                   href="/lcontactus"

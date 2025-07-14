@@ -555,7 +555,7 @@ const NavBar = () => {
 										}}
 									>
 										{hovered === menuItem.name
-											? `Go to ${menuItem.name}`
+											? `${menuItem.name}`
 											: menuItem.name}
 									</a>
 								</li>
