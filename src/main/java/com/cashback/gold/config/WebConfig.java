@@ -15,7 +15,7 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://localhost:5174",
                         "https://cashback.gold"
                 )
-                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
                 .allowCredentials(true)
                 .maxAge(3600);
