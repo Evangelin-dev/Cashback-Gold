@@ -10,4 +10,5 @@ import lombok.NoArgsConstructor;
 public class MarketingResourceRequest {
     private String title;
     private String description;
+    private String status;
 }

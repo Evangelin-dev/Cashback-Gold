@@ -61,6 +61,7 @@ public class MarketingResourceService {
                 .orElseThrow(() -> new InvalidArgumentException("Resource not found"));
         resource.setTitle(request.getTitle());
         resource.setDescription(request.getDescription());
+        resource.setStatus(request.getStatus());
         return toResponse(resourceRepository.save(resource));
     }
 
