@@ -148,12 +148,18 @@ const MyBankAccounts = () => {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200">
-                  {accounts.map((acc) => (
+                  {[...accounts].reverse().map((acc) => (
                     <tr key={acc.id} className="hover:bg-gray-50 transition-colors">
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{acc.bank}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{acc.account}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{acc.ifsc}</td>
-                      <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" title={acc.description}>{acc.description}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" title={acc.description}><div
+                        className="text-sm text-gray-900 max-w-[150px] truncate"
+                      >
+                        {acc.description.length > 12
+                          ? `${acc.description.slice(0, 15)}...`
+                          : acc.description}
+                      </div></td>
                       <td className="px-6 py-4 whitespace-nowrap text-center">
                         <button
                           onClick={() => handleStatusToggle(acc.id)}

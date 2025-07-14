@@ -7,6 +7,7 @@ import SavingPlan from "./src/app/admin/ChitJewelsSavingPlan/savingplan";
 import Commission from "./src/app/admin/Commission/commission";
 import SPIPPlan from "./src/app/admin/DigitalGoldSPIPlan/sipplan";
 import PlantScheme from "./src/app/admin/GoldPlantScheme/plantscheme";
+import SchemesFlyer from "./src/app/admin/SchemesFlyer/schemesflyer";
 import KYC from "./src/app/admin/KYC/kyc";
 import ManageOrnaments from "./src/app/admin/ManageOrnaments/manageornaments";
 import ManageUsers from "./src/app/admin/ManageUsers/ManageUsers";
@@ -108,6 +109,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/savingplan" element={<SavingPlan />} />
           <Route path="/spiplan" element={<SPIPPlan />} />
           <Route path="/plantscheme" element={<PlantScheme />} />
+          <Route path="/flayerschemes" element={<SchemesFlyer />} />
           <Route path="/notification" element={<Notification />} />
           <Route path="/mybankaccounts" element={<MyBankAccounts />} />
           <Route path="/manageornaments" element={<ManageOrnaments />} />

@@ -11,7 +11,6 @@ import {
 import { setCurrentPage } from "../../features/slices/adminSlice";
 import type { Ornament } from "../../types/type";
 
-// --- CONSTANTS ---
 const CATEGORY_TREE = [
     {
       name: "Indian Gold",
@@ -104,14 +103,11 @@ const ManageOrnaments: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { ornaments, status, error, currentPage, totalPages, pageSize } = useSelector((state: RootState) => state.admin);
 
- 
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [form, setForm] = useState<any>(emptyFormState);
-  const [breakupForm, setBreakupForm] = useState<any>(emptyBreakup);
   const [editingBreakupIdx, setEditingBreakupIdx] = useState<number | null>(null);
   const [showPriceBreakup, setShowPriceBreakup] = useState(false);
   
- 
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
   const [subImageFiles, setSubImageFiles] = useState<(File | null)[]>(Array(4).fill(null));
   const [imagePreviews, setImagePreviews] = useState({ main: "", subs: Array(4).fill("") });
@@ -130,7 +126,6 @@ const ManageOrnaments: React.FC = () => {
     setMainImageFile(null);
     setSubImageFiles(Array(4).fill(null));
     setImagePreviews({ main: "", subs: Array(4).fill("") });
-    setBreakupForm(emptyBreakup);
     setEditingBreakupIdx(null);
     setShowPriceBreakup(false);
     setMainCategory("");
@@ -205,8 +200,17 @@ const ManageOrnaments: React.FC = () => {
 
   const handleFinalSave = async () => {
     if (form.priceBreakups.length === 0) {
-      alert("Price breakup is required.");
+      alert("At least one price breakup row is required. Please add a row and fill it out.");
       return;
+    }
+
+    for (const breakup of form.priceBreakups) {
+      for (const key in breakup) {
+        if (!breakup[key] || String(breakup[key]).trim() === "") {
+          alert("Please fill all fields in all price breakup rows before saving.");
+          return;
+        }
+      }
     }
 
     const data: OrnamentApiData = {
@@ -246,7 +250,7 @@ const ManageOrnaments: React.FC = () => {
         resetAndHideForm();
         dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
     } catch (err: any) {
-        alert(`Error: ${err}`);
+        alert(`Error: ${err.message || 'An unknown error occurred'}`);
     }
   };
 
@@ -256,33 +260,27 @@ const ManageOrnaments: React.FC = () => {
         await dispatch(deleteOrnament(id)).unwrap();
         alert("Ornament deleted.");
         dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
-      } catch (err) {
-        alert(`Error: ${err}`);
+      } catch (err: any) {
+        alert(`Error: ${err.message || 'An unknown error occurred'}`);
       }
     }
   };
 
- 
-  const handleBreakupChange = (e: React.ChangeEvent<HTMLInputElement>) => setBreakupForm({ ...breakupForm, [e.target.name]: e.target.value });
-  const handleBreakupSave = () => {
-    const required = ["component", "goldRate18kt", "weightG", "discount", "finalValue"];
-    for (const key of required) {
-        if (!breakupForm[key] || String(breakupForm[key]).trim() === "") {
-            alert(`Please fill all breakup fields.`);
-            return;
-        }
-    }
-    if (editingBreakupIdx !== null) {
-      setForm((f: any) => ({ ...f, priceBreakups: f.priceBreakups.map((r: any, i: number) => i === editingBreakupIdx ? breakupForm : r) }));
-    } else {
-      setForm((f: any) => ({ ...f, priceBreakups: [...f.priceBreakups, breakupForm] }));
-    }
-    setBreakupForm(emptyBreakup);
-    setEditingBreakupIdx(null);
+  const handleBreakupChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
+    const { name, value } = e.target;
+    const updatedBreakups = form.priceBreakups.map((item: any, i: number) => 
+        i === index ? { ...item, [name]: value } : item
+    );
+    setForm({ ...form, priceBreakups: updatedBreakups });
   };
-  const handleBreakupEdit = (idx: number) => { setEditingBreakupIdx(idx); setBreakupForm(form.priceBreakups[idx]); };
-  const handleBreakupDelete = (idx: number) => setForm((f: any) => ({ ...f, priceBreakups: f.priceBreakups.filter((_: any, i: number) => i !== idx) }));
-  const handleBreakupCancel = () => { setEditingBreakupIdx(null); setBreakupForm(emptyBreakup); };
+
+  const addBreakupRow = () => {
+    setForm((f: any) => ({ ...f, priceBreakups: [...f.priceBreakups, emptyBreakup] }));
+  };
+
+  const handleBreakupDelete = (idx: number) => {
+    setForm((f: any) => ({ ...f, priceBreakups: f.priceBreakups.filter((_: any, i: number) => i !== idx) }));
+  };
 
   const handlePageChange = (newPage: number) => {
     if (newPage >= 0 && newPage < totalPages) {
@@ -312,7 +310,6 @@ const ManageOrnaments: React.FC = () => {
         <div className="bg-white rounded-2xl shadow-2xl p-8 mb-10">
           <h2 className="text-2xl font-bold text-gray-700 mb-6">{form.id ? 'Edit Ornament' : 'Create New Ornament'}</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Column 1: Image, Title, Price, Categories */}
             <div>
               <div className="mb-4">
                 <label className="block font-semibold text-[#7a1335] mb-2">Main Image *</label>
@@ -344,7 +341,6 @@ const ManageOrnaments: React.FC = () => {
               </div>
             </div>
             
-            {/* Column 2: Material, Purity, Quality, Descriptions */}
             <div>
               <input type="text" name="material" placeholder="Material *" value={form.material} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               <input type="text" name="purity" placeholder="Gold Purity *" value={form.purity} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
@@ -356,7 +352,6 @@ const ManageOrnaments: React.FC = () => {
               <input type="text" name="description3" placeholder="Description Point 3 *" value={form.description3} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
             </div>
 
-            {/* Column 3: Gallery Images */}
             <div>
               <label className="block font-semibold text-[#7a1335] mb-2">Gallery Images</label>
               <div className="grid grid-cols-2 gap-4">
@@ -365,7 +360,7 @@ const ManageOrnaments: React.FC = () => {
                     {imagePreviews.subs[i] && <img src={imagePreviews.subs[i]} alt={`Sub ${i}`} className="w-20 h-20 object-contain rounded border mb-2" />}
                     <label className="w-full flex flex-col items-center">
                         <input type="file" name={`subImage${i}`} accept="image/*" onChange={(e) => handleFileChange(e, i)} className="hidden" />
-                        <button type="button" className="bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold py-1 px-4 rounded transition mt-2" onClick={e => (e.currentTarget.previousElementSibling as HTMLInputElement)?.click()}>Upload</button>
+                        <button type="button" className="bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold py-1 px-4 rounded transition mt-2 flex items-center gap-2" onClick={e => (e.currentTarget.previousElementSibling as HTMLInputElement)?.click()}>Upload</button>
                     </label>
                   </div>
                 ))}
@@ -396,13 +391,12 @@ const ManageOrnaments: React.FC = () => {
                   <tbody>
                     {form.priceBreakups.map((row: any, i: number) => (
                       <tr key={i} className="border-b">
-                        <td className="px-4 py-2">{row.component}</td>
-                        <td className="px-4 py-2">₹{row.goldRate18kt}</td>
-                        <td className="px-4 py-2">{row.weightG}g</td>
-                        <td className="px-4 py-2">₹{row.discount}</td>
-                        <td className="px-4 py-2">₹{row.finalValue}</td>
-                        <td className="px-4 py-2 flex gap-2">
-                          <button onClick={() => handleBreakupEdit(i)} className="bg-blue-500 text-white px-3 py-1 rounded text-xs">Edit</button>
+                        <td className="p-2"><input type="text" name="component" placeholder="Component *" value={row.component} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+                        <td className="p-2"><input type="number" name="goldRate18kt" placeholder="Gold Rate *" value={row.goldRate18kt} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+                        <td className="p-2"><input type="number" name="weightG" placeholder="Weight (g) *" value={row.weightG} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+                        <td className="p-2"><input type="number" name="discount" placeholder="Discount *" value={row.discount} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+                        <td className="p-2"><input type="number" name="finalValue" placeholder="Final Value *" value={row.finalValue} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+                        <td className="p-2 flex gap-2">
                           <button onClick={() => handleBreakupDelete(i)} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Delete</button>
                         </td>
                       </tr>
@@ -410,19 +404,13 @@ const ManageOrnaments: React.FC = () => {
                   </tbody>
                 </table>
               </div>
-              <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-4">
-                <input type="text" name="component" placeholder="Component *" value={breakupForm.component} onChange={handleBreakupChange} className="px-2 py-1 border rounded" />
-                <input type="number" name="goldRate18kt" placeholder="Gold Rate *" value={breakupForm.goldRate18kt} onChange={handleBreakupChange} className="px-2 py-1 border rounded" />
-                <input type="number" name="weightG" placeholder="Weight (g) *" value={breakupForm.weightG} onChange={handleBreakupChange} className="px-2 py-1 border rounded" />
-                <input type="number" name="discount" placeholder="Discount *" value={breakupForm.discount} onChange={handleBreakupChange} className="px-2 py-1 border rounded" />
-                <input type="number" name="finalValue" placeholder="Final Value *" value={breakupForm.finalValue} onChange={handleBreakupChange} className="px-2 py-1 border rounded" />
-              </div>
               <div className="flex gap-4">
-                <button onClick={handleBreakupSave} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded">{editingBreakupIdx !== null ? 'Update Row' : 'Add Row'}</button>
-                {editingBreakupIdx !== null && <button onClick={handleBreakupCancel} className="bg-gray-400 text-white font-semibold py-2 px-4 rounded">Cancel Edit</button>}
+                <button onClick={addBreakupRow} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Add Row</button>
               </div>
               <div className="flex gap-4 mt-8 border-t pt-6">
-                <button onClick={handleFinalSave} disabled={status === 'loading'} className="bg-green-600 text-white font-semibold py-2 px-8 rounded disabled:bg-gray-400">{status === 'loading' ? 'Saving...' : (form.id ? 'Update Product' : 'Save Product')}</button>
+                <button onClick={handleFinalSave} disabled={status === 'loading'} className="bg-green-600 text-white font-semibold py-2 px-8 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">
+                  {status === 'loading' ? 'Saving...' : (form.id ? 'Update Product' : 'Save Product')}
+                </button>
                 <button onClick={() => setShowPriceBreakup(false)} className="bg-gray-500 text-white font-semibold py-2 px-6 rounded">Back</button>
               </div>
             </div>
@@ -430,7 +418,7 @@ const ManageOrnaments: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-xl p-8 mt-10">
+      <div className="bg-white rounded-2xl shadow-2xl p-8 mt-10">
         <h2 className="text-2xl font-bold text-gray-700 mb-6">Existing Ornaments</h2>
         {status === 'loading' && !ornaments.length && <p>Loading ornaments...</p>}
         {error && <p className="text-red-500">Error: {error}</p>}

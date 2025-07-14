@@ -18,6 +18,7 @@ const menuItems = [
   { label: 'Chit Jewels Saving Plan', icon: '💍', path: '/savingplan' },
   { label: 'Digital Gold SIP Plan', icon: '🥇', path: '/spiplan' },
   { label: 'Gold Plant Scheme', icon: '🌱', path: '/plantscheme' },
+  { label: 'Schemes Flyer', icon: '🖼️', path: '/flayerschemes' },
   { label: 'Market Resource', icon: '📊', path: '/resource' },
   { label: 'Campaigns', icon: '📋', path: '/campaigns' },
   { label: 'Manage FAQ', icon: '📋', path: '/faq' },
