@@ -87,6 +87,7 @@ import LGoldPlantSchemes from "./src/app/loginuser/GoldSchemes/goldschemes.tsx";
 import GoldPlantSchemes from "./src/app/user/GoldSchemes/goldschemes.tsx";
 import BCommission from "./src/app/b2b/commission/Commission";
 import AdminProtectedRoute from './src/app/protectedRoutes/AdminProtectedRoute';
+import UserProtectedRoute from './src/app/protectedRoutes/UserProtectedRoute';
 import SIPPlanDisclaimer from "./src/app/user/SIPDisclaimer/sipdisclaimer";
 import ShippingPolicy from "./src/app/user/ShippingPolicy/shippingpolicy";
 import LSIPPlanDisclaimer from "./src/app/loginuser/SIPDisclaimer/sipdisclaimer";
@@ -175,53 +176,48 @@ const AppRoutes: React.FC = () => {
         <Route path="/chit" element={<ChitJewelsPlans />} />
         <Route path="/goldsip" element={<GoldSIPPlans />} />
         <Route path="/schemes" element={<GoldPlantSchemes />} />
-        <Route path="/shippingpolicy" element={<ShippingPolicy/>} />
+        <Route path="/shippingpolicy" element={<ShippingPolicy />} />
         <Route path="/SIPplandisclaimer" element={<SIPPlanDisclaimer />} />
       </Route >
 
 
 
-
-      {/*Login User routes */}
-
-      <Route element={<LogUserLayout />}>
-        {/* <Route path="/loguser" element={ <UserHome />}/> */}
-
-        {/*Login UserDashboard routes */}
-        <Route path="user" element={<LogUserDashboardLayout />} />
-
-        <Route path="/lnavbar" element={<LNavBar />} />
-        <Route path="/lfooter" element={<LFooter />} />
-        <Route path="/lterms" element={<LTerms />} />
-        <Route path="/lcontactus" element={<LContactUsPage />} />
-        <Route path="/lbuyornaments" element={<LBuyOrnamentsPage />} />
-        <Route path="/lbuyornaments/:id" element={<LJewelryProductPage />} />
-        <Route path="/laboutus" element={<LAboutUsPage />} />
-        <Route path="/lprivacy" element={<LPrivacyPlicyPage />} />
-        <Route path="/buynow" element={<BuyNow />} />
-        <Route path="/Wishlist" element={<Wishlist />} />
-        <Route path="/lUserHome" element={<LUserHome />} />
-        <Route path="paymentpopup" element={<PaymentPopup />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/lrefund" element={<LRefund />} />
-        <Route path="/lchit" element={<LChitJewelsPlans />} />
-        <Route path="/lgoldsip" element={<LGoldSIPPlans />} />
-        <Route path="/lschemes" element={<LGoldPlantSchemes />} />
-        <Route path="/lSIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
-        <Route path="/lshippingpolicy" element={<LShippingPolicy/>} />
+      <Route element={<UserProtectedRoute />}>
+        <Route element={<LogUserLayout />}>
+          <Route path="/user" element={<LogUserDashboardLayout />} />
+          <Route path="/lnavbar" element={<LNavBar />} />
+          <Route path="/lfooter" element={<LFooter />} />
+          <Route path="/lterms" element={<LTerms />} />
+          <Route path="/lcontactus" element={<LContactUsPage />} />
+          <Route path="/lbuyornaments" element={<LBuyOrnamentsPage />} />
+          <Route path="/lbuyornaments/:id" element={<LJewelryProductPage />} />
+          <Route path="/laboutus" element={<LAboutUsPage />} />
+          <Route path="/lprivacy" element={<LPrivacyPlicyPage />} />
+          <Route path="/buynow" element={<BuyNow />} />
+          <Route path="/Wishlist" element={<Wishlist />} />
+          <Route path="/lUserHome" element={<LUserHome />} />
+          <Route path="paymentpopup" element={<PaymentPopup />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/lrefund" element={<LRefund />} />
+          <Route path="/lchit" element={<LChitJewelsPlans />} />
+          <Route path="/lgoldsip" element={<LGoldSIPPlans />} />
+          <Route path="/lschemes" element={<LGoldPlantSchemes />} />
+          <Route path="/lSIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
+          <Route path="/lshippingpolicy" element={<LShippingPolicy />} />
 
 
 
-        <Route path="/userdash" element={<LMyDashboard />} />
-        <Route path="/userprofile" element={<LMyProfile />} />
-        <Route path="/userkyc" element={<LKYC />} />
-        <Route path="/userbeneficiaries" element={<LNavBar />} />
-        <Route path="/usersavingplan" element={<LChitJewelsSavingPlan />} />
-        <Route path="/userspiplan" element={<LDigitalGoldSIPPlan />} />
-        <Route path="/userplantscheme" element={<LGoldPlantScheme />} />
-        <Route path="/usernotification" element={<LNotification />} />
-        <Route path="/usermybankaccounts" element={<MyBankAccounts />} />
-      </Route >
+          <Route path="/userdash" element={<LMyDashboard />} />
+          <Route path="/userprofile" element={<LMyProfile />} />
+          <Route path="/userkyc" element={<LKYC />} />
+          <Route path="/userbeneficiaries" element={<LNavBar />} />
+          <Route path="/usersavingplan" element={<LChitJewelsSavingPlan />} />
+          <Route path="/userspiplan" element={<LDigitalGoldSIPPlan />} />
+          <Route path="/userplantscheme" element={<LGoldPlantScheme />} />
+          <Route path="/usernotification" element={<LNotification />} />
+          <Route path="/usermybankaccounts" element={<MyBankAccounts />} />
+        </Route >
+      </Route>
 
       <Route path="/b2bregistration" element={<B2BRegistration />} />
 

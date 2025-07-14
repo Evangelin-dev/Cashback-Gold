@@ -187,7 +187,11 @@ const AdminCampaigns = () => {
                     {paginatedCampaigns.map((campaign) => (
                       <tr key={campaign.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium text-gray-900">{campaign.name}</div></td>
-                        <td className="px-6 py-4"><div className="text-sm text-gray-900 max-w-xs truncate">{campaign.description}</div></td>
+                        <td className="px-6 py-4"><div className="text-sm text-gray-900 max-w-[150px] truncate">
+                          {campaign.description.length > 15
+                            ? `${campaign.description.slice(0, 18)}...`
+                            : campaign.description}
+                        </div></td>
                         <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{campaign.startDate}</div></td>
                         <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm text-gray-900">{campaign.endDate}</div></td>
                         <td className="px-6 py-4 whitespace-nowrap"><div className="text-sm font-medium text-gray-900">{campaign.multiplier}</div></td>
