@@ -1,7 +1,11 @@
 package com.cashback.gold.security;
 
+import com.cashback.gold.dto.common.ApiResponse; // ✅ Added
 import com.cashback.gold.service.UserAuthService;
 import com.cashback.gold.service.jwt.JwtService;
+import com.fasterxml.jackson.databind.ObjectMapper; // ✅ Added
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -23,17 +27,40 @@ public class JwtAuthFilter extends OncePerRequestFilter {
     private final UserAuthService userAuthService;
 
     @Override
-    protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain)
+    protected void doFilterInternal(HttpServletRequest request,
+                                    HttpServletResponse response,
+                                    FilterChain filterChain)
             throws ServletException, IOException {
 
         final String authHeader = request.getHeader("Authorization");
+
         if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             filterChain.doFilter(request, response);
             return;
         }
 
         final String token = authHeader.substring(7);
-        final String userId = jwtService.extractUserId(token);
+        String userId = null;
+        ObjectMapper mapper = new ObjectMapper(); // ✅ Added
+
+        try {
+            userId = jwtService.extractUserId(token);
+        } catch (ExpiredJwtException e) {
+            // ✅ Handle expired token
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            ApiResponse apiResponse = ApiResponse.error("Token expired");
+            response.getWriter().write(mapper.writeValueAsString(apiResponse));
+            return;
+        } catch (JwtException | IllegalArgumentException e) {
+            // ✅ Handle invalid token
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json");
+            ApiResponse apiResponse = ApiResponse.error("Invalid token");
+            response.getWriter().write(mapper.writeValueAsString(apiResponse));
+            return;
+        }
+
         if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
             var userDetails = userAuthService.loadUserById(userId);
 
