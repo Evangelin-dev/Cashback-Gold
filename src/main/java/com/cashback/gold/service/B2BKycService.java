@@ -3,6 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.kyc.KycResponse;
 import com.cashback.gold.dto.kyc.KycUploadRequest;
 import com.cashback.gold.entity.KycDocument;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.KycRepository;
 import com.cashback.gold.repository.UserRepository;
 import com.cashback.gold.service.aws.S3Service;
@@ -27,7 +28,7 @@ public class B2BKycService {
         // Validate documents
         if (request.getAadharOrGst() == null || request.getPan() == null ||
                 request.getAddressProof() == null || request.getBankStatement() == null) {
-            throw new IllegalArgumentException("All KYC documents are required for B2B");
+            throw new InvalidArgumentException("All KYC documents are required for B2B");
         }
 
         // Upload files
@@ -54,14 +55,14 @@ public class B2BKycService {
     public KycResponse getKyc(Long userId) {
         validateUser(userId, "B2B");
         KycDocument doc = kycRepo.findTopByUserIdAndUserTypeOrderBySubmittedAtDesc(userId, "B2B")
-                .orElseThrow(() -> new IllegalArgumentException("No KYC documents found for B2B"));
+                .orElseThrow(() -> new InvalidArgumentException("No KYC documents found for B2B"));
         return toKycResponse(doc);
     }
 
     private void validateUser(Long userId, String expectedRole) {
         userRepo.findById(userId)
                 .filter(user -> expectedRole.equals(user.getRole()))
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user or role"));
+                .orElseThrow(() -> new InvalidArgumentException("Invalid user or role"));
     }
 
     private KycResponse toKycResponse(KycDocument doc) {

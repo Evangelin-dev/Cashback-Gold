@@ -9,5 +9,8 @@ public class GoldPlantSchemeRequest {
     private String minInvest;
     private String status;
     private String description;
+    private String keyPoint1;
+    private String keyPoint2;
+    private String keyPoint3;
 }
 

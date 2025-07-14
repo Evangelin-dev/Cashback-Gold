@@ -4,6 +4,7 @@ import com.cashback.gold.dto.B2BProfileRequest;
 import com.cashback.gold.dto.B2BProfileResponse;
 import com.cashback.gold.entity.B2BProfile;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.B2BProfileRepository;
 import com.cashback.gold.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -21,7 +22,7 @@ public class B2BProfileService {
     public B2BProfileResponse getProfile(Long userId) {
         User user = validateUser(userId, "B2B");
         B2BProfile profile = b2bProfileRepo.findByUserId(userId)
-                .orElseThrow(() -> new IllegalArgumentException("B2B profile not found for user"));
+                .orElseThrow(() -> new InvalidArgumentException("B2B profile not found for user"));
         return toB2BProfileResponse(profile, user.getStatus());
     }
 
@@ -32,7 +33,7 @@ public class B2BProfileService {
         if (request.getCompanyName() == null || request.getGstin() == null ||
                 request.getPan() == null || request.getBankAccount() == null ||
                 request.getTeamEmail() == null) {
-            throw new IllegalArgumentException("Company name, GSTIN, PAN, bank account, and team email are required for B2B profile");
+            throw new InvalidArgumentException("Company name, GSTIN, PAN, bank account, and team email are required for B2B profile");
         }
 
         // Find or create profile
@@ -55,7 +56,7 @@ public class B2BProfileService {
     private User validateUser(Long userId, String expectedRole) {
         return userRepo.findById(userId)
                 .filter(user -> expectedRole.equals(user.getRole()))
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user or role"));
+                .orElseThrow(() -> new InvalidArgumentException("Invalid user or role"));
     }
 
     public B2BProfileResponse saveProfile(Long userId, B2BProfileRequest request) {
@@ -65,7 +66,7 @@ public class B2BProfileService {
         if (request.getCompanyName() == null || request.getGstin() == null ||
                 request.getPan() == null || request.getBankAccount() == null ||
                 request.getTeamEmail() == null) {
-            throw new IllegalArgumentException("Company name, GSTIN, PAN, bank account, and team email are required for B2B profile");
+            throw new InvalidArgumentException("Company name, GSTIN, PAN, bank account, and team email are required for B2B profile");
         }
 
         // Check if profile exists, update or create

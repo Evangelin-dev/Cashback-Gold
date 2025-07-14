@@ -3,6 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.kyc.KycResponse;
 import com.cashback.gold.dto.kyc.KycUploadRequest;
 import com.cashback.gold.entity.KycDocument;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.KycRepository;
 import com.cashback.gold.repository.UserRepository;
 import com.cashback.gold.service.aws.S3Service;
@@ -26,10 +27,10 @@ public class PartnerKycService {
 
         // Validate documents
         if (request.getAadharOrGst() == null || request.getPan() == null) {
-            throw new IllegalArgumentException("Aadhaar and PAN are required for PARTNER");
+            throw new InvalidArgumentException("Aadhaar and PAN are required for PARTNER");
         }
         if (request.getAddressProof() != null || request.getBankStatement() != null) {
-            throw new IllegalArgumentException("Address proof and bank statement are not allowed for PARTNER");
+            throw new InvalidArgumentException("Address proof and bank statement are not allowed for PARTNER");
         }
 
         // Upload files
@@ -52,14 +53,14 @@ public class PartnerKycService {
     public KycResponse getKyc(Long userId) {
         validateUser(userId, "PARTNER");
         KycDocument doc = kycRepo.findTopByUserIdAndUserTypeOrderBySubmittedAtDesc(userId, "PARTNER")
-                .orElseThrow(() -> new IllegalArgumentException("No KYC documents found for PARTNER"));
+                .orElseThrow(() -> new InvalidArgumentException("No KYC documents found for PARTNER"));
         return toKycResponse(doc);
     }
 
     private void validateUser(Long userId, String expectedRole) {
         userRepo.findById(userId)
                 .filter(user -> expectedRole.equals(user.getRole()))
-                .orElseThrow(() -> new IllegalArgumentException("Invalid user or role"));
+                .orElseThrow(() -> new InvalidArgumentException("Invalid user or role"));
     }
 
     private KycResponse toKycResponse(KycDocument doc) {

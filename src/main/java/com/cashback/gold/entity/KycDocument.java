@@ -1,5 +1,6 @@
 package com.cashback.gold.entity;
 
+import com.cashback.gold.exception.InvalidArgumentException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -59,7 +60,7 @@ public class KycDocument {
     @PreUpdate
     private void validateStatus() {
         if (!"PENDING".equals(status) && !"APPROVED".equals(status) && !"REJECTED".equals(status)) {
-            throw new IllegalArgumentException("Status must be PENDING, APPROVED, or REJECTED");
+            throw new InvalidArgumentException("Status must be PENDING, APPROVED, or REJECTED");
         }
     }
 }

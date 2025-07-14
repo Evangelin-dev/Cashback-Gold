@@ -1,5 +1,6 @@
 package com.cashback.gold.entity;
 
+import com.cashback.gold.exception.InvalidArgumentException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -43,13 +44,13 @@ public class Wallet {
     @PreUpdate
     private void validateFields() {
         if (balance.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Balance cannot be negative");
+            throw new InvalidArgumentException("Balance cannot be negative");
         }
         if (creditLimit.compareTo(BigDecimal.ZERO) < 0) {
-            throw new IllegalArgumentException("Credit limit cannot be negative");
+            throw new InvalidArgumentException("Credit limit cannot be negative");
         }
         if (usedCredit.compareTo(BigDecimal.ZERO) < 0 || usedCredit.compareTo(creditLimit) > 0) {
-            throw new IllegalArgumentException("Used credit must be between 0 and credit limit");
+            throw new InvalidArgumentException("Used credit must be between 0 and credit limit");
         }
     }
 }

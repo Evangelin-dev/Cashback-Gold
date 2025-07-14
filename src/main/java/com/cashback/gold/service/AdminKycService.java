@@ -30,10 +30,10 @@ public class AdminKycService {
 
     public KycResponse updateStatus(Long id, String status) {
         if (!status.matches("PENDING|APPROVED|REJECTED")) {
-            throw new IllegalArgumentException("Status must be PENDING, APPROVED, or REJECTED");
+            throw new InvalidArgumentException("Status must be PENDING, APPROVED, or REJECTED");
         }
         KycDocument doc = kycRepo.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("KYC document not found"));
+                .orElseThrow(() -> new InvalidArgumentException("KYC document not found"));
         doc.setStatus(status);
         kycRepo.save(doc);
         return toKycResponse(doc);

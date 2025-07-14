@@ -37,4 +37,9 @@ public class GoldPlantScheme {
 
     @LastModifiedDate
     private LocalDateTime updatedAt;
+
+    private String keyPoint1; // Required
+    private String keyPoint2; // Optional
+    private String keyPoint3; // Optional
+
 }

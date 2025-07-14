@@ -451,6 +451,13 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="10-3" author="azeem">
+        <addColumn tableName="gold_plant_schemes">
+            <column name="key_point1" type="VARCHAR(255)"/>
+            <column name="key_point2" type="VARCHAR(255)"/>
+            <column name="key_point3" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
 
     <changeSet id="11" author="azeem">
         <createTable tableName="campaigns">

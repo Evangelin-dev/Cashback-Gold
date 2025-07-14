@@ -28,6 +28,9 @@ public class GoldPlantSchemeService {
                 .description(req.getDescription())
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
+                .keyPoint1(req.getKeyPoint1())
+                .keyPoint2(req.getKeyPoint2())
+                .keyPoint3(req.getKeyPoint3())
                 .build();
         return repository.save(scheme);
     }
@@ -41,6 +44,9 @@ public class GoldPlantSchemeService {
         scheme.setStatus(req.getStatus());
         scheme.setDescription(req.getDescription());
         scheme.setUpdatedAt(LocalDateTime.now());
+        scheme.setKeyPoint1(req.getKeyPoint1());
+        scheme.setKeyPoint2(req.getKeyPoint2());
+        scheme.setKeyPoint3(req.getKeyPoint3());
         return repository.save(scheme);
     }
 

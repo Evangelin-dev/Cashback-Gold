@@ -1,5 +1,6 @@
 package com.cashback.gold.entity;
 
+import com.cashback.gold.exception.InvalidArgumentException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -42,13 +43,13 @@ public class WalletTransaction {
     @PrePersist
     private void validateFields() {
         if (!type.matches("TOPUP|PURCHASE")) {
-            throw new IllegalArgumentException("Type must be TOPUP or PURCHASE");
+            throw new InvalidArgumentException("Type must be TOPUP or PURCHASE");
         }
         if (!status.matches("PENDING|COMPLETED|FAILED")) {
-            throw new IllegalArgumentException("Status must be PENDING, COMPLETED, or FAILED");
+            throw new InvalidArgumentException("Status must be PENDING, COMPLETED, or FAILED");
         }
         if (amount.compareTo(BigDecimal.ZERO) <= 0) {
-            throw new IllegalArgumentException("Amount must be positive");
+            throw new InvalidArgumentException("Amount must be positive");
         }
     }
 }

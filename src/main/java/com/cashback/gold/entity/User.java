@@ -1,5 +1,6 @@
 package com.cashback.gold.entity;
 
+import com.cashback.gold.exception.InvalidArgumentException;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -72,10 +73,10 @@ public class User {
     @PreUpdate
     private void validateRoleAndStatus() {
         if (!role.matches("ADMIN|PARTNER|B2B|USER")) {
-            throw new IllegalArgumentException("Role must be ADMIN, PARTNER, B2B, or USER");
+            throw new InvalidArgumentException("Role must be ADMIN, PARTNER, B2B, or USER");
         }
         if (!status.matches("PENDING|APPROVED|REJECTED")) {
-            throw new IllegalArgumentException("Status must be PENDING, APPROVED, or REJECTED");
+            throw new InvalidArgumentException("Status must be PENDING, APPROVED, or REJECTED");
         }
     }
 }

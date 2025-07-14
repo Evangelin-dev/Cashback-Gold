@@ -1,5 +1,6 @@
 package com.cashback.gold.service.aws;
 
+import com.cashback.gold.exception.InvalidArgumentException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,7 +31,7 @@ public class S3Service {
     public String uploadFile(MultipartFile file) {
         try {
             if (file == null || file.isEmpty()) {
-                throw new IllegalArgumentException("File is empty or null.");
+                throw new InvalidArgumentException("File is empty or null.");
             }
 
             String originalFileName = file.getOriginalFilename();
