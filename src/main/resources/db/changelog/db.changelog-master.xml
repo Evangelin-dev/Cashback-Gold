@@ -513,6 +513,14 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="13-1" author="azeem">
+        <sql>
+            ALTER TABLE faqs ADD CONSTRAINT chk_faqs_type
+                CHECK (type IN ('HOME', 'CHIT', 'SIP', 'SCHEME'));
+        </sql>
+    </changeSet>
+
+
     <!-- B2B Profiles Table -->
     <changeSet id="14" author="azeem">
         <createTable tableName="b2b_profiles">
