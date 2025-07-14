@@ -7,7 +7,6 @@ import SavingPlan from "./src/app/admin/ChitJewelsSavingPlan/savingplan";
 import Commission from "./src/app/admin/Commission/commission";
 import SPIPPlan from "./src/app/admin/DigitalGoldSPIPlan/sipplan";
 import PlantScheme from "./src/app/admin/GoldPlantScheme/plantscheme";
-import SchemesFlyer from "./src/app/admin/SchemesFlyer/schemesflyer";
 import KYC from "./src/app/admin/KYC/kyc";
 import ManageOrnaments from "./src/app/admin/ManageOrnaments/manageornaments";
 import ManageUsers from "./src/app/admin/ManageUsers/ManageUsers";
@@ -93,6 +92,7 @@ import SIPPlanDisclaimer from "./src/app/user/SIPDisclaimer/sipdisclaimer";
 import ShippingPolicy from "./src/app/user/ShippingPolicy/shippingpolicy";
 import LSIPPlanDisclaimer from "./src/app/loginuser/SIPDisclaimer/sipdisclaimer";
 import LShippingPolicy from "./src/app/loginuser/ShippingPolicy/shippingpolicy";
+import SchemesFlyer from "./src/app/admin/SchemesFlyer/Schemesflyer.tsx";
 
 const AppRoutes: React.FC = () => {
   return (
