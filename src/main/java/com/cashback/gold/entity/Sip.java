@@ -50,5 +50,8 @@ public class Sip {
 
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt = LocalDateTime.now();
+
+    @Column(name = "created_by")
+    private Long createdBy; // Just user ID of B2B creator
 }
 

@@ -31,6 +31,7 @@ public class SecurityConfig {
                         .requestMatchers("/admin/ornaments/**").hasAuthority("ADMIN")
                         .requestMatchers("/admin/marketing-resources/**").hasAuthority("ADMIN")
                         .requestMatchers("/admin/marketing-resources").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/admin/marketing-resources").hasAnyAuthority("ADMIN","B2B")
                         .requestMatchers("/api/admin/profile").hasAuthority("ADMIN")
 //                        .requestMatchers("/api/kyc/**").hasAuthority("ADMIN") // for GET, PUT, DELETE, etc.
                         .requestMatchers("/api/saving-plans").hasAuthority("ADMIN")

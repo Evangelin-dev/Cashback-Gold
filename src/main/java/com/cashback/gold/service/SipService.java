@@ -24,7 +24,7 @@ public class SipService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    public Sip createSip(SipRequest request) {
+    public Sip createSip(SipRequest request,Long b2bUserId) {
         // Create or find user
         User user = userRepository.findByEmailOrMobile(request.getEmail(), request.getMobile())
                 .orElseGet(() -> {
@@ -59,7 +59,7 @@ public class SipService {
         sip.setCommission("₹0");
         sip.setCreatedAt(LocalDateTime.now());
         sip.setUpdatedAt(LocalDateTime.now());
-
+        sip.setCreatedBy(b2bUserId);
         return sipRepository.save(sip);
     }
 
@@ -109,4 +109,14 @@ public class SipService {
         sip.setUpdatedAt(LocalDateTime.now());
         return sipRepository.save(sip);
     }
+
+    public List<Sip> getSipsForUser(Long userId) {
+        return sipRepository.findByUserId(userId);
+    }
+
+    public List<Sip> getSipsCreatedByB2BUser(Long b2bUserId) {
+        return sipRepository.findByCreatedBy(b2bUserId);
+    }
+
+
 }

@@ -780,6 +780,12 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="22-1" author="cseazeem">
+        <addColumn tableName="sips">
+            <column name="created_by" type="BIGINT"/>
+        </addColumn>
+    </changeSet>
+
     <!-- Add status constraint -->
     <changeSet id="23" author="cseazeem">
         <sql>
