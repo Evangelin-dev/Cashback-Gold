@@ -2,6 +2,7 @@ package com.cashback.gold.service;
 
 import com.cashback.gold.config.MetalApiProperties;
 import com.cashback.gold.dto.GoldPurchaseRequest;
+import com.cashback.gold.dto.MetalRatesResponse;
 import com.cashback.gold.dto.OrderResponse;
 import com.cashback.gold.entity.GoldPurchaseOrder;
 import com.cashback.gold.entity.User;
@@ -88,6 +89,38 @@ public class GoldPurchaseOrderService {
                 .status(order.getStatus())
                 .invoice("invoice_ORD" + order.getId() + ".pdf")
                 .build()).collect(Collectors.toList());
+    }
+
+    public MetalRatesResponse fetchGoldAndSilverRatesFromApi() {
+        String url = metalApiProperties.getUrl() +
+                "?api_key=" + metalApiProperties.getKey() +
+                "&base=INR&currencies=XAU,XAG";
+
+        ResponseEntity<Map> response = restTemplate.getForEntity(url, Map.class);
+        Map<String, Object> body = response.getBody();
+
+        if (body != null && Boolean.TRUE.equals(body.get("success"))) {
+            Map<String, Double> rates = (Map<String, Double>) body.get("rates");
+
+            double inrPerOunceGold = rates.get("INRXAU");
+            double inrPerOunceSilver = rates.get("INRXAG");
+
+            // Convert ounce to gram
+            double goldInrPerGram = Math.round((inrPerOunceGold / 31.1035) * 100.0) / 100.0;
+            double silverInrPerGram = Math.round((inrPerOunceSilver / 31.1035) * 100.0) / 100.0;
+
+//            // Save both in DB
+//            updateRate("GOLD", goldInrPerGram);
+//            updateRate("SILVER", silverInrPerGram);
+
+            return MetalRatesResponse.builder()
+                    .goldRateInrPerGram(goldInrPerGram)
+                    .silverRateInrPerGram(silverInrPerGram)
+                    .fetchedAt(LocalDateTime.now())
+                    .build();
+        }
+
+        throw new RuntimeException("Failed to fetch gold and silver rates");
     }
 
 }

@@ -70,7 +70,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.POST,"/api/flyers").hasAnyAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.DELETE,"/api/flyers").hasAnyAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.GET,"/api/flyers").permitAll()
-
+                                .requestMatchers("/api/metal-rates").permitAll()
                                 // All other requests require authentication
                         .anyRequest().authenticated()
                 )
