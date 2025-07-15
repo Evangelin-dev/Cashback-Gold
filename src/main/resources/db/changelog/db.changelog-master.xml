@@ -812,4 +812,20 @@
         </sql>
     </changeSet>
 
+    <changeSet id="25" author="azeem">
+        <createTable tableName="inventory">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="total_stock" type="DOUBLE PRECISION"/>
+            <column name="in_store_stock" type="DOUBLE PRECISION"/>
+            <column name="gold_stock" type="DOUBLE PRECISION"/>
+            <column name="silver_stock" type="DOUBLE PRECISION"/>
+            <column name="diamond_stock" type="DOUBLE PRECISION"/>
+            <column name="unit" type="VARCHAR(10)"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+
 </databaseChangeLog>
