@@ -6,14 +6,20 @@ import com.cashback.gold.dto.MetalRatesResponse;
 import com.cashback.gold.dto.OrderResponse;
 import com.cashback.gold.entity.GoldPurchaseOrder;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.entity.Wallet;
+import com.cashback.gold.entity.WalletTransaction;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.GoldPurchaseOrderRepository;
 import com.cashback.gold.repository.UserRepository;
+import com.cashback.gold.repository.WalletRepository;
+import com.cashback.gold.repository.WalletTransactionRepository;
 import com.cashback.gold.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
@@ -27,6 +33,8 @@ public class GoldPurchaseOrderService {
     private final RestTemplate restTemplate;
     private final MetalApiProperties metalApiProperties;
     private final UserRepository userRepository;
+    private final WalletRepository walletRepository;
+    private final WalletTransactionRepository walletTransactionRepository;
 
     public double getCurrentGoldRate() {
         String url = metalApiProperties.getUrl() +
@@ -42,16 +50,64 @@ public class GoldPurchaseOrderService {
             return Math.round((inrPerOunce / 31.1035) * 100.0) / 100.0;
         }
 
-        throw new RuntimeException("Failed to fetch gold rate");
+        throw new InvalidArgumentException("Failed to fetch gold rate");
     }
+
+//    public GoldPurchaseOrder createOrder(UserPrincipal userPrincipal, GoldPurchaseRequest req) {
+//        double rate = getCurrentGoldRate();
+//        double total = rate * req.getQuantity();
+//
+//        User user = userRepository.findById(userPrincipal.getId()).get();
+//        GoldPurchaseOrder order = GoldPurchaseOrder.builder()
+//                .userId(userPrincipal.getId())
+//                .customerName(user.getFullName())
+//                .customerType(user.getRole())
+//                .quantity(req.getQuantity())
+//                .pricePerGram(rate)
+//                .totalAmount(total)
+//                .deliveryMethod(req.getDeliveryMethod())
+//                .paymentMethod(req.getPaymentMethod())
+//                .status("PENDING")
+//                .createdAt(LocalDateTime.now())
+//                .build();
+//
+//        return repo.save(order);
+//    }
 
     public GoldPurchaseOrder createOrder(UserPrincipal userPrincipal, GoldPurchaseRequest req) {
         double rate = getCurrentGoldRate();
         double total = rate * req.getQuantity();
 
-        User user = userRepository.findById(userPrincipal.getId()).get();
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
+
+        if ("WALLET".equalsIgnoreCase(req.getPaymentMethod())) {
+            Wallet wallet = walletRepository.findByUserId(user.getId())
+                    .orElseThrow(() -> new InvalidArgumentException("Wallet not found"));
+
+            BigDecimal totalAmount = BigDecimal.valueOf(total);
+            if (wallet.getBalance().compareTo(totalAmount) < 0) {
+                throw new InvalidArgumentException("Insufficient wallet balance");
+            }
+
+            // Deduct from wallet
+            wallet.setBalance(wallet.getBalance().subtract(totalAmount));
+            walletRepository.save(wallet);
+
+            // Log transaction
+            WalletTransaction transaction = WalletTransaction.builder()
+                    .wallet(wallet)
+                    .type("PURCHASE")  // must be either TOPUP or PURCHASE
+                    .amount(totalAmount)
+                    .paymentMethod("WALLET")
+                    .status("COMPLETED")
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            walletTransactionRepository.save(transaction);
+        }
+
         GoldPurchaseOrder order = GoldPurchaseOrder.builder()
-                .userId(userPrincipal.getId())
+                .userId(user.getId())
                 .customerName(user.getFullName())
                 .customerType(user.getRole())
                 .quantity(req.getQuantity())
@@ -75,7 +131,7 @@ public class GoldPurchaseOrderService {
     }
 
     public GoldPurchaseOrder updateStatus(Long id, String status) {
-        GoldPurchaseOrder order = repo.findById(id).orElseThrow(() -> new RuntimeException("Order not found"));
+        GoldPurchaseOrder order = repo.findById(id).orElseThrow(() -> new InvalidArgumentException("Order not found"));
         order.setStatus(status);
         return repo.save(order);
     }
@@ -120,7 +176,7 @@ public class GoldPurchaseOrderService {
                     .build();
         }
 
-        throw new RuntimeException("Failed to fetch gold and silver rates");
+        throw new InvalidArgumentException("Failed to fetch gold and silver rates");
     }
 
 }
