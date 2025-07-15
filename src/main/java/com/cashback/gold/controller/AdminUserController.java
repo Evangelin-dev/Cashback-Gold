@@ -1,5 +1,6 @@
 package com.cashback.gold.controller;
 
+import com.cashback.gold.dto.UserCountResponse;
 import com.cashback.gold.dto.UserResponse;
 import com.cashback.gold.dto.common.ApiResponse;
 import com.cashback.gold.service.UserService;
@@ -36,5 +37,9 @@ public class AdminUserController {
         return ResponseEntity.ok(userService.getUsersByTypePaginated(type, page, size));
     }
 
+    @GetMapping("/counts")
+    public ResponseEntity<UserCountResponse> getUserCounts() {
+        return ResponseEntity.ok(userService.getUserCountsByRole());
+    }
 }
 

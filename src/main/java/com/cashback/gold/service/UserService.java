@@ -1,5 +1,6 @@
 package com.cashback.gold.service;
 
+import com.cashback.gold.dto.UserCountResponse;
 import com.cashback.gold.dto.UserResponse;
 import com.cashback.gold.entity.User;
 import com.cashback.gold.repository.UserRepository;
@@ -33,4 +34,10 @@ public class UserService {
                 .build();
     }
 
+    public UserCountResponse getUserCountsByRole() {
+        long userCount = userRepository.countByRoleIgnoreCase("USER");
+        long partnerCount = userRepository.countByRoleIgnoreCase("PARTNER");
+        long b2bCount = userRepository.countByRoleIgnoreCase("B2B");
+        return new UserCountResponse(userCount, partnerCount, b2bCount);
+    }
 }
