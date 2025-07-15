@@ -65,7 +65,11 @@ public class SecurityConfig {
                         .requestMatchers("/api/gold/user").hasAnyAuthority("USER", "B2B")
                         .requestMatchers("/api/gold/orders/my").hasAnyAuthority("USER", "B2B")
                         .requestMatchers("/api/gold/rate").permitAll()
-                        // All other requests require authentication
+                                .requestMatchers(HttpMethod.POST,"/api/flyers").hasAnyAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE,"/api/flyers").hasAnyAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.GET,"/api/flyers").permitAll()
+
+                                // All other requests require authentication
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)

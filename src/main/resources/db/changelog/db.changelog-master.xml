@@ -787,4 +787,23 @@
                 CHECK (STATUS IN ('ACTIVE', 'CANCELLED', 'COMPLETED'));
         </sql>
     </changeSet>
+
+    <changeSet id="24" author="azeem">
+        <createTable tableName="flyers">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="url" type="TEXT"/>
+            <column name="type" type="VARCHAR(50)"/>
+            <column name="upload_date" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="24-1" author="azeem">
+        <sql>
+            ALTER TABLE flyers ADD CONSTRAINT chk_flyer_type
+                CHECK (type IN ('GOLD_PLANT', 'SIP_PLAN', 'SAVING_PLAN'));
+        </sql>
+    </changeSet>
+
 </databaseChangeLog>
