@@ -88,11 +88,13 @@ import GoldPlantSchemes from "./src/app/user/GoldSchemes/goldschemes.tsx";
 import BCommission from "./src/app/b2b/commission/Commission";
 import AdminProtectedRoute from './src/app/protectedRoutes/AdminProtectedRoute';
 import UserProtectedRoute from './src/app/protectedRoutes/UserProtectedRoute';
+import B2BProtectedRoute from './src/app/protectedRoutes/B2BProtectedRoute';
 import SIPPlanDisclaimer from "./src/app/user/SIPDisclaimer/sipdisclaimer";
 import ShippingPolicy from "./src/app/user/ShippingPolicy/shippingpolicy";
 import LSIPPlanDisclaimer from "./src/app/loginuser/SIPDisclaimer/sipdisclaimer";
 import LShippingPolicy from "./src/app/loginuser/ShippingPolicy/shippingpolicy";
 import SchemesFlyer from "./src/app/admin/Schemes-Flyer/Schemeflyer";
+import SupportTicket from "./src/app/admin/Support-Ticket/SupportTicket";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -118,6 +120,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/goldorders" element={<GoldOrders />} />
           <Route path="/orderhistory" element={<AOrderHistory />} />
           <Route path="/faq" element={<FAQManagement />} />
+          <Route path="/support-ticket" element={<SupportTicket />} />
         </Route>
       </Route>
 
@@ -125,6 +128,8 @@ const AppRoutes: React.FC = () => {
 
       {/* <Route element={<B2BLayout/>}> */}
       <Route path="/b2b/login" element={<Login />} />
+      <Route path="/b2b/register" element={<B2BRegistration />} />
+      <Route element={<B2BProtectedRoute />} >
       <Route element={<B2BLayout />}>
         <Route path="bdashboard" element={<Dashboard />} />
         <Route path="bgoldpurchase" element={<GoldPurchase />} />
@@ -139,7 +144,7 @@ const AppRoutes: React.FC = () => {
         <Route path="bnotifications" element={<Notifications />} />
         <Route path="logout" element={<Logout />} />
       </Route>
-
+      </Route>
       {/* </Route> */}
 
 
@@ -220,9 +225,6 @@ const AppRoutes: React.FC = () => {
           <Route path="/usermybankaccounts" element={<MyBankAccounts />} />
         </Route >
       </Route>
-
-      <Route path="/b2bregistration" element={<B2BRegistration />} />
-
     </Routes>
 
   );

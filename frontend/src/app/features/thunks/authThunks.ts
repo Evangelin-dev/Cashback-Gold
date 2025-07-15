@@ -73,7 +73,7 @@ export const sendRegistrationOtp = createAsyncThunk<ApiResponse, RegistrationDat
         state: userData.state,
         country: userData.country,
         password: userData.password,
-        role: "USER",
+        role: userData.role,
       });
 
       if (!response.data.success) {
@@ -105,7 +105,7 @@ export const verifyOtpAndRegister = createAsyncThunk<LoginResponse, Verification
         state: verificationData.state,
         country: verificationData.country,
         password: verificationData.password,
-        role: "USER",
+        role: verificationData.role,
       });
       if (!response.data.success) {
         return rejectWithValue(response.data.message);

@@ -20,9 +20,10 @@ const menuItems = [
   { label: 'Gold Plant Scheme', icon: '🌱', path: '/plantscheme' },
   { label: 'Schemes Flyer', icon: '🖼️', path: '/flayerschemes' },
   { label: 'Market Resource', icon: '📊', path: '/resource' },
-  { label: 'Campaigns', icon: '📋', path: '/campaigns' },
-  { label: 'Manage FAQ', icon: '📋', path: '/faq' },
+  { label: 'Campaigns', icon: '📣', path: '/campaigns' },
+  { label: 'Manage FAQ', icon: '📚', path: '/faq' },
   { label: 'My Bank Accounts', icon: '🏦', path: '/mybankaccounts' },
+  { label: 'Support Tickets', icon: '🧾', path: '/support-ticket' },
   { label: 'Logout', icon: '🚪', path: '#' }
 ];
 

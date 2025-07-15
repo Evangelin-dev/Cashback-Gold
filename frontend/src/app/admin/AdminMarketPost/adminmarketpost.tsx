@@ -105,6 +105,7 @@ const MarketingResourcesUpload = () => {
     setIsUploading(true);
 
     const formData = new FormData();
+    
     formData.append('file', newResource.file);
 
     const jsonData = {
@@ -112,18 +113,18 @@ const MarketingResourcesUpload = () => {
       description: newResource.description,
       status: newResource.status
     };
-    formData.append('data', JSON.stringify(jsonData));
+    const jsonBlob = new Blob([JSON.stringify(jsonData)], { type: 'application/json' });
+    formData.append('data', jsonBlob);
 
     try {
-      await axiosInstance.post('/admin/marketing-resources', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
-      alert('Resource uploaded successfully!');
+      await axiosInstance.post('/admin/marketing-resources', formData);
+      
       resetUploadForm();
       fetchResources();
-    } catch (err) {
+    } catch (err: any) {
       console.error("Upload failed:", err);
-      alert("An error occurred during upload. Please try again.");
+      const errorMessage = err.response?.data?.message || "An error occurred during upload.";
+      alert(`Upload Failed: ${errorMessage}`);
     } finally {
       setIsUploading(false);
     }
@@ -141,7 +142,6 @@ const MarketingResourcesUpload = () => {
 
     try {
       await axiosInstance.put(`/admin/marketing-resources/${editingResource.id}`, payload);
-      alert('Resource updated successfully!');
       setEditingResource(null);
       fetchResources();
     } catch (err) {
@@ -156,7 +156,6 @@ const MarketingResourcesUpload = () => {
 
     try {
       await axiosInstance.delete(`/admin/marketing-resources/${resourceToDelete.id}`);
-      alert('Resource deleted successfully!');
       setShowDeleteConfirm(false);
       setResourceToDelete(null);
       fetchResources();
@@ -241,7 +240,7 @@ const MarketingResourcesUpload = () => {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {paginatedResources.map((resource) => (
+                    {paginatedResources.reverse().map((resource) => (
                       <tr key={resource.id} className="hover:bg-gray-50">
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div>
@@ -356,7 +355,7 @@ const MarketingResourcesUpload = () => {
         )}
 
         {showDeleteConfirm && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="fixed inset-0 top-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
             <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md text-center">
               <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
               <p className="text-gray-600 mb-6">Are you sure you want to delete the resource "{resourceToDelete?.title}"?</p>

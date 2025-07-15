@@ -71,11 +71,17 @@ const PlantScheme = () => {
     }
   };
 
-  const handleUpdateScheme = async () => {
+   const handleUpdateScheme = async () => {
+    // 1. Guard clause: Ensure we are in edit mode. This is correct.
     if (!editingScheme) return;
-    const { id, ...payload } = formData;
+
+    // 2. The payload is simply the formData state itself. It already has the correct shape.
+    const payload = formData; 
+    
     try {
+      // 3. Use the 'id' from `editingScheme` for the URL.
       await axiosInstance.put(`/api/gold-plants/${editingScheme.id}`, payload);
+      
       alert('Scheme updated successfully!');
       fetchSchemes();
       closeModal();
@@ -193,7 +199,7 @@ const PlantScheme = () => {
       )}
       
       {showAddSchemeModal && ReactDOM.createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+        <div className="fixed inset-0 top-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md max-h-[90vh] overflow-y-auto">
                 <h2 className="text-xl font-bold text-[#7a1335] mb-4 text-center">{editingScheme ? "Edit Scheme" : "Add New Scheme"}</h2>
                 <form onSubmit={handleSubmitScheme} className="space-y-4">

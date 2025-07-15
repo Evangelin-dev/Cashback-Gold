@@ -54,6 +54,7 @@ export interface RegistrationData {
   state: string;
   country: string;
   password: string;
+  role: 'USER' | 'PARTNER' | 'B2B' | 'ADMIN';
 }
 
 export interface VerificationData extends RegistrationData {

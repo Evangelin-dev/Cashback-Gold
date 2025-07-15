@@ -59,8 +59,10 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       if (mode === 'login') {
         if (currentUser.role === 'ADMIN') {
           navigate("/admin");
-        } else {
+        } else if (currentUser.role === 'USER') {
           navigate("/user");
+        } else if (currentUser.role === 'B2B') {
+          navigate("/bdashboard");
         }
         onClose();
       }
@@ -179,6 +181,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       state: signupState,
       country: signupCountry,
       password: signupPassword,
+      role: 'USER'
     })).then(result => {
       if (sendRegistrationOtp.fulfilled.match(result)) {
         setStep("otp");
@@ -217,6 +220,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
           state: signupState,
           country: signupCountry,
           password: signupPassword,
+          role: 'USER'
         })).unwrap();
 
 
