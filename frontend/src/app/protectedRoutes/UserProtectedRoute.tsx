@@ -10,7 +10,7 @@ const UserProtectedRoute: React.FC = () => {
         return <Navigate to="/SignupPopup" replace />;
     }
 
-    if (currentUser.role !== 'USER') {
+    if (currentUser.role !== 'USER' || currentUser.status !== 'APPROVED') {
         return <Navigate to="/" replace />;
     }
     return <Outlet />;

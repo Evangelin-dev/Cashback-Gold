@@ -1,12 +1,10 @@
 import { ChevronDown, User } from "lucide-react";
-import { useEffect, useState } from "react";
-import CustomImage from "../../components/custom/Image";
+import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { AppDispatch, RootState } from "../../../store";
-import { useRef } from "react";
-import { logoutUser } from "../../features/slices/authSlice";
 import { Link } from "react-router-dom";
-
+import { AppDispatch, RootState } from "../../../store";
+import CustomImage from "../../components/custom/Image";
+import { logoutUser } from "../../features/slices/authSlice";
 
 export const MENU = [
 	{ name: "Home", link: "/" },
@@ -25,10 +23,9 @@ const NavBar = () => {
 	const { currentUser } = useSelector((state: RootState) => state.auth);
 	const dispatch = useDispatch<AppDispatch>();
 
-
 	const userMenuRef = useRef<HTMLDivElement>(null);
 
-	// Add this useEffect to handle clicking outside the menu
+	// Handle clicking outside the user menu to close it
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -41,12 +38,12 @@ const NavBar = () => {
 		};
 	}, []);
 
-
 	// Check screen size and update mobile state
 	useEffect(() => {
 		const checkScreenSize = () => {
-			setIsMobile(window.innerWidth < 768);
-			if (window.innerWidth >= 768) {
+			const mobile = window.innerWidth < 768;
+			setIsMobile(mobile);
+			if (!mobile) {
 				setIsMobileMenuOpen(false);
 			}
 		};
@@ -68,6 +65,7 @@ const NavBar = () => {
 	const handleLogout = () => {
 		dispatch(logoutUser());
 		setIsUserMenuOpen(false);
+		setIsMobileMenuOpen(false); // Close mobile menu on logout
 	};
 
 	return (
@@ -130,7 +128,7 @@ const NavBar = () => {
 							overflow: "hidden",
 							textOverflow: "ellipsis"
 						}}>
-							{isMobile ? "+91 81900 59995" : "+91 81900 59995"}
+							+91 81900 59995
 						</span>
 					</span>
 					{!isMobile && (
@@ -183,10 +181,6 @@ const NavBar = () => {
 							style={{
 								height: isMobile ? 20 : 26,
 								width: isMobile ? 20 : 26,
-								background: "transparent",
-								padding: 3,
-								display: "block",
-								transition: "transform 0.15s"
 							}}
 						/>
 					</a>
@@ -197,10 +191,6 @@ const NavBar = () => {
 							style={{
 								height: isMobile ? 20 : 26,
 								width: isMobile ? 20 : 26,
-								background: "transparent",
-								padding: 3,
-								display: "block",
-								transition: "transform 0.15s"
 							}}
 						/>
 					</a>
@@ -211,10 +201,6 @@ const NavBar = () => {
 							style={{
 								height: isMobile ? 20 : 26,
 								width: isMobile ? 20 : 26,
-								background: "transparent",
-								padding: 3,
-								display: "block",
-								transition: "transform 0.15s"
 							}}
 						/>
 					</a>
@@ -224,28 +210,14 @@ const NavBar = () => {
 								<img
 									src="/home/Youtube.png"
 									alt="YouTube"
-									style={{
-										height: 26,
-										width: 26,
-										background: "transparent",
-										padding: 3,
-										display: "block",
-										transition: "transform 0.15s"
-									}}
+									style={{ height: 26, width: 26 }}
 								/>
 							</a>
 							<a href="#">
 								<img
 									src="/home/Linkedin.png"
 									alt="LinkedIn"
-									style={{
-										height: 26,
-										width: 26,
-										background: "transparent",
-										padding: 3,
-										display: "block",
-										transition: "transform 0.15s"
-									}}
+									style={{ height: 26, width: 26 }}
 								/>
 							</a>
 						</>
@@ -266,7 +238,6 @@ const NavBar = () => {
 					zIndex: 1000,
 					overflow: "visible",
 					minHeight: 0,
-					transition: "box-shadow 0.18s",
 				}}
 			>
 				<div
@@ -292,410 +263,355 @@ const NavBar = () => {
 							width={isMobile ? "60px" : "80px"}
 						/>
 					</a>
-					{/* Desktop All Category */}
-					{!isMobile && (
-						<div
-							style={{
-								position: "relative",
-								marginLeft: "24px",
-								flex: "0 0 auto",
-								width: "auto",
-								marginTop: 0,
-								display: "flex",
-								justifyContent: "flex-start",
-							}}
-						>
-							<button
-								onClick={() => setHovered(hovered === "categories" ? null : "categories")}
-								onMouseEnter={() => setHovered("categories")}
-								style={{
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									gap: "8px",
-									width: "auto",
-									padding: "12px 20px",
-									background: hovered === "categories"
-										? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
-										: "rgba(106, 8, 34, 0.1)",
-									color: hovered === "categories" ? "#fff" : "#6a0822",
-									border: "none",
-									borderRadius: "12px",
-									fontWeight: 600,
-									fontSize: "15px",
-									cursor: "pointer",
-									transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-									boxShadow: hovered === "categories"
-										? "0 4px 16px rgba(106, 8, 34, 0.3)"
-										: "0 2px 8px rgba(0, 0, 0, 0.1)",
-									transform: hovered === "categories" ? "translateY(-2px)" : "translateY(0)",
-									whiteSpace: "nowrap",
-									marginBottom: 0,
-								}}
-							>
-								<span style={{ fontSize: "18px" }}></span>
-								All Categories
-								<ChevronDown
-									size={16}
-									style={{
-										transform: hovered === "categories" ? "rotate(180deg)" : "rotate(0deg)",
-										transition: "transform 0.3s ease"
-									}}
-								/>
-							</button>
-							{/* Dropdown for desktop */}
-							{hovered === "categories" && (
+
+					<div style={{ display: "flex", alignItems: "center", gap: "24px" }}>
+						{/* Desktop Menu & Categories */}
+						{!isMobile && (
+							<>
 								<div
 									style={{
-										position: "absolute",
-										top: "60px",
-										left: 0,
-										background: "rgba(255, 255, 255, 0.98)",
-										backdropFilter: "blur(20px)",
-										borderRadius: "20px",
-										boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
-										minWidth: "600px",
-										width: "auto",
-										zIndex: 3000,
-										overflow: "hidden",
-										border: "1px solid rgba(255, 255, 255, 0.2)",
-										animation: "slideIn 0.3s ease-out",
-										padding: undefined,
-										maxHeight: undefined,
-										overflowY: undefined,
+										position: "relative",
+										flex: "0 0 auto",
 									}}
-									onMouseLeave={() => setHovered(null)}
 								>
-									<div style={{
-										background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
-										padding: "20px 24px",
-										textAlign: "center"
-									}}>
-										<h3 style={{
-											color: "#fff",
-											fontSize: "18px",
-											fontWeight: "600",
-											margin: "0 0 8px 0"
-										}}>
-											Browse by Category
-										</h3>
-										<p style={{
-											color: "rgba(255, 255, 255, 0.8)",
-											fontSize: "14px",
-											margin: 0
-										}}>
-											Discover our premium collection
-										</p>
-									</div>
-									<div
+									<button
+										type="button"
+										onClick={() => setHovered(hovered === "categories" ? null : "categories")}
+										onMouseEnter={() => setHovered("categories")}
 										style={{
-											padding: "24px",
-											display: "grid",
-											gridTemplateColumns: "1fr 1fr 1fr 1fr",
-											gap: "24px"
+											display: "flex",
+											alignItems: "center",
+											gap: "8px",
+											padding: "12px 20px",
+											background: hovered === "categories"
+												? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
+												: "rgba(106, 8, 34, 0.1)",
+											color: hovered === "categories" ? "#fff" : "#6a0822",
+											border: "none",
+											borderRadius: "12px",
+											fontWeight: 600,
+											fontSize: "15px",
+											cursor: "pointer",
+											transition: "all 0.3s",
+											boxShadow: hovered === "categories"
+												? "0 4px 16px rgba(106, 8, 34, 0.3)"
+												: "0 2px 8px rgba(0, 0, 0, 0.1)",
+											transform: hovered === "categories" ? "translateY(-2px)" : "translateY(0)",
+											whiteSpace: "nowrap",
 										}}
 									>
-										{[
-											{
-												name: "Gold",
-												icon: "",
-												color: "#FFD700",
-												bgColor: "rgba(255, 215, 0, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Silver",
-												icon: "",
-												color: "#C0C0C0",
-												bgColor: "rgba(192, 192, 192, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Diamond",
-												icon: "",
-												color: "#E5E4E2",
-												bgColor: "rgba(229, 228, 226, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Gold coin",
-												icon: "",
-												color: "#FFD700",
-												bgColor: "rgba(229, 228, 226, 0.1)",
-												subcategories: ["22k coin", "24k coin"]
-											}
-										].map((category, index) => (
+										All Categories
+										<ChevronDown
+											size={16}
+											style={{
+												transform: hovered === "categories" ? "rotate(180deg)" : "rotate(0deg)",
+												transition: "transform 0.3s ease"
+											}}
+										/>
+									</button>
+									{hovered === "categories" && (
+										<div
+											style={{
+												position: "absolute",
+												top: "60px",
+												left: 0,
+												background: "rgba(255, 255, 255, 0.98)",
+												backdropFilter: "blur(20px)",
+												borderRadius: "20px",
+												boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+												minWidth: "600px",
+												width: "auto",
+												zIndex: 3000,
+												overflow: "hidden",
+												border: "1px solid rgba(255, 255, 255, 0.2)",
+												animation: "slideIn 0.3s ease-out",
+												padding: undefined,
+												maxHeight: undefined,
+												overflowY: undefined,
+											}}
+											onMouseLeave={() => setHovered(null)}
+										>
+											<div style={{
+												background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
+												padding: "20px 24px",
+												textAlign: "center"
+											}}>
+												<h3 style={{
+													color: "#fff",
+													fontSize: "18px",
+													fontWeight: "600",
+													margin: "0 0 8px 0"
+												}}>
+													Browse by Category
+												</h3>
+												<p style={{
+													color: "rgba(255, 255, 255, 0.8)",
+													fontSize: "14px",
+													margin: 0
+												}}>
+													Discover our premium collection
+												</p>
+											</div>
 											<div
-												key={category.name}
 												style={{
-													background: category.bgColor,
-													borderRadius: "16px",
-													padding: "20px",
-													border: `1px solid ${category.color}30`,
-													transition: "all 0.3s ease"
-												}}
-												onMouseEnter={e => {
-													e.currentTarget.style.transform = "translateY(-4px)";
-													e.currentTarget.style.boxShadow = `0 8px 24px ${category.color}40`;
-												}}
-												onMouseLeave={e => {
-													e.currentTarget.style.transform = "translateY(0)";
-													e.currentTarget.style.boxShadow = "none";
+													padding: "24px",
+													display: "grid",
+													gridTemplateColumns: "1fr 1fr 1fr 1fr",
+													gap: "24px"
 												}}
 											>
-												<div style={{
-													display: "flex",
-													alignItems: "center",
-													gap: "12px",
-													marginBottom: "16px"
-												}}>
-													<span style={{ fontSize: "24px" }}>{category.icon}</span>
-													<h4 style={{
-														color: "#374151",
-														fontSize: "16px",
-														fontWeight: "600",
-														margin: 0
-													}}>
-														{category.name}
-													</h4>
-												</div>
-												<div style={{
-													display: "flex",
-													flexDirection: "column",
-													gap: "8px"
-												}}>
-													{category.subcategories.map((sub, subIndex) => (
-														<a
-															key={sub}
-															href={`/category/${category.name.toLowerCase()}/${sub.toLowerCase()}`}
-															style={{
-																display: "flex",
-																alignItems: "center",
-																gap: "8px",
-																padding: "8px 12px",
-																borderRadius: "8px",
-																textDecoration: "none",
-																color: "#6B7280",
-																fontWeight: 500,
-																fontSize: "14px",
-																transition: "all 0.3s ease"
-															}}
-															onMouseEnter={e => {
-																e.currentTarget.style.background = "rgba(106, 8, 34, 0.1)";
-																e.currentTarget.style.color = "#6a0822";
-																e.currentTarget.style.transform = "translateX(4px)";
-															}}
-															onMouseLeave={e => {
-																e.currentTarget.style.background = "transparent";
-																e.currentTarget.style.color = "#6B7280";
-																e.currentTarget.style.transform = "translateX(0)";
-															}}
-															onClick={() => setHovered(null)}
-														>
-															<span style={{ fontSize: "16px" }}>
-																{sub === "Men" ? "" : sub === "Women" ? "" : sub === "Kids" ? "" : ""}
-															</span>
-															{sub}
-														</a>
-													))}
-												</div>
+												{[
+													{
+														name: "Gold",
+														icon: "",
+														color: "#FFD700",
+														bgColor: "rgba(255, 215, 0, 0.1)",
+														subcategories: ["Men", "Women", "Kids", "Unisex"]
+													},
+													{
+														name: "Silver",
+														icon: "",
+														color: "#C0C0C0",
+														bgColor: "rgba(192, 192, 192, 0.1)",
+														subcategories: ["Men", "Women", "Kids", "Unisex"]
+													},
+													{
+														name: "Diamond",
+														icon: "",
+														color: "#E5E4E2",
+														bgColor: "rgba(229, 228, 226, 0.1)",
+														subcategories: ["Men", "Women", "Kids", "Unisex"]
+													},
+													{
+														name: "Gold coin",
+														icon: "",
+														color: "#FFD700",
+														bgColor: "rgba(229, 228, 226, 0.1)",
+														subcategories: ["22k coin", "24k coin"]
+													}
+												].map((category, index) => (
+													<div
+														key={category.name}
+														style={{
+															background: category.bgColor,
+															borderRadius: "16px",
+															padding: "20px",
+															border: `1px solid ${category.color}30`,
+															transition: "all 0.3s ease"
+														}}
+														onMouseEnter={e => {
+															e.currentTarget.style.transform = "translateY(-4px)";
+															e.currentTarget.style.boxShadow = `0 8px 24px ${category.color}40`;
+														}}
+														onMouseLeave={e => {
+															e.currentTarget.style.transform = "translateY(0)";
+															e.currentTarget.style.boxShadow = "none";
+														}}
+													>
+														<div style={{
+															display: "flex",
+															alignItems: "center",
+															gap: "12px",
+															marginBottom: "16px"
+														}}>
+															<span style={{ fontSize: "24px" }}>{category.icon}</span>
+															<h4 style={{
+																color: "#374151",
+																fontSize: "16px",
+																fontWeight: "600",
+																margin: 0
+															}}>
+																{category.name}
+															</h4>
+														</div>
+														<div style={{
+															display: "flex",
+															flexDirection: "column",
+															gap: "8px"
+														}}>
+															{category.subcategories.map((sub, subIndex) => (
+																<a
+																	key={sub}
+																	href={`/category/${category.name.toLowerCase()}/${sub.toLowerCase()}`}
+																	style={{
+																		display: "flex",
+																		alignItems: "center",
+																		gap: "8px",
+																		padding: "8px 12px",
+																		borderRadius: "8px",
+																		textDecoration: "none",
+																		color: "#6B7280",
+																		fontWeight: 500,
+																		fontSize: "14px",
+																		transition: "all 0.3s ease"
+																	}}
+																	onMouseEnter={e => {
+																		e.currentTarget.style.background = "rgba(106, 8, 34, 0.1)";
+																		e.currentTarget.style.color = "#6a0822";
+																		e.currentTarget.style.transform = "translateX(4px)";
+																	}}
+																	onMouseLeave={e => {
+																		e.currentTarget.style.background = "transparent";
+																		e.currentTarget.style.color = "#6B7280";
+																		e.currentTarget.style.transform = "translateX(0)";
+																	}}
+																	onClick={() => setHovered(null)}
+																>
+																	<span style={{ fontSize: "16px" }}>
+																		{sub === "Men" ? "" : sub === "Women" ? "" : sub === "Kids" ? "" : ""}
+																	</span>
+																	{sub}
+																</a>
+															))}
+														</div>
+													</div>
+												))}
 											</div>
-										))}
-									</div>
+										</div>
+									)}
 								</div>
-							)}
-						</div>
-					)}
+								<ul
+									style={{
+										display: "flex", alignItems: "center", gap: 12, margin: 0,
+										padding: 0, listStyle: "none", fontSize: 15, fontWeight: 500,
+									}}
+								>
+									{MENU.map((menuItem) => (
+										<li key={menuItem.name}>
+											<a
+												href={menuItem.link}
+												onClick={() => setSelected(menuItem.name)}
+												onMouseEnter={() => setHovered(menuItem.name)}
+												onMouseLeave={() => setHovered(null)}
+												style={{
+													color: selected === menuItem.name ? "#8a2342" : hovered === menuItem.name ? "#fff" : "#222",
+													background: selected === menuItem.name ? "#f9e9c7" : hovered === menuItem.name ? "#7a1335" : "transparent",
+													fontWeight: selected === menuItem.name ? 700 : 500,
+													textDecoration: "none", padding: "4px 14px", transition: "all 0.18s",
+													borderRadius: 7, whiteSpace: "nowrap", cursor: "pointer",
+												}}
+											>
+												{menuItem.name}
+											</a>
+										</li>
+									))}
+								</ul>
+							</>
+						)}
+					</div>
 
-					{/* Desktop Menu */}
-					{!isMobile && (
-						<ul
-							style={{
-								display: "flex",
-								alignItems: "center",
-								gap: 12,
-								margin: 0,
-								padding: 0,
-								listStyle: "none",
-								fontSize: 15,
-								fontWeight: 500,
-								fontFamily: "'Red Hat Display', 'DM Sans', Arial, sans-serif",
-								flexWrap: "wrap"
-							}}
-						>
-							{MENU.map((menuItem) => (
-								<li key={menuItem.name}>
-									<a
-										href={menuItem.link}
-										onClick={() => setSelected(menuItem.name)}
-										onMouseEnter={() => setHovered(menuItem.name)}
-										onMouseLeave={() => setHovered(null)}
-										style={{
-											color:
-												selected === menuItem.name
-													? "#8a2342"
-													: hovered === menuItem.name
-														? "#fff"
-														: "#222",
-											background:
-												selected === menuItem.name
-													? "#f9e9c7"
-													: hovered === menuItem.name
-														? "#7a1335"
-														: "transparent",
-											fontWeight: selected === menuItem.name ? 700 : 500,
-											textDecoration: "none",
-											padding: "4px 14px",
-											transition: "color 0.18s, background 0.18s",
-											borderRadius: 7,
-											whiteSpace: "nowrap",
-											cursor: "pointer",
-											boxShadow: hovered === menuItem.name ? "0 2px 8px #f0e3d1" : "none",
-											outline: hovered === menuItem.name ? "1.5px solid #7a1335" : "none",
-										}}
-									>
-										{hovered === menuItem.name
-											? `${menuItem.name}`
-											: menuItem.name}
-									</a>
-								</li>
-							))}
-						</ul>
-					)}
-
-					{/* Mobile Menu Button */}
-					{isMobile && (
-						<button
-							onClick={toggleMobileMenu}
-							style={{
-								background: "transparent",
-								border: "none",
-								cursor: "pointer",
-								padding: "5px",
-								display: "flex",
-								flexDirection: "column",
-								gap: "3px",
-								alignItems: "center",
-								justifyContent: "center",
-								width: "30px",
-								height: "30px"
-							}}
-						>
-							<span style={{
-								width: "20px",
-								height: "2px",
-								backgroundColor: "#7a1335",
-								transition: "all 0.3s",
-								transform: isMobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
-							}}></span>
-							<span style={{
-								width: "20px",
-								height: "2px",
-								backgroundColor: "#7a1335",
-								transition: "all 0.3s",
-								opacity: isMobileMenuOpen ? 0 : 1
-							}}></span>
-							<span style={{
-								width: "20px",
-								height: "2px",
-								backgroundColor: "#7a1335",
-								transition: "all 0.3s",
-								transform: isMobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
-							}}></span>
-						</button>
-					)}
-
-
-					{/* Desktop Right actions */}
-					<div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+					{/* Right-side Actions & Mobile Menu Toggle */}
+					<div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 16 }}>
 						{currentUser ? (
 							<div style={{ position: "relative" }} ref={userMenuRef}>
 								<button
+									type="button"
 									onClick={() => setIsUserMenuOpen(prev => !prev)}
 									style={{
-										display: 'flex',
-										height: '40px',
-										width: '40px',
-										alignItems: 'center',
-										justifyContent: 'center',
-										borderRadius: '9999px',
-										background: '#e5e7eb',
-										color: '#6a0822',
-										transition: 'all 0.2s',
-										border: 'none',
-										cursor: 'pointer'
+										display: 'flex', height: '40px', width: '40px', alignItems: 'center', justifyContent: 'center',
+										borderRadius: '9999px', background: '#e5e7eb', color: '#6a0822',
+										transition: 'all 0.2s', border: 'none', cursor: 'pointer'
 									}}
 								>
 									<User size={20} />
 								</button>
 								{isUserMenuOpen && (
 									<div style={{
-										position: 'absolute',
-										top: '100%',
-										right: 0,
-										marginTop: '8px',
-										width: '12rem',
-										borderRadius: '0.5rem',
-										border: '1px solid #e5e7eb',
-										backgroundColor: '#ffffff',
-										boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)',
-										zIndex: 2000
+										position: 'absolute', top: '100%', right: 0, marginTop: '8px', width: '12rem',
+										borderRadius: '0.5rem', border: '1px solid #e5e7eb', backgroundColor: '#ffffff',
+										boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1)', zIndex: 2000
 									}}>
 										<div style={{ padding: '0.5rem' }}>
-											<Link to="/user" style={{ textDecoration: 'none', display: 'block', width: '100%', borderRadius: '0.25rem', padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', color: '#374151' }}>
-												My Account
-											</Link>
-											<button onClick={handleLogout} style={{ display: 'block', width: '100%', borderRadius: '0.25rem', padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', color: '#374151', background: 'none', border: 'none', cursor: 'pointer' }}>
-												Logout
-											</button>
+											{currentUser.role === 'USER' && (
+												<Link to="/user" onClick={() => setIsUserMenuOpen(false)} style={{
+													textDecoration: 'none', display: 'block', width: '100%', borderRadius: '0.25rem',
+													padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', color: '#374151'
+												}}>My Account</Link>
+											)}
+											{currentUser.role === 'B2B' && (
+												<Link to="/bdashboard" onClick={() => setIsUserMenuOpen(false)} style={{
+													textDecoration: 'none', display: 'block', width: '100%', borderRadius: '0.25rem',
+													padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', color: '#374151'
+												}}>B2B Dashboard</Link>
+											)}
+											<button onClick={handleLogout} style={{
+												display: 'block', width: '100%', borderRadius: '0.25rem', padding: '0.5rem 1rem',
+												textAlign: 'left', fontSize: '0.875rem', color: '#374151', background: 'none',
+												border: 'none', cursor: 'pointer'
+											}}>Logout</button>
 										</div>
 									</div>
 								)}
 							</div>
 						) : (
-							<>
-								<a
-									href="/PartnerPopup"
-									style={{
-										background: hovered === "Become a partner / Login" ? "#8a2342" : "#7a1335",
-										color: "#fff",
-										borderRadius: 10,
-										padding: "7px 14px",
-										fontWeight: 500,
-										fontSize: 13,
-										display: "flex",
-										alignItems: "center",
-										gap: 7,
-										textDecoration: "none",
-										whiteSpace: "nowrap",
-										cursor: "pointer"
-									}}
-									onMouseEnter={() => setHovered("Become a partner / Login")}
-									onMouseLeave={() => setHovered(null)}
-								>
-									Become a partner / Login
-								</a>
-								<a
-									href="SignupPopup"
-									style={{
-										color: "#8a2342",
-										fontWeight: 700,
-										fontSize: 15,
-										textDecoration: "none",
-										marginLeft: 5,
-										whiteSpace: "nowrap",
-										padding: "7px 16px",
-										borderRadius: 10,
-										background: "transparent",
-										border: "1.5px solid transparent",
-										cursor: "pointer"
-									}}
-									onMouseEnter={() => setHovered("User Login / Signup")}
-									onMouseLeave={() => setHovered(null)}
-								>
-									User Login / Signup
-								</a>
-							</>
+							// Desktop action buttons - hidden on mobile
+							!isMobile && (
+								<div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+									<a
+										href="/PartnerPopup"
+										style={{
+											background: "#7a1335", color: "#fff", borderRadius: 10, padding: "8px 16px",
+											fontWeight: 600, fontSize: 13, textDecoration: "none", whiteSpace: "nowrap",
+											cursor: "pointer", transition: "background 0.2s"
+										}}
+										onMouseEnter={(e) => e.currentTarget.style.background = "#8a2342"}
+										onMouseLeave={(e) => e.currentTarget.style.background = "#7a1335"}
+									>
+										Become a partner / Login
+									</a>
+									<a
+										href="/b2b/register"
+										style={{
+											background: hovered === "B2B Register" ? "rgba(106, 8, 34, 0.05)" : "transparent",
+											color: "#7a1335", border: "1.5px solid #7a1335", borderRadius: 10,
+											padding: "6.5px 14.5px", fontWeight: 600, fontSize: 13, textDecoration: "none",
+											whiteSpace: "nowrap", cursor: "pointer", transition: "all 0.2s"
+										}}
+										onMouseEnter={() => setHovered("B2B Register")}
+										onMouseLeave={() => setHovered(null)}
+									>
+										B2B Register
+									</a>
+									<a
+										href="/SignupPopup"
+										style={{
+											color: "#8a2342", fontWeight: 700, fontSize: 15, textDecoration: "none",
+											whiteSpace: "nowrap", padding: "7px 16px", borderRadius: 10,
+											background: "transparent", border: "1.5px solid transparent", cursor: "pointer",
+										}}
+									>
+										Login / Signup
+									</a>
+								</div>
+							)
+						)}
+
+						{/* Mobile Menu Button */}
+						{isMobile && (
+							<button
+								type="button"
+								onClick={toggleMobileMenu}
+								aria-label="Toggle mobile menu"
+								aria-expanded={isMobileMenuOpen}
+								style={{
+									background: "transparent", border: "none", cursor: "pointer", padding: "5px",
+									display: "flex", flexDirection: "column", gap: "3px", alignItems: "center",
+									justifyContent: "center", width: "30px", height: "30px"
+								}}
+							>
+								<span style={{
+									width: "20px", height: "2px", backgroundColor: "#7a1335", transition: "all 0.3s",
+									transform: isMobileMenuOpen ? "rotate(45deg) translate(5px, 5px)" : "none"
+								}}></span>
+								<span style={{
+									width: "20px", height: "2px", backgroundColor: "#7a1335",
+									transition: "all 0.3s", opacity: isMobileMenuOpen ? 0 : 1
+								}}></span>
+								<span style={{
+									width: "20px", height: "2px", backgroundColor: "#7a1335", transition: "all 0.3s",
+									transform: isMobileMenuOpen ? "rotate(-45deg) translate(7px, -6px)" : "none"
+								}}></span>
+							</button>
 						)}
 					</div>
 				</div>
@@ -704,30 +620,18 @@ const NavBar = () => {
 				{isMobile && (
 					<div
 						style={{
-							position: "absolute",
-							top: "100%",
-							left: 0,
-							right: 0,
-							background: "#fff",
+							position: "absolute", top: "100%", left: 0, right: 0, background: "#fff",
 							boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-							transform: isMobileMenuOpen ? "translateY(0)" : "translateY(-100%)",
+							transform: isMobileMenuOpen ? "translateY(0)" : "translateY(-110%)",
 							opacity: isMobileMenuOpen ? 1 : 0,
 							visibility: isMobileMenuOpen ? "visible" : "hidden",
-							transition: "all 0.3s ease-in-out",
-							zIndex: 999,
-							maxHeight: isMobileMenuOpen ? "400px" : "0",
-							overflow: "hidden"
+							transition: "all 0.35s cubic-bezier(0.4, 0, 0.2, 1)", zIndex: 999,
+							maxHeight: isMobileMenuOpen ? "calc(100vh - 100px)" : "0",
+							overflowY: "auto"
 						}}
 					>
 						<div style={{ padding: "1rem 4vw" }}>
-							{/* Mobile Menu Items */}
-							<ul style={{
-								listStyle: "none",
-								margin: 0,
-								padding: 0,
-								fontSize: 16,
-								fontWeight: 500
-							}}>
+							<ul style={{ listStyle: "none", margin: 0, padding: 0, fontSize: 16, fontWeight: 500 }}>
 								{MENU.map((menuItem) => (
 									<li key={menuItem.name} style={{ marginBottom: "0.5rem" }}>
 										<a
@@ -737,19 +641,8 @@ const NavBar = () => {
 												color: selected === menuItem.name ? "#8a2342" : "#222",
 												background: selected === menuItem.name ? "#f9e9c7" : "transparent",
 												fontWeight: selected === menuItem.name ? 700 : 500,
-												textDecoration: "none",
-												padding: "12px 16px",
-												display: "block",
-												borderRadius: 8,
-												transition: "all 0.18s",
-												cursor: "pointer",
-												border: "1px solid transparent"
-											}}
-											onTouchStart={(e) => {
-												e.currentTarget.style.background = "#f5f5f5";
-											}}
-											onTouchEnd={(e) => {
-												e.currentTarget.style.background = selected === menuItem.name ? "#f9e9c7" : "transparent";
+												textDecoration: "none", padding: "12px 16px", display: "block",
+												borderRadius: 8, transition: "all 0.18s", cursor: "pointer"
 											}}
 										>
 											{menuItem.name}
@@ -757,17 +650,17 @@ const NavBar = () => {
 									</li>
 								))}
 							</ul>
-
-							{/* Mobile Action Buttons */}
-							<div className="mt-4 flex flex-col gap-2 border-t pt-4">
+							<div className="mt-4 flex flex-col gap-3 border-t pt-4">
+								{/* Mobile Action Buttons */}
 								{currentUser ? (
 									<>
-										<Link to="/user" className="w-full rounded-lg bg-gray-100 px-4 py-3 text-center font-bold text-[#8a2342]">My Account</Link>
+										<Link to="/user" onClick={() => setIsMobileMenuOpen(false)} className="w-full rounded-lg bg-gray-100 px-4 py-3 text-center font-bold text-[#8a2342]">My Account</Link>
 										<button onClick={handleLogout} className="w-full rounded-lg border border-[#8a2342] px-4 py-3 text-center font-bold text-[#8a2342]">Logout</button>
 									</>
 								) : (
 									<>
 										<a href="/PartnerPopup" className="w-full rounded-lg bg-[#7a1335] px-4 py-3 text-center font-medium text-white">Become a partner / Login</a>
+										<a href="/b2bregister" className="w-full rounded-lg border border-[#8a2342] px-4 py-3 text-center font-bold text-[#8a2342]">B2B Register</a>
 										<a href="/SignupPopup" className="w-full rounded-lg border border-[#8a2342] px-4 py-3 text-center font-bold text-[#8a2342]">User Login / Signup</a>
 									</>
 								)}
