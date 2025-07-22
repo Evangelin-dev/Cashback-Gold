@@ -236,7 +236,7 @@ const PlantScheme = () => {
       )}
 
       {(showError || showDeleteConfirm) && ReactDOM.createPortal(
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div className="fixed inset-0 top-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center animate-fade-in w-full max-w-sm">
                 {showError ? (
                     <>
