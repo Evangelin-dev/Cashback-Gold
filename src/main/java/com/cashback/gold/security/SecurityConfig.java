@@ -38,7 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/saving-plans").hasAuthority("ADMIN")
                         .requestMatchers("/api/gold-plants").hasAuthority("ADMIN")
                         .requestMatchers("/api/admin/campaigns").hasAuthority("ADMIN")
-                        .requestMatchers("/api/bank-accounts").hasAuthority("ADMIN","USER","PARTNER","B2B")
+                        .requestMatchers("/api/bank-accounts").hasAnyAuthority("ADMIN","USER","PARTNER","B2B")
                         .requestMatchers("/api/faqs").hasAuthority("ADMIN")
                         // KYC endpoints for USER
                         .requestMatchers(HttpMethod.POST, "/api/kyc/user").hasAuthority("USER")
