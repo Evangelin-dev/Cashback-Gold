@@ -64,11 +64,6 @@ const AdminDashboard = () => {
 	const [activityPage, setActivityPage] = useState(1);
 	const [activityFilter, setActivityFilter] = useState("all");
     const pageSize = 6;
-	const [showInvoicePopup, setShowInvoicePopup] = useState(false);
-	const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
-    const [showUserInvoicePopup, setShowUserInvoicePopup] = useState(false);
-    const [userInvoiceList, setUserInvoiceList] = useState<{ name: string; invoices: any[] } | null>(null);
-
 
     const fetchRates = useCallback(async () => {
         setRateLoading(true);
@@ -149,10 +144,6 @@ const AdminDashboard = () => {
 	let filteredActivities = activityData.filter(a => activityFilter === 'all' || a.type === activityFilter);
 	const totalPages = Math.ceil(filteredActivities.length / pageSize);
 	const pagedActivities = filteredActivities.slice((activityPage - 1) * pageSize, activityPage * pageSize);
-	const handleCloseUserInvoicePopup = () => { setShowUserInvoicePopup(false); setUserInvoiceList(null); };
-    const handleShowUserInvoices = (user: { name: string; invoices: any[] }) => { setUserInvoiceList(user); setShowUserInvoicePopup(true); };
-    const handleViewInvoice = (invoice: any) => { setSelectedInvoice(invoice); setShowInvoicePopup(true); };
-    const handleClosePopup = () => { setShowInvoicePopup(false); setSelectedInvoice(null); };
     const getActivityTypeColor = (type: string) => {
 		switch (type) {
 			case "user": return "bg-blue-50 border-blue-200 text-blue-700";
