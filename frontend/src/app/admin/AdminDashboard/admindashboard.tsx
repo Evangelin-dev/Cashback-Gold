@@ -182,7 +182,6 @@ const AdminDashboard = () => {
 				<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 className="text-lg font-bold text-[#7a1335] mb-2">Gold Rate</h3>
-                        <p className="text-xs text-gray-500 mb-4">Live rate from API</p>
                         {rateLoading ? <Loader className="animate-spin text-[#7a1335]" /> :
                          rateError ? <p className="text-red-500 font-semibold">{rateError}</p> :
                          <p className="text-3xl font-bold text-gray-800">₹{apiGoldPrice}<span className="text-lg font-medium text-gray-500">/gram</span></p>
@@ -190,7 +189,6 @@ const AdminDashboard = () => {
                     </div>
                     <div className="bg-white rounded-2xl p-6 shadow-sm">
                         <h3 className="text-lg font-bold text-[#7a1335] mb-2">Silver Rate</h3>
-                        <p className="text-xs text-gray-500 mb-4">Live rate from API</p>
                         {rateLoading ? <Loader className="animate-spin text-[#7a1335]" /> :
                          rateError ? <p className="text-red-500 font-semibold">{rateError}</p> :
                          <p className="text-3xl font-bold text-gray-800">₹{apiSilverPrice}<span className="text-lg font-medium text-gray-500">/gram</span></p>
@@ -313,35 +311,6 @@ const AdminDashboard = () => {
 					</div>
 				</div>
 			</div>
-
-			<div className="mb-8">
-				<h2 className="text-xl font-semibold text-gray-800 mb-4">B2B & Partner Invoices</h2>
-				<div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-					<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        {/* B2B Users Table JSX */}
-					</div>
-					<div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-6">
-                        {/* Partner Users Table JSX */}
-					</div>
-				</div>
-			</div>
-
-			{showUserInvoicePopup && userInvoiceList && (
-				<div
-					style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 2000 }}
-					onClick={handleCloseUserInvoicePopup}
-				>
-                    {/* User Invoice Popup Content */}
-				</div>
-			)}
-			{showInvoicePopup && selectedInvoice && (
-				<div
-					style={{ position: "fixed", top: 0, left: 0, width: "100vw", height: "100vh", background: "rgba(0,0,0,0.5)", display: "flex", alignItems: "center", justifyContent: "center", zIndex: 3000 }}
-					onClick={handleClosePopup}
-				>
-					{/* Invoice Details Popup Content */}
-				</div>
-			)}
 
 			<div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 				<div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
