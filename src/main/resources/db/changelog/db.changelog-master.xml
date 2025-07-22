@@ -827,5 +827,19 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="25-1" author="azeem">
+        <addColumn tableName="inventory">
+            <column name="user_id" type="BIGINT" />
+        </addColumn>
+
+        <addForeignKeyConstraint
+                baseTableName="inventory"
+                baseColumnNames="user_id"
+                constraintName="fk_inventory_user"
+                referencedTableName="users"
+                referencedColumnNames="id"/>
+    </changeSet>
+
+
 
 </databaseChangeLog>
