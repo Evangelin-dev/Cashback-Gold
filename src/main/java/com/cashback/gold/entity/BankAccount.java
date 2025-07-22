@@ -19,6 +19,7 @@ public class BankAccount {
     private String bank;
     private String account;
     private String ifsc;
+    private String upiId;
     private String status;
     private String description;
 

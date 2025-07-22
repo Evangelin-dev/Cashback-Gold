@@ -5,7 +5,7 @@ import com.cashback.gold.security.UserPrincipal;
 import com.cashback.gold.service.BankAccountService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -17,31 +17,29 @@ public class BankAccountController {
 
     private final BankAccountService service;
 
-    private Long getUserId() {
-        UserPrincipal userPrincipal = (UserPrincipal) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-        return userPrincipal.getId();
-    }
-
-
     @GetMapping
-    public ResponseEntity<List<BankAccount>> getMyAccounts() {
-        return ResponseEntity.ok(service.getMyAccounts(getUserId()));
+    public ResponseEntity<List<BankAccount>> getMyAccounts(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(service.getMyAccounts(userPrincipal.getId()));
     }
 
     @PostMapping
-    public ResponseEntity<BankAccount> save(@RequestBody BankAccount account) {
-        return ResponseEntity.ok(service.addOrUpdate(getUserId(), account));
+    public ResponseEntity<BankAccount> save(@AuthenticationPrincipal UserPrincipal userPrincipal,
+                                            @RequestBody BankAccount account) {
+        return ResponseEntity.ok(service.addOrUpdate(userPrincipal.getId(), account));
     }
 
     @PutMapping("/{id}/toggle")
-    public ResponseEntity<BankAccount> toggleStatus(@PathVariable Long id) {
-        return ResponseEntity.ok(service.toggleStatus(id, getUserId()));
+    public ResponseEntity<BankAccount> toggleStatus(@PathVariable Long id,
+                                                    @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        return ResponseEntity.ok(service.toggleStatus(id, userPrincipal.getId()));
     }
 
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@PathVariable Long id) {
-        service.delete(id, getUserId());
+    public ResponseEntity<Void> delete(@PathVariable Long id,
+                                       @AuthenticationPrincipal UserPrincipal userPrincipal) {
+        service.delete(id, userPrincipal.getId());
         return ResponseEntity.noContent().build();
     }
 }
+
 
