@@ -45,7 +45,7 @@ public class AdminKycService {
                 .userId(doc.getUserId())
                 .userType(doc.getUserType())
                 .aadharUrl(doc.getAadharUrl())
-                .panUrl(doc.getPanUrl())
+                .panCardUrl(doc.getPanCardUrl())
                 .gstCertificateUrl(doc.getGstCertificateUrl())
                 .panCardUrl(doc.getPanCardUrl())
                 .addressProofUrl(doc.getAddressProofUrl())

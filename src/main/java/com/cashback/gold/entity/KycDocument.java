@@ -29,9 +29,6 @@ public class KycDocument {
     @Column(name = "aadhar_url")
     private String aadharUrl;
 
-    @Column(name = "pan_url")
-    private String panUrl;
-
     @Column(name = "gst_certificate_url")
     private String gstCertificateUrl;
 

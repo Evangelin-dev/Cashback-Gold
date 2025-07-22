@@ -41,7 +41,7 @@ public class UserKycService {
                 .userId(userId)
                 .userType("USER")
                 .aadharUrl(aadharUrl)
-                .panUrl(panUrl)
+                .panCardUrl(panUrl)
                 .status("PENDING")
                 .submittedAt(LocalDateTime.now())
                 .build();
@@ -69,7 +69,6 @@ public class UserKycService {
                 .userId(doc.getUserId())
                 .userType(doc.getUserType())
                 .aadharUrl(doc.getAadharUrl())
-                .panUrl(doc.getPanUrl())
                 .gstCertificateUrl(doc.getGstCertificateUrl())
                 .panCardUrl(doc.getPanCardUrl())
                 .addressProofUrl(doc.getAddressProofUrl())

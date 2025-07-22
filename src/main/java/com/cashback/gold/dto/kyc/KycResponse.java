@@ -10,7 +10,6 @@ public class KycResponse {
     private Long userId;
     private String userType;
     private String aadharUrl;
-    private String panUrl;
     private String gstCertificateUrl;
     private String panCardUrl;
     private String addressProofUrl;

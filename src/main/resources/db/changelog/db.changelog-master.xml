@@ -175,7 +175,6 @@
                 <constraints nullable="false"/>
             </column>
             <column name="aadhar_url" type="TEXT"/>
-            <column name="pan_url" type="TEXT"/>
             <column name="gst_certificate_url" type="TEXT"/>
             <column name="pan_card_url" type="TEXT"/>
             <column name="address_proof_url" type="TEXT"/>
