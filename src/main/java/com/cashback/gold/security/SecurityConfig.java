@@ -27,7 +27,7 @@ public class SecurityConfig {
                         // Public endpoints
                         .requestMatchers("/auth/**").permitAll()
                         // Admin endpoints
-                        .requestMatchers(HttpMethod.GET,"/admin/marketing-resources").hasAnyAuthority("ADMIN","B2B")
+                        .requestMatchers(HttpMethod.GET,"/admin/marketing-resources").hasAnyAuthority("ADMIN","B2B","PARTNER")
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/admin/ornaments/**").hasAuthority("ADMIN")
                         .requestMatchers("/admin/marketing-resources/**").hasAuthority("ADMIN")
@@ -38,6 +38,7 @@ public class SecurityConfig {
                         .requestMatchers("/api/saving-plans").hasAuthority("ADMIN")
                         .requestMatchers("/api/gold-plants").hasAuthority("ADMIN")
                         .requestMatchers("/api/admin/campaigns").hasAuthority("ADMIN")
+                        .requestMatchers("/api/admin/campaigns").hasAnyAuthority("ADMIN","USER","PARTNER","B2B")
                         .requestMatchers("/api/bank-accounts").hasAnyAuthority("ADMIN","USER","PARTNER","B2B")
                         .requestMatchers("/api/faqs").hasAuthority("ADMIN")
                         // KYC endpoints for USER
