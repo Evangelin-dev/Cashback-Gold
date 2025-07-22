@@ -2,6 +2,7 @@ package com.cashback.gold.service;
 
 import com.cashback.gold.dto.UserCountResponse;
 import com.cashback.gold.dto.UserResponse;
+import com.cashback.gold.dto.UserStatsResponse;
 import com.cashback.gold.entity.User;
 import com.cashback.gold.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,5 +40,13 @@ public class UserService {
         long partnerCount = userRepository.countByRoleIgnoreCase("PARTNER");
         long b2bCount = userRepository.countByRoleIgnoreCase("B2B");
         return new UserCountResponse(userCount, partnerCount, b2bCount);
+    }
+
+    public UserStatsResponse getUserStats() {
+        long total = userRepository.count();
+        long partners = userRepository.countByRole("PARTNER");
+        long b2b = userRepository.countByRole("B2B");
+
+        return new UserStatsResponse(total, partners, b2b);
     }
 }

@@ -2,6 +2,7 @@ package com.cashback.gold.controller;
 
 import com.cashback.gold.dto.UserCountResponse;
 import com.cashback.gold.dto.UserResponse;
+import com.cashback.gold.dto.UserStatsResponse;
 import com.cashback.gold.dto.common.ApiResponse;
 import com.cashback.gold.service.UserService;
 import com.cashback.gold.service.admin.AdminService;
@@ -40,6 +41,11 @@ public class AdminUserController {
     @GetMapping("/counts")
     public ResponseEntity<UserCountResponse> getUserCounts() {
         return ResponseEntity.ok(userService.getUserCountsByRole());
+    }
+
+    @GetMapping("/stats")
+    public ResponseEntity<UserStatsResponse> getStats() {
+        return ResponseEntity.ok(userService.getUserStats());
     }
 }
 
