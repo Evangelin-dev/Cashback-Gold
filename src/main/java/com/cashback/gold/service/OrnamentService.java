@@ -87,8 +87,24 @@ public class OrnamentService {
     }
 
     public void delete(Long id) {
+        Ornament ornament = repo.findById(id)
+                .orElseThrow(() -> new InvalidArgumentException("Ornament not found with id: " + id));
+
+        // Delete main image from S3
+        if (ornament.getMainImage() != null) {
+            s3Service.deleteFile(ornament.getMainImage());
+        }
+
+        // Delete all sub images from S3
+        if (ornament.getSubImage1() != null) s3Service.deleteFile(ornament.getSubImage1());
+        if (ornament.getSubImage2() != null) s3Service.deleteFile(ornament.getSubImage2());
+        if (ornament.getSubImage3() != null) s3Service.deleteFile(ornament.getSubImage3());
+        if (ornament.getSubImage4() != null) s3Service.deleteFile(ornament.getSubImage4());
+
+        // Now delete ornament from DB
         repo.deleteById(id);
     }
+
 
     private OrnamentRequest parse(String json) {
         try {
