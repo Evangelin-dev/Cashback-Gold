@@ -3,7 +3,9 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.SupportTicketRequest;
 import com.cashback.gold.dto.SupportTicketResponse;
 import com.cashback.gold.entity.SupportTicket;
+import com.cashback.gold.entity.User;
 import com.cashback.gold.repository.SupportTicketRepository;
+import com.cashback.gold.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
@@ -15,6 +17,7 @@ import java.time.LocalDateTime;
 public class SupportService {
 
     private final SupportTicketRepository supportRepo;
+    private final UserRepository userRepo;
 
     // User: Raise Ticket
     public SupportTicketResponse createTicket(Long userId, SupportTicketRequest req) {
@@ -48,7 +51,21 @@ public class SupportService {
     public SupportTicketResponse getTicketById(Long id) {
         SupportTicket ticket = supportRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Ticket not found"));
-        return toResponse(ticket);
+
+        // Fetch the user details
+        User user = userRepo.findById(ticket.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return SupportTicketResponse.builder()
+                .id(ticket.getId())
+                .userId(ticket.getUserId())
+                .subject(ticket.getSubject())
+                .message(ticket.getMessage())
+                .status(ticket.getStatus())
+                .submittedAt(ticket.getSubmittedAt())
+                .email(user.getEmail()) // Include email
+                .mobile(user.getMobile()) // Include mobile
+                .build();
     }
 
     // Admin: Update Status

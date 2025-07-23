@@ -14,4 +14,6 @@ public class SupportTicketResponse {
     private String message;
     private String status;
     private LocalDateTime submittedAt;
+    private String email; // Added email field
+    private String mobile; // Added mobile field
 }
