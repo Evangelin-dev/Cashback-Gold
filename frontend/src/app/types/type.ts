@@ -82,6 +82,8 @@ export interface Ornament {
   meta: string;
   category: string;
   subCategory: string;
+  item: string;
+  customItem?: string;
   gender: 'Male' | 'Female' | 'Unisex';
   description: string;
   description1?: string;
