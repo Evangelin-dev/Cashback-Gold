@@ -9,4 +9,8 @@ import org.springframework.data.domain.Pageable;
 public interface OrnamentRepository extends JpaRepository<Ornament, Long> {
         @EntityGraph(attributePaths = {"priceBreakups"})
         Page<Ornament> findAll(Pageable pageable);
+
+        @EntityGraph(attributePaths = {"priceBreakups"})
+        Page<Ornament> findByItemTypeIgnoreCase(String itemType, Pageable pageable);
+
 }

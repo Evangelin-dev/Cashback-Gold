@@ -58,4 +58,14 @@ public class OrnamentController {
         service.delete(id);
         return ResponseEntity.ok().body("Deleted");
     }
+
+    @GetMapping("/by-item-type")
+    public ResponseEntity<List<OrnamentResponse>> getByItemType(
+            @RequestParam String itemType,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "5") int size
+    ) {
+        return ResponseEntity.ok(service.getByItemType(itemType, page, size));
+    }
+
 }

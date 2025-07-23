@@ -30,7 +30,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/admin/marketing-resources").hasAnyAuthority("ADMIN","B2B","PARTNER")
                                 .requestMatchers(HttpMethod.GET, "/admin/ornaments").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/admin/ornaments/*").permitAll()
-                        .requestMatchers("/admin/ornaments/**").hasAuthority("ADMIN") // restrict others
+                                .requestMatchers(HttpMethod.GET, "/admin/ornaments/by-item-type").permitAll()
+
+                                .requestMatchers("/admin/ornaments/**").hasAuthority("ADMIN") // restrict others
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/admin/marketing-resources/**").hasAuthority("ADMIN")
                         .requestMatchers("/admin/marketing-resources").hasAuthority("ADMIN")

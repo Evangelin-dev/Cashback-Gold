@@ -111,6 +111,14 @@ public class OrnamentService {
         repo.deleteById(id);
     }
 
+    public List<OrnamentResponse> getByItemType(String itemType, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return repo.findByItemTypeIgnoreCase(itemType, pageable)
+                .stream()
+                .map(this::toResponse)
+                .toList();
+    }
+
 
     private OrnamentRequest parse(String json) {
         try {
