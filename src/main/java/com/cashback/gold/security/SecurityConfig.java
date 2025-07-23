@@ -29,7 +29,8 @@ public class SecurityConfig {
                         // Admin endpoints
                         .requestMatchers(HttpMethod.GET,"/admin/marketing-resources").hasAnyAuthority("ADMIN","B2B","PARTNER")
                         .requestMatchers("/admin/**").hasAuthority("ADMIN")
-                        .requestMatchers("/admin/ornaments/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/admin/ornaments").permitAll() // 👈 allow GET only
+                                .requestMatchers("/admin/ornaments/**").hasAuthority("ADMIN") // restrict others
                         .requestMatchers("/admin/marketing-resources/**").hasAuthority("ADMIN")
                         .requestMatchers("/admin/marketing-resources").hasAuthority("ADMIN")
 //                        .requestMatchers(HttpMethod.GET,"/admin/marketing-resources").hasAnyAuthority("ADMIN","B2B")
