@@ -40,8 +40,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET,"/api/admin/campaigns").hasAnyAuthority("ADMIN","USER","PARTNER","B2B")
                         .requestMatchers("/api/admin/campaigns").hasAuthority("ADMIN")
                         .requestMatchers("/api/bank-accounts").hasAnyAuthority("ADMIN","USER","PARTNER","B2B")
-                        .requestMatchers("/api/faqs").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.GET,"/api/faqs").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/faqs").permitAll() // GET sabko allowed
+                        .requestMatchers("/api/faqs/**").hasAuthority("ADMIN")    // POST/PUT/DELETE sirf ADMIN
                         // KYC endpoints for USER
                         .requestMatchers(HttpMethod.POST, "/api/kyc/user").hasAuthority("USER")
                         .requestMatchers(HttpMethod.GET, "/api/kyc/user").hasAuthority("USER")
