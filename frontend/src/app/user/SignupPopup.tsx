@@ -61,6 +61,8 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
           navigate("/admin");
         } else if (currentUser.role === 'USER') {
           navigate("/user");
+        } else if (currentUser.role === 'PARTNER') {
+          navigate("/pdashboard");
         } else if (currentUser.role === 'B2B') {
           navigate("/bdashboard");
         }

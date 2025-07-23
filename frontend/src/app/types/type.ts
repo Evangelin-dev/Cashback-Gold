@@ -122,3 +122,30 @@ export interface AdminProfileData {
   role: string;
   avatarUrl: string | null;
 }
+
+export interface PriceBreakup {
+  id: number;
+  component: string;
+  goldRate18kt: number;
+  weightG: number;
+  discount: number;
+  finalValue: number;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  subCategory: string;
+  gender: string;
+  description: string;
+  mainImage: string;
+  subImages: string[];
+  material: string;
+  purity: string;
+  quality: string;
+  warranty: string;
+  details: string;
+  priceBreakups: PriceBreakup[];
+}

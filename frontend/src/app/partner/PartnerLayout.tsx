@@ -193,7 +193,7 @@ const PartnerLayout: React.FC = () => {
       {/* Main Section */}
       <div className="flex-1 flex flex-col min-w-0 md:ml-64">
         {/* Header */}
-           <header className="fixed top-0 w-full md:w-[calc(100%-16rem)] md:left-64 z-30 bg-gradient-to-r from-[#8B1538] to-[#A91B47] text-white shadow-md h-16 flex justify-between items-center px-4 md:px-6">
+           <header className="fixed top-0  w-full md:w-[calc(100%-16rem)]  md:left-64 z-50 bg-gradient-to-r from-[#8B1538] to-[#A91B47] text-white shadow-md h-16 flex justify-between items-center px-4 md:px-6">
           <div className="flex items-center gap-4">
             <button
               className="text-white text-xl md:hidden hover:bg-white/10 p-2 rounded-lg transition-colors"
@@ -201,7 +201,7 @@ const PartnerLayout: React.FC = () => {
             >
               ☰
             </button>
-            <h1 className="text-xl font-semibold">Partner Panel</h1>
+            <h1 className="text-xl font-semibold text-[#7a1335]">Partner Panel</h1>
           </div>
           <div className="relative">
             <button
