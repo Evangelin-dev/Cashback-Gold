@@ -36,6 +36,12 @@ public class GoldPurchaseOrderController {
         return ResponseEntity.ok(service.getAllOrders());
     }
 
+    // Admin views purchase/payment history (new endpoint)
+    @GetMapping("/admin/orders/history")
+    public ResponseEntity<List<GoldPurchaseOrder>> getAdminOrderHistory() {
+        return ResponseEntity.ok(service.getAllOrders());
+    }
+
     // User views their own orders
     @GetMapping("/user")
     public ResponseEntity<List<GoldPurchaseOrder>> getUserOrders(@AuthenticationPrincipal UserPrincipal userPrincipal) {

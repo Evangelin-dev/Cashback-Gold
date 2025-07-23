@@ -52,4 +52,19 @@ public class OrnamentController {
         service.delete(id);
         return ResponseEntity.ok().body("Deleted");
     }
+
+    @RestController
+    @RequestMapping("/user/ornaments")
+    public static class UserOrnamentController {
+        private final OrnamentService service;
+        public UserOrnamentController(OrnamentService service) {
+            this.service = service;
+        }
+        @GetMapping
+        public ResponseEntity<List<OrnamentResponse>> getAllForUser(
+                @RequestParam(defaultValue = "0") int page,
+                @RequestParam(defaultValue = "5") int size) {
+            return ResponseEntity.ok(service.getAll(page, size));
+        }
+    }
 }
