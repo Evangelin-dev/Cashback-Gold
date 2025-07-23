@@ -1,9 +1,10 @@
 import { createSlice } from '@reduxjs/toolkit';
 import { 
-  loginUser, 
   sendRegistrationOtp, 
   verifyOtpAndRegister, 
-  resendOtp 
+  resendOtp, 
+  verifyLoginOtp,
+  sendLoginOtp
 } from '../thunks/authThunks';
 import type { AuthState, User } from '../../types/type';
 
@@ -43,22 +44,33 @@ const authSlice = createSlice({
   extraReducers: (builder) => {
     builder
     
-      .addCase(loginUser.pending, (state) => {
+      .addCase(sendLoginOtp.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
-      .addCase(loginUser.fulfilled, (state, action) => {
+      .addCase(sendLoginOtp.fulfilled, (state) => {
+        state.status = 'succeeded';
+      })
+      .addCase(sendLoginOtp.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+
+      .addCase(verifyLoginOtp.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(verifyLoginOtp.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.currentUser = action.payload.user;
         state.token = action.payload.token;
         localStorage.setItem('currentUser', JSON.stringify(action.payload.user));
         localStorage.setItem('authToken', action.payload.token);
       })
-      .addCase(loginUser.rejected, (state, action) => {
+      .addCase(verifyLoginOtp.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       })
-
     
       .addCase(sendRegistrationOtp.pending, (state) => {
         state.status = 'loading';

@@ -2,8 +2,21 @@
 
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../../utils/axiosInstance';
-import type { Ornament } from '../../types/type';
+import type { AdminProfileData, Ornament, PaginatedResponse, User } from '../../types/type';
 
+export type UserType = 'partner' | 'b2b' | 'user';
+
+interface FetchUsersPayload {
+  userType: UserType;
+  page: number;
+  size: number;
+}
+
+interface UpdateUserStatusPayload {
+  userId: number;
+  action: 'approve' | 'reject';
+  userType: UserType;
+}
 
 const getErrorMessage = (error: unknown): string => {
   if (error && typeof error === 'object' && 'response' in error) {
@@ -129,6 +142,56 @@ export const deleteOrnament = createAsyncThunk<number, number>(
     try {
       await axiosInstance.delete(`/admin/ornaments/${ornamentId}`);
       return ornamentId;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const fetchAdminProfile = createAsyncThunk<AdminProfileData>(
+  'admin/fetchProfile',
+  async (_, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get<AdminProfileData>('/api/admin/profile');
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export const fetchUsers = createAsyncThunk<
+  { userType: UserType; data: PaginatedResponse<User> },
+  FetchUsersPayload
+>(
+  'admin/fetchUsers',
+  async ({ userType, page, size }, { rejectWithValue }) => {
+    try {
+      const response = await axiosInstance.get<PaginatedResponse<User>>('/admin/users', {
+        params: { type: userType.toUpperCase(), page: page - 1, size },
+      });
+      return { userType, data: response.data };
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+
+export const updateUserStatus = createAsyncThunk<
+  { updatedUser: User, userType: UserType },
+  UpdateUserStatusPayload
+>(
+  'admin/updateUserStatus',
+  async ({ userId, action, userType }, { rejectWithValue }) => {
+    try {
+      console.log(userId, action, userType , 'ummm');
+      const res = await axiosInstance.put(`/admin/users/${userId}/${action}`);
+      console.log(res, 'res');
+      return { 
+        updatedUser: { id: userId, status: action === 'approve' ? 'APPROVED' : 'REJECTED' } as User,
+        userType
+      };
     } catch (error) {
       return rejectWithValue(getErrorMessage(error));
     }

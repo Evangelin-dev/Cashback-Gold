@@ -1,339 +1,320 @@
-import { useState } from "react";
+import React, { useState, useEffect, useCallback } from 'react';
+import ReactDOM from 'react-dom'; // 1. Import ReactDOM for portals
+import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
 
-const initialSPIPlans = [
-  { id: 1, name: "SPI Plan 1", tenure: "6 months", monthly: "₹500", status: "Active", description: "A 6-month digital gold saving plan.", points: ["Low risk", "Flexible tenure", "Monthly returns"] },
-  { id: 2, name: "SPI Plan 2", tenure: "12 months", monthly: "₹1,000", status: "Active", description: "A 12-month digital gold saving plan.", points: ["Moderate risk", "Fixed returns", "Tax benefits"] },
-];
+// 2. Updated type to match the API response structure
+interface SPIPlan {
+  id: number;
+  name: string;
+  tenure: string;
+  monthlyAmount: string;
+  description: string;
+  status: 'ACTIVE' | 'CLOSED';
+  keyPoint1: string;
+  keyPoint2: string | null;
+  keyPoint3: string | null;
+}
 
-const emptyPlan = {
-  id: 0,
+// 3. Updated empty plan object to match the new type
+const emptyPlan: Omit<SPIPlan, 'id'> = {
   name: "",
   tenure: "",
-  monthly: "",
-  status: "Active",
+  monthlyAmount: "",
   description: "",
-  points: ["", "", ""] // 1 required, 2 optional
+  status: "ACTIVE",
+  keyPoint1: "",
+  keyPoint2: "",
+  keyPoint3: "",
 };
 
 const SIPPlan = () => {
-  const [spiPlans, setSPIPlans] = useState(initialSPIPlans);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newPlan, setNewPlan] = useState(emptyPlan);
-  const [showError, setShowError] = useState(false);
-  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [spiPlans, setSPIPlans] = useState<SPIPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  // Pagination state
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<SPIPlan | null>(null);
+  const [formData, setFormData] = useState(emptyPlan);
+
+  const [showError, setShowError] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [planToDelete, setPlanToDelete] = useState<SPIPlan | null>(null);
+
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const totalPages = Math.ceil(spiPlans.length / itemsPerPage);
   const paginatedPlans = spiPlans.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  const handleAddChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
-  ) => {
-    const { name, value } = e.target;
-    if (name.startsWith("point")) {
-      const idx = Number(name.replace("point", ""));
-      setNewPlan((prev) => ({
-        ...prev,
-        points: prev.points.map((p, i) => (i === idx ? value : p)),
-      }));
-    } else {
-      setNewPlan((prev) => ({ ...prev, [name]: value }));
+  // --- API Functions ---
+  const fetchPlans = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axiosInstance.get('/admin/sip-plans');
+      setSPIPlans(response.data);
+      setError(null);
+    } catch (err) {
+      console.error("Failed to fetch SIP plans:", err);
+      setError("Could not load SIP plans.");
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchPlans();
+  }, [fetchPlans]);
+
+  const handleCreatePlan = async (planData: Omit<SPIPlan, 'id'>) => {
+    try {
+      await axiosInstance.post('/admin/sip-plans', planData);
+      alert('Plan created successfully!');
+      fetchPlans();
+      closeModal();
+    } catch (err) {
+      console.error("Failed to create plan:", err);
+      alert("An error occurred while creating the plan.");
     }
   };
 
-  const handleAddPlan = () => {
-    if (!newPlan.name || !newPlan.tenure || !newPlan.monthly || !newPlan.status || !newPlan.description || !newPlan.points[0]) {
+  const handleUpdatePlan = async (planData: SPIPlan) => {
+    const { id, ...payload } = planData;
+    try {
+      await axiosInstance.put(`/admin/sip-plans/${id}`, payload);
+      alert('Plan updated successfully!');
+      fetchPlans();
+      closeModal();
+    } catch (err) {
+      console.error("Failed to update plan:", err);
+      alert("An error occurred while updating the plan.");
+    }
+  };
+
+  const handleStatusChange = async (id: number, newStatus: 'ACTIVE' | 'CLOSED') => {
+    const originalPlans = [...spiPlans];
+
+    const updatedPlans = spiPlans.map(plan =>
+      plan.id === id ? { ...plan, status: newStatus } : plan
+    );
+    setSPIPlans(updatedPlans);
+
+    try {
+      await axiosInstance.patch(`/admin/sip-plans/${id}/status?status=${newStatus}`);
+    } catch (err) {
+      console.error("Failed to toggle status:", err);
+      alert("Failed to update status. Reverting change.");
+      setSPIPlans(originalPlans);
+    }
+  };
+
+  const handleDelete = async () => {
+    if (!planToDelete) return;
+    try {
+      await axiosInstance.delete(`/admin/sip-plans/${planToDelete.id}`);
+      alert("Plan deleted successfully!");
+      setShowDeleteConfirm(false);
+      setPlanToDelete(null);
+      fetchPlans();
+    } catch (err) {
+      console.error("Failed to delete plan:", err);
+      alert("An error occurred while deleting the plan.");
+    }
+  };
+
+  // --- Form and Modal Logic ---
+  const openAddModal = () => {
+    setEditingPlan(null);
+    setFormData(emptyPlan);
+    setShowAddModal(true);
+  };
+
+  const openEditModal = (plan: SPIPlan) => {
+    setEditingPlan(plan);
+    setFormData(plan);
+    setShowAddModal(true);
+  };
+
+  const closeModal = () => {
+    setShowAddModal(false);
+    setEditingPlan(null);
+    setFormData(emptyPlan);
+  };
+
+  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!formData.name || !formData.tenure || !formData.monthlyAmount || !formData.description || !formData.keyPoint1) {
       setShowError(true);
       return;
     }
-    if (editIdx !== null) {
-      setSPIPlans((prev) =>
-        prev.map((plan, idx) => (idx === editIdx ? { ...newPlan, id: plan.id } : plan))
-      );
-      setEditIdx(null);
+
+    if (editingPlan) {
+      handleUpdatePlan({ ...formData, id: editingPlan.id });
     } else {
-      setSPIPlans((prev) => [
-        ...prev,
-        { ...newPlan, id: prev.length ? prev[prev.length - 1].id + 1 : 1 },
-      ]);
+      handleCreatePlan(formData);
     }
-    setShowAdd(false);
-    setNewPlan(emptyPlan);
   };
 
-  const handleEdit = (idx: number) => {
-    setEditIdx(idx);
-    setNewPlan(spiPlans[idx]);
-    setShowAdd(true);
-  };
-
-  const handleStatusChange = (id: number, newStatus: string) => {
-    setSPIPlans((prev) =>
-      prev.map((plan) =>
-        plan.id === id ? { ...plan, status: newStatus } : plan
-      )
-    );
+  const openDeleteConfirm = (plan: SPIPlan) => {
+    setPlanToDelete(plan);
+    setShowDeleteConfirm(true);
   };
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Active":
-        return "bg-green-100 text-green-700";
-      case "Closed":
-        return "bg-gray-200 text-gray-700";
-      default:
-        return "bg-gray-100 text-gray-700";
-    }
+    return status === "ACTIVE" ? "bg-green-100 text-green-700" : "bg-gray-200 text-gray-700";
   };
+
+  // Get the portal root element, ensuring it exists.
+  const modalRoot = document.getElementById('modal-root');
+  if (!modalRoot) {
+    return <div>Error: Modal container not found. Check public/index.html</div>;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fbeaf0] to-white p-2 sm:p-6">
-      {/* Removed card centering, content now starts from top */}
-      <div className="bg-white rounded-xl shadow-lg p-4  mx-auto">
+      <div className="bg-white rounded-xl shadow-lg p-4 mx-auto">
         <h1 className="text-xl sm:text-2xl font-bold text-[#7a1335] mb-4 sm:mb-6">Digital Gold SPI Plans</h1>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded-lg overflow-hidden text-xs sm:text-sm">
-            <thead>
-              <tr>
-                <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Plan Name</th>
-                <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Tenure</th>
-                <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Monthly Amount</th>
-                <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Description</th>
-                <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Status</th>
-                <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Key Points</th>
-              </tr>
-            </thead>
-            <tbody>
-              {paginatedPlans.map((plan) => (
-                <tr key={plan.id} className="border-b last:border-b-0">
-                  <td className="px-4 py-3 align-middle">{plan.name}</td>
-                  <td className="px-4 py-3 align-middle">{plan.tenure}</td>
-                  <td className="px-4 py-3 align-middle">{plan.monthly}</td>
-                  <td className="px-4 py-3 text-gray-600 align-middle">{plan.description}</td>
-                  <td className="px-4 py-3 align-middle">
-                    <div className="relative w-full max-w-[160px]">
-                      <select
-                        value={plan.status}
-                        onChange={e => handleStatusChange(plan.id, e.target.value)}
-                        className={`block w-full px-3 py-2 rounded-full text-xs sm:text-sm font-medium border-0 focus:ring-2 focus:ring-purple-500 transition ${getStatusColor(plan.status)}`}
-                        style={{
-                          minWidth: 100,
-                          appearance: 'none',
-                          backgroundPosition: 'right 0.75rem center',
-                          backgroundRepeat: 'no-repeat'
-                        }}
+        {loading && <div className="text-center py-4">Loading plans...</div>}
+        {error && <div className="text-center py-4 text-red-500">{error}</div>}
+        {!loading && !error && (
+          <>
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white rounded-lg overflow-hidden text-xs sm:text-sm">
+                <thead>
+                  <tr>
+                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Plan Name</th>
+                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Tenure</th>
+                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Monthly Amount</th>
+                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Description</th>
+                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Status</th>
+                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Key Points</th>
+                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {paginatedPlans.map((plan) => (
+                    <tr key={plan.id} className="border-b last:border-b-0">
+                      <td className="px-4 py-3 align-top">{plan.name}</td>
+                      <td className="px-4 py-3 align-top">{plan.tenure}</td>
+                      <td className="px-4 py-3 align-top">{plan.monthlyAmount}</td>
+                      <td className="px-4 py-3 text-gray-600 align-top"><div
+                        className="text-sm text-gray-900 max-w-[150px] truncate"
+                        title={plan.description}
                       >
-                        <option value="Active">Active</option>
-                        <option value="Closed">Closed</option>
-                      </select>
-                      <span
-                        style={{
-                          pointerEvents: 'none',
-                          position: 'absolute',
-                          right: 14,
-                          top: '50%',
-                          transform: 'translateY(-50%)',
-                          fontSize: 12,
-                          color: '#888'
-                        }}
-                      >▼</span>
-                    </div>
-                  </td>
-                  <td className="px-4 py-3 text-gray-600 align-middle">
-                    {plan.points && plan.points.filter(Boolean).length > 0 && (
-                      <ul className="list-disc pl-4">
-                        {plan.points.filter(Boolean).map((pt, i) => (
-                          <li key={i}>{pt}</li>
-                        ))}
-                      </ul>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        {/* Pagination Controls */}
-        <div className="flex justify-center items-center gap-2 mt-4">
-          <button
-            className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-          >
-            Prev
-          </button>
-          <span className="text-sm text-gray-700">
-            Page {currentPage} of {totalPages}
-          </span>
-          <button
-            className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-          >
-            Next
-          </button>
-        </div>
+                        {plan.description.length > 12
+                          ? `${plan.description.slice(0, 7)}...`
+                          : plan.description}
+                      </div></td>
+                      <td className="px-4 py-3 align-top">
+                        <select
+                          value={plan.status}
+                          onChange={e => handleStatusChange(plan.id, e.target.value as 'ACTIVE' | 'CLOSED')}
+                          className={`block w-full px-3 py-2 rounded-full font-medium border-0 focus:ring-2 focus:ring-purple-500 transition cursor-pointer ${getStatusColor(plan.status)}`}
+                        >
+                          <option value="ACTIVE">Active</option>
+                          <option value="CLOSED">Closed</option>
+                        </select>
+                      </td>
+                      <td className="px-4 py-3 text-gray-600 align-top">
+                        <ul className="list-disc pl-4 space-y-1">
+                          {plan.keyPoint1 && <li>{plan.keyPoint1}</li>}
+                          {plan.keyPoint2 && <li>{plan.keyPoint2}</li>}
+                          {plan.keyPoint3 && <li>{plan.keyPoint3}</li>}
+                        </ul>
+                      </td>
+                      <td className="px-4 py-3 align-top text-center space-x-2">
+                        <button onClick={() => openEditModal(plan)} className="text-blue-600 hover:underline">Edit</button>
+                        <button onClick={() => openDeleteConfirm(plan)} className="text-red-600 hover:underline">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-2 mt-4">
+                <button className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50" onClick={() => setCurrentPage((p) => Math.max(1, p - 1))} disabled={currentPage === 1}>Prev</button>
+                <span className="text-sm text-gray-700">Page {currentPage} of {totalPages}</span>
+                <button className="px-3 py-1 rounded bg-gray-200 text-gray-700 disabled:opacity-50" onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages}>Next</button>
+              </div>
+            )}
+          </>
+        )}
         <button
           className="mt-4 sm:mt-6 bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold py-2 px-6 rounded transition w-full sm:w-auto"
-          onClick={() => { setShowAdd(true); setEditIdx(null); }}
-        >
-          Add New SPI Plan
-        </button>
-        {showAdd && (
-          <div
-            style={{
-              position: "fixed",
-              inset: 0,
-              zIndex: 50,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              background: "rgba(0,0,0,0.4)",
-              padding: 8
-            }}
-          >
-            <div
-              style={{
-                background: "#fff",
-                borderRadius: "0.75rem",
-                boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-                minWidth: 320,
-                maxWidth: 420,
-                width: "100%",
-                padding: 24,
-                position: "relative",
-                margin: "0 auto"
-              }}
-            >
-              <h2 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16, color: "#7a1335", textAlign: "center" }}>
-                {editIdx !== null ? "Edit SPI Plan" : "Add New SPI Plan"}
+          onClick={openAddModal}
+        >Add New SPI Plan</button>
+
+        {/* 4. Render all modals into the #modal-root div using portals */}
+        {showAddModal && ReactDOM.createPortal(
+          <div className="fixed inset-0 overflow-y-auto h-full top-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 pt-5">
+            <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in">
+              <h2 className="text-lg font-bold  text-[#7a1335] text-center">
+                {editingPlan ? "Edit SPI Plan" : "Add New SPI Plan"}
               </h2>
-              <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <form onSubmit={handleSubmit} className="space-y-3">
                 <div>
-                  <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Plan Name</label>
-                  <input
-                    type="text"
-                    name="name"
-                    value={newPlan.name}
-                    onChange={handleAddChange}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc" }}
-                    placeholder="Plan Name"
-                  />
+                  <label className="block text-sm mb-1 font-medium text-gray-700">Plan Name</label>
+                  <input type="text" name="name" value={formData.name} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" required />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Tenure</label>
-                  <input
-                    type="text"
-                    name="tenure"
-                    value={newPlan.tenure}
-                    onChange={handleAddChange}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc" }}
-                    placeholder="e.g. 12 months"
-                  />
+                  <label className="block text-sm mb-1 font-medium text-gray-700">Tenure</label>
+                  <input type="text" name="tenure" value={formData.tenure} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" required />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Monthly Amount</label>
-                  <input
-                    type="text"
-                    name="monthly"
-                    value={newPlan.monthly}
-                    onChange={handleAddChange}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc" }}
-                    placeholder="e.g. ₹1,000"
-                  />
+                  <label className="block text-sm mb-1 font-medium text-gray-700">Monthly Amount</label>
+                  <input type="text" name="monthlyAmount" value={formData.monthlyAmount} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" required />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Description</label>
-                  <textarea
-                    name="description"
-                    value={newPlan.description}
-                    onChange={handleAddChange}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc" }}
-                    placeholder="Description"
-                    rows={2}
-                  />
+                  <label className="block text-sm mb-1 font-medium text-gray-700">Description</label>
+                  <textarea name="description" value={formData.description} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" rows={2} required />
                 </div>
                 <div>
-                  <label style={{ display: "block", fontSize: 14, marginBottom: 4 }}>Key Points</label>
-                  <input
-                    type="text"
-                    name="point0"
-                    value={newPlan.points[0]}
-                    onChange={handleAddChange}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc", marginBottom: 6 }}
-                    placeholder="Important Point (required)"
-                    required
-                  />
-                  <input
-                    type="text"
-                    name="point1"
-                    value={newPlan.points[1]}
-                    onChange={handleAddChange}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc", marginBottom: 6 }}
-                    placeholder="Optional Point 2"
-                  />
-                  <input
-                    type="text"
-                    name="point2"
-                    value={newPlan.points[2]}
-                    onChange={handleAddChange}
-                    style={{ width: "100%", padding: "8px 12px", borderRadius: 4, border: "1px solid #ccc" }}
-                    placeholder="Optional Point 3"
-                  />
+                  <label className="block text-sm mb-1 font-medium text-gray-700">Key Points</label>
+                  <input type="text" name="keyPoint1" value={formData.keyPoint1} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md mb-2" placeholder="Key Point 1 (Required)" required />
+                  <input type="text" name="keyPoint2" value={formData.keyPoint2 || ''} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md mb-2" placeholder="Key Point 2 (Optional)" />
+                  <input type="text" name="keyPoint3" value={formData.keyPoint3 || ''} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" placeholder="Key Point 3 (Optional)" />
                 </div>
-              </div>
-              <div style={{ display: "flex", gap: 8, justifyContent: "center", marginTop: 16 }}>
-                <button
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 4,
-                    background: "#7a1335",
-                    color: "#fff",
-                    fontWeight: 600,
-                    border: "none",
-                    cursor: "pointer"
-                  }}
-                  onClick={handleAddPlan}
-                >
-                  {editIdx !== null ? "Save" : "Add"}
-                </button>
-                <button
-                  style={{
-                    padding: "8px 16px",
-                    borderRadius: 4,
-                    background: "#e5e7eb",
-                    color: "#374151",
-                    border: "none",
-                    cursor: "pointer"
-                  }}
-                  onClick={() => {
-                    setShowAdd(false);
-                    setNewPlan(emptyPlan);
-                    setEditIdx(null);
-                  }}
-                >
-                  Cancel
-                </button>
-              </div>
+                <div className="flex gap-4 justify-center pt-4">
+                  <button type="submit" className="py-2 px-6 rounded bg-[#7a1335] text-white font-semibold transition-transform hover:scale-105">
+                    {editingPlan ? "Save Changes" : "Add Plan"}
+                  </button>
+                  <button type="button" onClick={closeModal} className="py-2 px-6 rounded bg-gray-200 text-gray-800 hover:bg-gray-300 transition-colors">
+                    Cancel
+                  </button>
+                </div>
+              </form>
             </div>
-          </div>
+          </div>,
+          modalRoot
         )}
-        {/* Creative Centered Error Popup */}
-        {showError && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+        {showError && ReactDOM.createPortal(
+          <div className="fixed inset-0 top-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
             <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center animate-fade-in">
-           
-              <div className="mb-4 text-gray-700 text-center">Please fill all fields.</div>
+              <div className="mb-4 text-gray-700 text-center">Please fill all required fields.</div>
               <button
                 className="px-6 py-2 rounded bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold shadow transition"
                 onClick={() => setShowError(false)}
-              >
-                OK
-              </button>
+              >OK</button>
             </div>
-          </div>
+          </div>,
+          modalRoot
+        )}
+        {showDeleteConfirm && ReactDOM.createPortal(
+          <div className="fixed inset-0 top-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+            <div className="bg-white p-6 rounded-lg shadow-xl w-full max-w-md text-center">
+              <h2 className="text-xl font-bold mb-4">Confirm Deletion</h2>
+              <p className="text-gray-600 mb-6">Are you sure you want to delete the plan "{planToDelete?.name}"?</p>
+              <div className="flex justify-center gap-4">
+                <button onClick={() => setShowDeleteConfirm(false)} className="px-6 py-2 bg-gray-200 rounded-md">Cancel</button>
+                <button onClick={handleDelete} className="px-6 py-2 bg-red-600 text-white rounded-md">Delete</button>
+              </div>
+            </div>
+          </div>,
+          modalRoot
         )}
       </div>
     </div>

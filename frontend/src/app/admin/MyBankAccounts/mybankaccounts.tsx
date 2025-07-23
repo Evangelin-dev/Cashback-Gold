@@ -1,236 +1,273 @@
-import { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axiosInstance from "../../../utils/axiosInstance"; 
 
-const initialAccounts = [
-  { id: 1, bank: "HDFC Bank", account: "XXXX1234", ifsc: "HDFC0001234", status: "Active", description: "Primary salary account." },
-  { id: 2, bank: "SBI", account: "XXXX5678", ifsc: "SBIN0005678", status: "Inactive", description: "Savings account for investments." },
-];
 
-const emptyAccount = {
-  id: 0,
+interface BankAccount {
+  id: number;
+  bank: string;
+  account: string;
+  ifsc: string;
+  status: "ACTIVE" | "INACTIVE";
+  description: string;
+}
+
+const emptyAccount: Omit<BankAccount, 'id'> = {
   bank: "",
   account: "",
   ifsc: "",
-  status: "Active",
+  status: "ACTIVE",
   description: "",
 };
 
 const MyBankAccounts = () => {
-  const [accounts, setAccounts] = useState(initialAccounts);
-  const [showAdd, setShowAdd] = useState(false);
-  const [newAccount, setNewAccount] = useState(emptyAccount);
-  const [showError, setShowError] = useState(false);
-  const [editIdx, setEditIdx] = useState<number | null>(null);
+  const [accounts, setAccounts] = useState<BankAccount[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [currentAccount, setCurrentAccount] = useState(emptyAccount);
+  const [editingAccount, setEditingAccount] = useState<BankAccount | null>(null);
+  const [showValidationError, setShowValidationError] = useState(false);
 
-  const handleAddChange = (
+  
+  const fetchAccounts = async () => {
+    try {
+      setLoading(true);
+      const response = await axiosInstance.get('/api/bank-accounts');
+      setAccounts(response.data);
+      setError(null);
+    } catch (err) {
+      setError("Failed to fetch bank accounts.");
+      console.error(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  
+  useEffect(() => {
+    fetchAccounts();
+  }, []);
+
+  const handleModalInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>
   ) => {
     const { name, value } = e.target;
-    setNewAccount((prev) => ({ ...prev, [name]: value }));
+    setCurrentAccount((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleAddAccount = () => {
-    if (!newAccount.bank || !newAccount.account || !newAccount.ifsc || !newAccount.description) {
-      setShowError(true);
+  const handleSaveAccount = async () => {
+    if (!currentAccount.bank || !currentAccount.account || !currentAccount.ifsc) {
+      setShowValidationError(true);
       return;
     }
-    if (editIdx !== null) {
-      setAccounts((prev) =>
-        prev.map((acc, idx) => (idx === editIdx ? { ...newAccount, id: acc.id } : acc))
-      );
-      setEditIdx(null);
-    } else {
-      setAccounts((prev) => [
-        ...prev,
-        { ...newAccount, id: prev.length ? prev[prev.length - 1].id + 1 : 1 },
-      ]);
+
+    try {
+      if (editingAccount) {
+        
+        
+        await axiosInstance.put(`/api/bank-accounts/${editingAccount.id}`, currentAccount);
+      } else {
+        await axiosInstance.post('/api/bank-accounts', currentAccount);
+      }
+      await fetchAccounts();
+      closeModal();
+    } catch (err) {
+      setError(editingAccount ? "Failed to update account." : "Failed to add account.");
+      console.error(err);
     }
-    setShowAdd(false);
-    setNewAccount(emptyAccount);
   };
 
-  const handleEdit = (idx: number) => {
-    setEditIdx(idx);
-    setNewAccount(accounts[idx]);
-    setShowAdd(true);
+  const handleEditClick = (account: BankAccount) => {
+    setEditingAccount(account);
+    setCurrentAccount(account);
+    setShowAddModal(true);
   };
 
-  const handleStatusToggle = (id: number) => {
-    setAccounts((prev) =>
-      prev.map((acc) =>
-        acc.id === id
-          ? {
-              ...acc,
-              status: acc.status === "Active" ? "Inactive" : "Active",
-            }
-          : acc
-      )
-    );
+  const handleDeleteClick = async (id: number) => {
+    if (window.confirm("Are you sure you want to delete this bank account?")) {
+      try {
+        await axiosInstance.delete(`/api/bank-accounts/${id}`);
+        await fetchAccounts();
+      } catch (err) {
+        setError("Failed to delete account.");
+        console.error(err);
+      }
+    }
   };
 
+  const handleStatusToggle = async (id: number) => {
+    try {
+      await axiosInstance.put(`/api/bank-accounts/${id}/toggle`);
+      await fetchAccounts();
+    } catch (err) {
+      setError("Failed to update status.");
+      console.error(err);
+    }
+  };
+
+  const closeModal = () => {
+    setShowAddModal(false);
+    setCurrentAccount(emptyAccount);
+    setEditingAccount(null);
+    setShowValidationError(false);
+  };
+  
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#fbeaf0] to-white flex items-center justify-center p-2 sm:p-6">
-      <div className="bg-white rounded-xl shadow-lg p-4 sm:p-8 w-full max-w-full sm:max-w-5xl">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#7a1335] mb-4 sm:mb-6">My Bank Accounts</h1>
-        <div className="overflow-x-auto">
-          <table className="min-w-full bg-white rounded-lg overflow-hidden">
-            <thead>
-              <tr>
-                <th className="px-4 py-2 text-[#7a1335]">Bank</th>
-                <th className="px-4 py-2 text-[#7a1335]">Account</th>
-                <th className="px-4 py-2 text-[#7a1335]">IFSC</th>
-                <th className="px-4 py-2 text-[#7a1335]">Description</th>
-                <th className="px-4 py-2 text-[#7a1335]">Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              {accounts.map((acc, idx) => (
-                <tr key={acc.id} className="border-b last:border-b-0">
-                  {/* Left: Bank, Account */}
-                  <td className="px-4 py-3">{acc.bank}</td>
-                  <td className="px-4 py-3">{acc.account}</td>
-                  {/* IFSC */}
-                  <td className="px-4 py-3">{acc.ifsc}</td>
-                  {/* Description */}
-                  <td className="px-4 py-3 text-gray-600">{acc.description}</td>
-                  {/* Status as dropdown */}
-                  <td className="px-4 py-3">
-                    <select
-                      value={acc.status}
-                      onChange={e =>
-                        setAccounts(prev =>
-                          prev.map(a =>
-                            a.id === acc.id
-                              ? { ...a, status: e.target.value }
-                              : a
-                          )
-                        )
-                      }
-                      className={`px-3 py-1 rounded-full text-xs font-semibold border-0 focus:ring-2 focus:ring-purple-500 ${
-                        acc.status === "Active"
-                          ? "bg-green-100 text-green-700"
-                          : "bg-gray-200 text-gray-700"
-                      }`}
-                    >
-                      <option value="Active">Active</option>
-                      <option value="Inactive">Inactive</option>
-                    </select>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-        <div className="flex flex-col sm:flex-row gap-3 mt-4 sm:mt-6">
+    <div className="min-h-screen w-full bg-gray-100 p-4 sm:p-6">
+      <div className="bg-white rounded-xl shadow-lg p-6 sm:p-8 w-full max-w-7xl mx-auto">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-2xl font-bold text-[#7a1335]">My Bank Accounts</h1>
           <button
-            className="bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold py-2 px-6 rounded transition"
-            onClick={() => setShowAdd(true)}
+            className="bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold py-2 px-5 rounded-lg transition-colors shadow"
+            onClick={() => {
+              setEditingAccount(null);
+              setCurrentAccount(emptyAccount);
+              setShowAddModal(true);
+            }}
           >
             Add Bank Account
           </button>
-          <button
-            className="bg-gray-400 hover:bg-gray-500 text-white font-semibold py-2 px-6 rounded transition"
-            onClick={() => window.history.back()}
-          >
-            Back
-          </button>
         </div>
-        {showAdd && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-2">
-            <div className="bg-white rounded-lg shadow-xl p-4 sm:p-6 min-w-[90vw] sm:min-w-[320px] max-w-[98vw] sm:max-w-[90vw]">
-              <h2 className="text-lg font-bold mb-4 text-[#7a1335]">{editIdx !== null ? "Edit Bank Account" : "Add Bank Account"}</h2>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                {/* Left: Bank, Account */}
-                <div className="flex flex-col gap-2">
-                  <div>
-                    <label className="block text-sm mb-1">Bank</label>
-                    <input
-                      type="text"
-                      name="bank"
-                      value={newAccount.bank}
-                      onChange={handleAddChange}
-                      className="w-full px-3 py-2 border rounded"
-                      placeholder="Bank Name"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1">Account</label>
-                    <input
-                      type="text"
-                      name="account"
-                      value={newAccount.account}
-                      onChange={handleAddChange}
-                      className="w-full px-3 py-2 border rounded"
-                      placeholder="Account Number"
-                    />
-                  </div>
-                </div>
-                {/* Right: IFSC, Description */}
-                <div className="flex flex-col gap-2">
-                  <div>
-                    <label className="block text-sm mb-1">IFSC</label>
-                    <input
-                      type="text"
-                      name="ifsc"
-                      value={newAccount.ifsc}
-                      onChange={handleAddChange}
-                      className="w-full px-3 py-2 border rounded"
-                      placeholder="IFSC Code"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1">Description</label>
-                    <textarea
-                      name="description"
-                      value={newAccount.description}
-                      onChange={handleAddChange}
-                      className="w-full px-3 py-2 border rounded"
-                      placeholder="Description"
-                      rows={2}
-                    />
-                  </div>
-                </div>
+
+        {loading ? (
+            <div className="text-center py-10 text-gray-500">Loading accounts...</div>
+        ) : error ? (
+            <div className="text-center py-10 text-red-500">{error}</div>
+        ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full bg-white">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Bank</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Account</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">IFSC</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    <th className="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-200">
+                  {[...accounts].reverse().map((acc) => (
+                    <tr key={acc.id} className="hover:bg-gray-50 transition-colors">
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{acc.bank}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{acc.account}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{acc.ifsc}</td>
+                      <td className="px-6 py-4 text-sm text-gray-600 max-w-xs truncate" title={acc.description}><div
+                        className="text-sm text-gray-900 max-w-[150px] truncate"
+                      >
+                        {acc.description.length > 12
+                          ? `${acc.description.slice(0, 15)}...`
+                          : acc.description}
+                      </div></td>
+                      <td className="px-6 py-4 whitespace-nowrap text-center">
+                        <button
+                          onClick={() => handleStatusToggle(acc.id)}
+                          className={`px-4 py-1.5 text-xs font-semibold rounded-full cursor-pointer transition-colors ${
+                            acc.status === "ACTIVE"
+                              ? "bg-green-100 text-green-800 hover:bg-green-200"
+                              : "bg-red-100 text-red-800 hover:bg-red-200"
+                          }`}
+                        >
+                          {acc.status === "ACTIVE" ? "Active" : "Inactive"}
+                        </button>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                        <button onClick={() => handleDeleteClick(acc.id)} className="text-red-600 hover:underline ml-4">Delete</button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+        )}
+      </div>
+
+      {showAddModal && (
+        <div className="fixed top-0 inset-0 z-50 flex items-center justify-center bg-black/50 animate-fade-in-fast">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-xl m-4">
+            <h2 className="text-xl font-bold mb-6 text-[#7a1335]">{ "Add Bank Account"}</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Bank Name</label>
+                <input
+                  type="text"
+                  name="bank"
+                  value={currentAccount.bank}
+                  onChange={handleModalInputChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#a31d4b] focus:border-[#a31d4b] sm:text-sm"
+                  placeholder="e.g., HDFC Bank"
+                />
               </div>
-              <div className="flex gap-2 justify-end mt-4">
-                <button
-                  className="px-4 py-1 rounded bg-[#7a1335] hover:bg-[#a31d4b] text-white"
-                  onClick={handleAddAccount}
-                >
-                  {editIdx !== null ? "Save" : "Add"}
-                </button>
-                <button
-                  className="px-4 py-1 rounded bg-gray-300 hover:bg-gray-400 text-gray-800"
-                  onClick={() => {
-                    setShowAdd(false);
-                    setNewAccount(emptyAccount);
-                    setEditIdx(null);
-                  }}
-                >
-                  Cancel
-                </button>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">Account Number</label>
+                <input
+                  type="text"
+                  name="account"
+                  value={currentAccount.account}
+                  onChange={handleModalInputChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#a31d4b] focus:border-[#a31d4b] sm:text-sm"
+                  placeholder="e.g., 1234567890"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700">IFSC Code</label>
+                <input
+                  type="text"
+                  name="ifsc"
+                  value={currentAccount.ifsc}
+                  onChange={handleModalInputChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#a31d4b] focus:border-[#a31d4b] sm:text-sm"
+                  placeholder="e.g., HDFC0001234"
+                />
+              </div>
+              <div className="sm:col-span-2">
+                <label className="block text-sm font-medium text-gray-700">Description</label>
+                <textarea
+                  name="description"
+                  value={currentAccount.description}
+                  onChange={handleModalInputChange}
+                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[#a31d4b] focus:border-[#a31d4b] sm:text-sm"
+                  placeholder="e.g., Primary salary account"
+                  rows={3}
+                />
               </div>
             </div>
-          </div>
-        )}
-        {/* Creative Centered Error Popup */}
-        {showError && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center animate-fade-in">
-              <span className="material-icons text-5xl text-[#7a1335] mb-2 animate-bounce">warning_amber</span>
-              <h2 className="text-xl font-bold text-[#7a1335] mb-2 text-center">Missing Fields</h2>
-              <div className="mb-4 text-gray-700 text-center">Please fill all fields.</div>
+            <div className="flex gap-3 justify-end mt-6">
               <button
-                className="px-6 py-2 rounded bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold shadow transition"
-                onClick={() => setShowError(false)}
+                className="px-4 py-2 rounded-md bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold text-sm transition-colors"
+                onClick={closeModal}
               >
-                OK
+                Cancel
+              </button>
+              <button
+                className="px-4 py-2 rounded-md bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold text-sm transition-colors shadow"
+                onClick={handleSaveAccount}
+              >
+                { "Add Account"}
               </button>
             </div>
           </div>
-        )}
-      </div>
+        </div>
+      )}
+
+      {showValidationError && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-2xl shadow-2xl p-8 flex flex-col items-center animate-fade-in">
+            <span className="text-5xl text-yellow-500 mb-4">⚠️</span>
+            <h2 className="text-xl font-bold text-gray-800 mb-2">Missing Fields</h2>
+            <p className="mb-6 text-gray-600">Please fill all required fields.</p>
+            <button
+              className="px-6 py-2 rounded-lg bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold shadow-md transition-colors"
+              onClick={() => setShowValidationError(false)}
+            >
+              OK
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
 
 export default MyBankAccounts;
-          

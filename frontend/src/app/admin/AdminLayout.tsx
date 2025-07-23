@@ -1,6 +1,9 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Outlet, useNavigate } from 'react-router-dom';
+import { useSelector, useDispatch } from 'react-redux';
+import { logoutUser } from '../features/slices/authSlice'; // Ensure this path is correct
 import Notification from './Notification/notification';
+import { RootState } from '../../store';
 
 const menuItems = [
   { label: 'My Dashboard', icon: '📊', path: '/admin' },
@@ -15,11 +18,13 @@ const menuItems = [
   { label: 'Chit Jewels Saving Plan', icon: '💍', path: '/savingplan' },
   { label: 'Digital Gold SIP Plan', icon: '🥇', path: '/spiplan' },
   { label: 'Gold Plant Scheme', icon: '🌱', path: '/plantscheme' },
+  { label: 'Schemes Flyer', icon: '🖼️', path: '/flayerschemes' },
   { label: 'Market Resource', icon: '📊', path: '/resource' },
-  { label: 'Campaigns', icon: '📋', path: '/campaigns' },
-  { label: 'Manage FAQ', icon: '📋', path: '/faq' },
+  { label: 'Campaigns', icon: '📣', path: '/campaigns' },
+  { label: 'Manage FAQ', icon: '📚', path: '/faq' },
   { label: 'My Bank Accounts', icon: '🏦', path: '/mybankaccounts' },
-  { label: 'Logout', icon: '🚪', path: '/' }
+  { label: 'Support Tickets', icon: '🧾', path: '/support-ticket' },
+  { label: 'Logout', icon: '🚪', path: '#' }
 ];
 
 const SIDEBAR_BG = "#7a1335";
@@ -30,12 +35,28 @@ const AdminPanel: React.FC = () => {
   const [sidebarVisible, setSidebarVisible] = useState(false);
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [showNotificationPage, setShowNotificationPage] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+
+  const navigate = useNavigate();
+  const dispatch = useDispatch();
+
+  const { currentUser } = useSelector((state: RootState) => state.auth);
 
 
+  useEffect(() => {
+    if (!currentUser) {
+      navigate('/');
+    }
+  }, [currentUser, navigate]);
 
   const notificationRef = useRef<HTMLDivElement | null>(null);
   const notificationBtnRef = useRef<HTMLButtonElement | null>(null);
-  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate('/');
+    setShowLogoutConfirm(false);
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -52,7 +73,6 @@ const AdminPanel: React.FC = () => {
     return () => document.removeEventListener('click', handleClickOutside);
   }, []);
 
-  // Close sidebar when clicking outside on mobile
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -63,9 +83,12 @@ const AdminPanel: React.FC = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  if (!currentUser) {
+    return null;
+  }
+
   return (
     <div className="flex min-h-screen font-sans bg-gray-100">
-      {/* Overlay for mobile */}
       <div
         style={{
           position: "fixed",
@@ -76,7 +99,6 @@ const AdminPanel: React.FC = () => {
         }}
         onClick={() => setSidebarVisible(false)}
       ></div>
-      {/* Sidebar */}
       <nav
         style={{
           position: 'fixed',
@@ -104,7 +126,6 @@ const AdminPanel: React.FC = () => {
           ${sidebarVisible ? 'translate-x-0' : '-translate-x-full md:translate-x-0'}
         `}
       >
-        {/* Sidebar Header */}
         <div style={{
           padding: "1.2rem 1rem 0.8rem 1rem",
           borderBottom: "1px solid rgba(255,255,255,0.08)",
@@ -151,18 +172,23 @@ const AdminPanel: React.FC = () => {
             ✕
           </button>
         </div>
-        {/* Sidebar Menu */}
         <ul style={{ flex: 1, overflowY: "auto", padding: "0.8rem 0" }}>
           {menuItems.map(({ label, icon, path }, idx) => {
             const isActive = window.location.pathname === path;
+            const handleClick = () => {
+              setSidebarVisible(false);
+              if (label === 'Logout') {
+                setShowLogoutConfirm(true);
+              } else {
+                navigate(path);
+              }
+            };
+
             return (
               <li key={idx}>
                 <button
                   type="button"
-                  onClick={() => {
-                    setSidebarVisible(false);
-                    navigate(path);
-                  }}
+                  onClick={handleClick}
                   style={{
                     display: "flex",
                     alignItems: "center",
@@ -209,17 +235,15 @@ const AdminPanel: React.FC = () => {
           })}
         </ul>
         <div style={{ padding: "1rem", fontSize: 10, color: "#fff", opacity: 0.5, textAlign: "center" }}>
-          &copy; {new Date().getFullYear()} Admin Panel
+          © {new Date().getFullYear()} Admin Panel
         </div>
       </nav>
 
-      {/* Main Section */}
       <div className="flex-1 flex flex-col min-w-0 md:ml-64">
-        {/* Header */}
         <header className="fixed top-0 w-full md:w-[calc(100%-16rem)] md:left-64 z-30 bg-gradient-to-r from-[#8B1538] to-[#A91B47] text-white shadow-md h-16 flex justify-between items-center px-4 md:px-6">
           <div className="flex items-center gap-4">
-            <button 
-              className="text-white text-xl md:hidden hover:bg-white/10 p-2 rounded-lg transition-colors" 
+            <button
+              className="text-white text-xl md:hidden hover:bg-white/10 p-2 rounded-lg transition-colors"
               onClick={() => setSidebarVisible(!sidebarVisible)}
             >
               ☰
@@ -228,7 +252,7 @@ const AdminPanel: React.FC = () => {
           </div>
           <div className="relative">
             <button
-               ref={notificationBtnRef}
+              ref={notificationBtnRef}
               onClick={() => setShowNotificationPage(true)}
               className="relative bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
             >
@@ -238,16 +262,14 @@ const AdminPanel: React.FC = () => {
                 8
               </span>
             </button>
-            {/* Notification Dropdown */}
             <div
               ref={notificationRef}
-              className={`absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] max-h-[500px] overflow-hidden rounded-lg bg-white shadow-lg transform transition-all origin-top z-50 ${
-                notificationVisible ? 'opacity-100 visible scale-100' : 'opacity-0 invisible scale-95'
-              }`}
+              className={`absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] max-h-[500px] overflow-hidden rounded-lg bg-white shadow-lg transform transition-all origin-top z-50 ${notificationVisible ? 'opacity-100 visible scale-100' : 'opacity-0 invisible scale-95'
+                }`}
             >
               <div className="bg-[#8B1538] text-white p-4 flex justify-between">
                 <h3 className="font-semibold">Notifications</h3>
-                <button 
+                <button
                   onClick={() => setNotificationVisible(false)}
                   className="hover:bg-white/10 p-1 rounded"
                 >
@@ -290,13 +312,12 @@ const AdminPanel: React.FC = () => {
                 ].map(([message, type, date], idx) => (
                   <div key={idx} className="flex gap-3 items-start p-4 border-b text-sm hover:bg-gray-50 transition-colors">
                     <div
-                      className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${
-                        type === 'success'
-                          ? 'bg-green-500'
-                          : type === 'warning'
+                      className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${type === 'success'
+                        ? 'bg-green-500'
+                        : type === 'warning'
                           ? 'bg-yellow-500'
                           : 'bg-blue-500'
-                      }`}
+                        }`}
                     ></div>
                     <div className="flex-1">
                       <div>{message}</div>
@@ -312,7 +333,6 @@ const AdminPanel: React.FC = () => {
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="mt-16 p-2 sm:p-4 md:p-6 flex-1 min-w-0">
           <div className="w-full max-w-full mx-auto">
             {showNotificationPage ? (
@@ -331,6 +351,29 @@ const AdminPanel: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 top-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm m-4 text-center">
+            <h2 className="text-xl font-bold text-gray-800 mb-4">Confirm Logout</h2>
+            <p className="text-gray-600 mb-6">Are you sure you want to log out?</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-6 py-2 rounded-md font-semibold text-gray-700 bg-gray-200 hover:bg-gray-300"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-6 py-2 rounded-md font-semibold text-white bg-red-600 hover:bg-red-700"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

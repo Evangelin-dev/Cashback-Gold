@@ -1,6 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import axiosInstance from "../../../utils/axiosInstance";
 import { B2B_PRIMARY } from "../theme";
+import { Loader, UploadCloud, CheckCircle } from "lucide-react";
 
+// Types
 type ProfileForm = {
   companyName: string;
   gstin: string;
@@ -11,22 +14,62 @@ type ProfileForm = {
   teamEmail: string;
 };
 
-const initialForm: ProfileForm = {
-  companyName: "",
-  gstin: "",
-  pan: "",
-  address: "",
-  bankAccount: "",
-  upi: "",
-  teamEmail: "",
+type KycFiles = {
+  aadharOrGst: File | null;
+  pan: File | null;
+  addressProof: File | null;
+  bankStatement: File | null;
 };
 
-export default function Profile() {
-  const [showPopup, setShowPopup] = useState(false);
-  const [form, setForm] = useState(initialForm);
-  const [errors, setErrors] = useState<Partial<ProfileForm>>({});
+// Initial States
+const initialForm: ProfileForm = {
+  companyName: "", gstin: "", pan: "", address: "",
+  bankAccount: "", upi: "", teamEmail: "",
+};
 
-  const validate = (values: ProfileForm) => {
+const initialKycFiles: KycFiles = {
+  aadharOrGst: null, pan: null, addressProof: null, bankStatement: null,
+};
+
+
+export default function Profile() {
+  const [hasProfile, setHasProfile] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [form, setForm] = useState<ProfileForm>(initialForm);
+  const [kycFiles, setKycFiles] = useState<KycFiles>(initialKycFiles);
+  
+  const [errors, setErrors] = useState<Partial<ProfileForm>>({});
+  const [kycErrors, setKycErrors] = useState<Partial<Record<keyof KycFiles, string>>>({});
+  
+  const [isSubmittingProfile, setIsSubmittingProfile] = useState(false);
+  const [isSubmittingKyc, setIsSubmittingKyc] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
+
+  // --- Data Fetching ---
+  useEffect(() => {
+    const fetchProfile = async () => {
+      setIsLoading(true);
+      try {
+        const response = await axiosInstance.get('/api/b2b/profile');
+        if (response.data) {
+          setForm(response.data);
+          setHasProfile(true);
+        }
+      } catch (error: any) {
+        if (error.response && error.response.status === 404) {
+          setHasProfile(false);
+        } else {
+          console.error("Failed to fetch profile", error);
+        }
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
+  // --- Profile Form Logic ---
+  const validateProfile = (values: ProfileForm) => {
     const errs: Partial<ProfileForm> = {};
     if (!values.companyName) errs.companyName = "Company Name is required";
     if (!values.gstin) errs.gstin = "GSTIN is required";
@@ -44,185 +87,199 @@ export default function Profile() {
 
   const handleProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.name]: e.target.value });
-    setErrors({ ...errors, [e.target.name]: undefined });
-  };
-
-  const handleProfileSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    const validation = validate(form);
-    setErrors(validation);
-    if (Object.keys(validation).length === 0) {
-      setShowPopup(true);
-      setTimeout(() => setShowPopup(false), 2000);
+    if (errors[e.target.name as keyof ProfileForm]) {
+      setErrors({ ...errors, [e.target.name]: undefined });
     }
   };
+
+  const handleProfileSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const validationErrors = validateProfile(form);
+    setErrors(validationErrors);
+    if (Object.keys(validationErrors).length > 0) return;
+
+    setIsSubmittingProfile(true);
+    try {
+      if (hasProfile) {
+        // Update existing profile
+        await axiosInstance.put('/api/b2b/profile', form);
+      } else {
+        // Create new profile
+        const response = await axiosInstance.post('/api/b2b/profile', form);
+        setForm(response.data);
+        setHasProfile(true);
+      }
+      setShowSuccessPopup(true);
+      setTimeout(() => setShowSuccessPopup(false), 2500);
+    } catch (error) {
+      console.error("Failed to save profile:", error);
+      alert("An error occurred while saving your profile.");
+    } finally {
+      setIsSubmittingProfile(false);
+    }
+  };
+
+
+  // --- KYC Form Logic ---
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, files } = e.target;
+    if (files && files.length > 0) {
+      setKycFiles(prev => ({ ...prev, [name]: files[0] }));
+      setKycErrors(prev => ({ ...prev, [name]: undefined }));
+    }
+  };
+
+  const handleKycSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const fileErrors: Partial<Record<keyof KycFiles, string>> = {};
+    if (!kycFiles.aadharOrGst) fileErrors.aadharOrGst = "File is required";
+    if (!kycFiles.pan) fileErrors.pan = "File is required";
+    if (!kycFiles.addressProof) fileErrors.addressProof = "File is required";
+    if (!kycFiles.bankStatement) fileErrors.bankStatement = "File is required";
+    
+    setKycErrors(fileErrors);
+    if (Object.keys(fileErrors).length > 0) return;
+
+    const formData = new FormData();
+    Object.entries(kycFiles).forEach(([key, value]) => {
+        if (value) {
+            formData.append(key, value);
+        }
+    });
+
+    setIsSubmittingKyc(true);
+    try {
+        await axiosInstance.post('/api/kyc/b2b', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        });
+        setKycFiles(initialKycFiles);
+    } catch(error) {
+        console.error("KYC submission failed", error);
+        alert("An error occurred during KYC submission.");
+    } finally {
+        setIsSubmittingKyc(false);
+    }
+  };
+  
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader className="animate-spin h-12 w-12" color={B2B_PRIMARY} />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-4xl mx-auto space-y-8">
       {/* Basic Company Details Card */}
       <div className="bg-white rounded-lg shadow p-6">
         <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: B2B_PRIMARY }}>
-          <span role="img" aria-label="company">🏢</span> Basic Company Details
+          🏢 Basic Company Details
         </h3>
+        {!hasProfile && (
+            <div className="bg-blue-50 border-l-4 border-blue-500 text-blue-700 p-4 mb-4 rounded-r-lg">
+                <p className="font-bold">Welcome!</p>
+                <p>Please create your B2B profile to get started.</p>
+            </div>
+        )}
         <form className="grid grid-cols-1 md:grid-cols-2 gap-4" onSubmit={handleProfileSubmit} autoComplete="off">
-          <div>
-            <input
-              className={`border rounded px-3 py-2 w-full ${errors.companyName ? "border-red-500" : ""}`}
-              placeholder="Company Name"
-              name="companyName"
-              value={form.companyName}
-              onChange={handleProfileChange}
-            />
-            {errors.companyName && <span className="text-xs text-red-500">{errors.companyName}</span>}
-          </div>
-          <div>
-            <input
-              className={`border rounded px-3 py-2 w-full uppercase ${errors.gstin ? "border-red-500" : ""}`}
-              placeholder="GSTIN"
-              name="gstin"
-              value={form.gstin}
-              onChange={handleProfileChange}
-              maxLength={15}
-            />
-            {errors.gstin && <span className="text-xs text-red-500">{errors.gstin}</span>}
-          </div>
-          <div>
-            <input
-              className={`border rounded px-3 py-2 w-full uppercase ${errors.pan ? "border-red-500" : ""}`}
-              placeholder="PAN"
-              name="pan"
-              value={form.pan}
-              onChange={handleProfileChange}
-              maxLength={10}
-            />
-            {errors.pan && <span className="text-xs text-red-500">{errors.pan}</span>}
-          </div>
-          <div>
-            <input
-              className={`border rounded px-3 py-2 w-full ${errors.address ? "border-red-500" : ""}`}
-              placeholder="Business Address"
-              name="address"
-              value={form.address}
-              onChange={handleProfileChange}
-            />
-            {errors.address && <span className="text-xs text-red-500">{errors.address}</span>}
-          </div>
-          <div>
-            <input
-              className={`border rounded px-3 py-2 w-full ${errors.bankAccount ? "border-red-500" : ""}`}
-              placeholder="Bank Account"
-              name="bankAccount"
-              value={form.bankAccount}
-              onChange={handleProfileChange}
-            />
-            {errors.bankAccount && <span className="text-xs text-red-500">{errors.bankAccount}</span>}
-          </div>
-          <div>
-            <input
-              className={`border rounded px-3 py-2 w-full ${errors.upi ? "border-red-500" : ""}`}
-              placeholder="UPI ID"
-              name="upi"
-              value={form.upi}
-              onChange={handleProfileChange}
-            />
-            {errors.upi && <span className="text-xs text-red-500">{errors.upi}</span>}
-          </div>
-          <div>
-            <input
-              className={`border rounded px-3 py-2 w-full ${errors.teamEmail ? "border-red-500" : ""}`}
-              placeholder="Add Team Member Email"
-              name="teamEmail"
-              value={form.teamEmail}
-              onChange={handleProfileChange}
-            />
-            {errors.teamEmail && <span className="text-xs text-red-500">{errors.teamEmail}</span>}
-          </div>
+          {/* Form fields */}
+          <InputField label="Company Name" name="companyName" value={form.companyName} onChange={handleProfileChange} error={errors.companyName} />
+          <InputField label="GSTIN" name="gstin" value={form.gstin} onChange={handleProfileChange} error={errors.gstin} maxLength={15} upperCase />
+          <InputField label="PAN" name="pan" value={form.pan} onChange={handleProfileChange} error={errors.pan} maxLength={10} upperCase />
+          <InputField label="Business Address" name="address" value={form.address} onChange={handleProfileChange} error={errors.address} />
+          <InputField label="Bank Account" name="bankAccount" value={form.bankAccount} onChange={handleProfileChange} error={errors.bankAccount} />
+          <InputField label="UPI ID" name="upi" value={form.upi} onChange={handleProfileChange} error={errors.upi} />
+          <InputField label="Team Member Email" name="teamEmail" value={form.teamEmail} onChange={handleProfileChange} error={errors.teamEmail} />
+          
           <div className="flex items-center">
             <button
               type="submit"
-              className="w-full py-2 rounded font-semibold text-white transition-colors duration-200 shadow"
-              style={{ background: B2B_PRIMARY }}
+              disabled={isSubmittingProfile}
+              className="w-full py-2 rounded font-semibold text-white transition-all duration-200 shadow disabled:bg-gray-400 flex items-center justify-center gap-2"
+              style={{ background: isSubmittingProfile ? undefined : B2B_PRIMARY }}
             >
-              <span role="img" aria-label="save">💾</span> Save Profile
+              {isSubmittingProfile ? <Loader className="animate-spin" /> : '💾'}
+              {hasProfile ? 'Save Profile' : 'Create Profile'}
             </button>
           </div>
         </form>
-        {showPopup && (
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-20">
-            <div className="bg-white rounded shadow-lg px-8 py-6 text-center animate-bounce">
-              <div className="text-green-600 font-bold text-lg mb-2 flex items-center justify-center gap-2">
-                <span role="img" aria-label="success">✅</span> Profile saved successfully
-              </div>
-            </div>
-          </div>
-        )}
       </div>
+
       {/* KYC Documents Card */}
       <div className="bg-white rounded-lg shadow p-6">
-        <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-4">
-          <h3 className="text-xl font-bold flex items-center gap-2" style={{ color: B2B_PRIMARY }}>
-            <span role="img" aria-label="kyc">📄</span> KYC Documents
-          </h3>
-          <span className="text-sm text-gray-500 mt-2 md:mt-0">Update KYC documents every year</span>
-        </div>
-        {/* Uploaded Documents List - with image/file preview style */}
-        <div className="mb-6">
-          <h4 className="font-semibold mb-2 text-gray-700">Uploaded Documents</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="flex flex-col items-center bg-gray-50 rounded p-3 border hover:shadow transition">
-              <img src="/assets/kyc/gst_certificate.png" alt="GST Certificate" className="w-12 h-12 object-contain mb-2" />
-              <span className="text-xs font-medium text-gray-700 mb-1">GST Certificate</span>
-              <a href="#" className="text-xs text-blue-600 underline">gst_certificate.pdf</a>
-            </div>
-            <div className="flex flex-col items-center bg-gray-50 rounded p-3 border hover:shadow transition">
-              <img src="/assets/kyc/pan_card.png" alt="PAN Card" className="w-12 h-12 object-contain mb-2" />
-              <span className="text-xs font-medium text-gray-700 mb-1">PAN Card</span>
-              <a href="#" className="text-xs text-blue-600 underline">pan_card.pdf</a>
-            </div>
-            <div className="flex flex-col items-center bg-gray-50 rounded p-3 border hover:shadow transition">
-              <img src="/assets/kyc/address_proof.png" alt="Address Proof" className="w-12 h-12 object-contain mb-2" />
-              <span className="text-xs font-medium text-gray-700 mb-1">Address Proof</span>
-              <a href="#" className="text-xs text-blue-600 underline">address_proof.pdf</a>
-            </div>
-            <div className="flex flex-col items-center bg-gray-50 rounded p-3 border hover:shadow transition">
-              <img src="/assets/kyc/bank_statement.png" alt="Bank Statement" className="w-12 h-12 object-contain mb-2" />
-              <span className="text-xs font-medium text-gray-700 mb-1">Bank Statement</span>
-              <a href="#" className="text-xs text-blue-600 underline">bank_statement.pdf</a>
-            </div>
-          </div>
-        </div>
-        <form className="space-y-4">
+        <h3 className="text-xl font-bold mb-4 flex items-center gap-2" style={{ color: B2B_PRIMARY }}>
+          📄 KYC Documents
+        </h3>
+        <form className="space-y-4" onSubmit={handleKycSubmit}>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block mb-1 font-medium">GST Certificate</label>
-              <input type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#7a1335]/90 file:text-white hover:file:bg-[#7a1335]" />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">PAN Card</label>
-              <input type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#7a1335]/90 file:text-white hover:file:bg-[#7a1335]" />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Company Address Proof</label>
-              <input type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#7a1335]/90 file:text-white hover:file:bg-[#7a1335]" />
-            </div>
-            <div>
-              <label className="block mb-1 font-medium">Bank Statement</label>
-              <input type="file" className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-[#7a1335]/90 file:text-white hover:file:bg-[#7a1335]" />
-            </div>
+            <FileUploadField label="Aadhaar / GST Certificate" name="aadharOrGst" file={kycFiles.aadharOrGst} onChange={handleFileChange} error={kycErrors.aadharOrGst} />
+            <FileUploadField label="PAN Card" name="pan" file={kycFiles.pan} onChange={handleFileChange} error={kycErrors.pan} />
+            <FileUploadField label="Company Address Proof" name="addressProof" file={kycFiles.addressProof} onChange={handleFileChange} error={kycErrors.addressProof} />
+            <FileUploadField label="Bank Statement" name="bankStatement" file={kycFiles.bankStatement} onChange={handleFileChange} error={kycErrors.bankStatement} />
           </div>
           <button
             type="submit"
-            className="py-2 px-6 rounded font-semibold text-white transition-colors duration-200 shadow"
-            style={{ background: B2B_PRIMARY }}
+            disabled={isSubmittingKyc}
+            className="py-2 px-6 rounded font-semibold text-white transition-all duration-200 shadow disabled:bg-gray-400 flex items-center justify-center gap-2"
+            style={{ background: isSubmittingKyc ? undefined : B2B_PRIMARY }}
           >
-            <span role="img" aria-label="update">🔄</span> Update KYC Documents
+            {isSubmittingKyc ? <Loader className="animate-spin" /> : <UploadCloud size={20} />}
+            Submit KYC Documents
           </button>
         </form>
-        <div className="mt-4 text-xs text-gray-500">
-          <span>Last KYC update: <span className="font-semibold text-gray-700">--/--/----</span></span>
-          <span className="ml-4">Next update required: <span className="font-semibold text-gray-700">--/--/----</span></span>
-        </div>
       </div>
+      
+      {/* Success Popup */}
+      {showSuccessPopup && (
+        <div className="fixed top-5 right-5 z-50 bg-white rounded-lg shadow-lg p-4 flex items-center gap-3 animate-fade-in-out border-l-4 border-green-500">
+            <CheckCircle className="text-green-500" size={24} />
+            <span className="text-green-700 font-semibold">Profile saved successfully!</span>
+        </div>
+      )}
     </div>
   );
 }
+
+// Helper Components
+const InputField = ({ label, name, value, onChange, error, upperCase = false, ...props }: any) => (
+  <div>
+    <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+    <input
+      className={`border rounded px-3 py-2 w-full transition-colors ${error ? "border-red-500 bg-red-50" : "border-gray-300 focus:border-[${B2B_PRIMARY}] focus:ring-1 focus:ring-[${B2B_PRIMARY}]"}`}
+      name={name}
+      value={value}
+      onChange={(e) => {
+        if (upperCase) e.target.value = e.target.value.toUpperCase();
+        onChange(e);
+      }}
+      {...props}
+    />
+    {error && <span className="text-xs text-red-500 mt-1">{error}</span>}
+  </div>
+);
+
+const FileUploadField = ({ label, name, file, onChange, error }: any) => (
+    <div>
+        <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
+        <div className={`relative border-2 ${error ? 'border-red-500' : 'border-gray-300'} border-dashed rounded-lg p-4 text-center`}>
+            <UploadCloud className="mx-auto h-10 w-10 text-gray-400" />
+            <p className="mt-1 text-sm text-gray-600">
+                {file ? (
+                    <span className="font-semibold text-green-600">{file.name}</span>
+                ) : (
+                    "Click to upload or drag & drop"
+                )}
+            </p>
+            <input
+                type="file"
+                name={name}
+                onChange={onChange}
+                className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                accept="image/*,.pdf"
+            />
+        </div>
+        {error && <span className="text-xs text-red-500 mt-1">{error}</span>}
+    </div>
+);

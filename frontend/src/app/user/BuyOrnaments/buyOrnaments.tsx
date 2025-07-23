@@ -3,9 +3,9 @@ import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 
 
-import { CATEGORY_TREE, products } from '../../../../constants'; // Assuming products is an array of product objects
+import { CATEGORY_TREE, products } from '../../../../constants'; 
 
-// Type for CustomImage props (if not already present)
+
 type CustomImageProps = {
   src: string;
   alt: string;
@@ -65,14 +65,14 @@ const BuyOrnamentsPage = () => {
   const isAnyFilterSelected = Object.values(selectedFilters).some(set => set.size > 0);
   const filteredProducts = isAnyFilterSelected
     ? products.filter(product => {
-        // Use 'details' as subcategory field
+        
         return Object.entries(selectedFilters).some(([cat, set]) =>
           product.category === cat && (set.size === 0 || set.has(product.details))
         );
       })
     : products;
 
-  // Add types for parameters
+  
   const toggleLike = (productId: number, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     const newLikedItems = new Set(likedItems);
@@ -84,7 +84,7 @@ const BuyOrnamentsPage = () => {
     setLikedItems(newLikedItems);
   };
 
-  // If lodash is not available, use this shuffle function:
+  
   function simpleShuffle<T>(array: T[]): T[] {
     const arr = [...array];
     for (let i = arr.length - 1; i > 0; i--) {
@@ -96,14 +96,14 @@ const BuyOrnamentsPage = () => {
 
   const getRandomProducts = (count: number) => simpleShuffle(products).slice(0, count);
 
-  // If your products do not have a 'subcategory' property, map it from another field, e.g. 'details' or similar.
-  // For demonstration, let's assume 'details' holds the subcategory name.
+  
+  
   const getCategoryProducts = (cat: string, sub: string) =>
     products.filter(
-      (p: any) => p.category === cat && p.details === sub // Use 'details' as subcategory
+      (p: any) => p.category === cat && p.details === sub 
     ).slice(0, 5);
 
-  // Handle dropdown selection
+  
   const handleDropdownSelect = (main: string, sub: string, item: string) => {
     setSelectedDropdown(prev => {
       const exists = prev.some(sel => sel.main === main && sel.sub === sub && sel.item === item);
@@ -115,11 +115,11 @@ const BuyOrnamentsPage = () => {
     });
   };
 
-  // Remove unused openMain/openSub and multi-level dropdown below the search bar
+  
 
-  // --- Replace the Filter/Search Bar Row and remove the old multi-level dropdown below it ---
+  
 
-  // State for dropdowns
+  
   const [mainDropdownOpen, setMainDropdownOpen] = useState(false);
   const [mainCategory, setMainCategory] = useState<string>("All");
   const [subDropdownOpen, setSubDropdownOpen] = useState(false);
@@ -127,23 +127,23 @@ const BuyOrnamentsPage = () => {
   const [itemDropdownOpen, setItemDropdownOpen] = useState(false);
   const [itemCategory, setItemCategory] = useState<string>("");
 
-  // Dropdown open/close state for each level
+  
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownMain, setDropdownMain] = useState<string>("All");
   const [dropdownSub, setDropdownSub] = useState<string>("");
   const [dropdownItem, setDropdownItem] = useState<string>("");
 
-  // Helper: get subcategories for selected main
+  
   const getSubCategories = () => {
     const found = CATEGORY_TREE.find(cat => cat.name === dropdownMain);
     return found && found.children ? found.children : [];
   };
 
-  // Helper: get items for selected subcategory (support nested gold coin structure)
+  
   const getItems = () => {
     const subs = getSubCategories();
     const found = subs.find((s: any) => s.name === dropdownSub);
-    // If Gold Coin, flatten to show 22k/24k options
+    
     if (
       found &&
       found.name === "Gold Coin" &&
@@ -155,7 +155,7 @@ const BuyOrnamentsPage = () => {
     return found && Array.isArray(found.items) ? found.items : [];
   };
 
-  // Helper: get gram variations for gold coin
+  
   const getGramVariations = () => {
     const subs = getSubCategories();
     const goldCoinSub = subs.find((s: any) => s.name === "Gold Coin");
@@ -172,7 +172,7 @@ const BuyOrnamentsPage = () => {
     return [];
   };
 
-  // Filter products based on dropdown selection
+  
   const filteredProductsDropdown =
     dropdownMain === "All"
       ? products

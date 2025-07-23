@@ -1,198 +1,154 @@
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FaCheckCircle, FaHourglassHalf, FaIdCard, FaRegEye, FaTimesCircle, FaUser, FaBuilding, FaHandshake, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import axiosInstance from "../../../utils/axiosInstance"; // Make sure this path is correct
 
-const kycRequests = [
-	// User requests
-	{
-		id: 1,
-		user: "Amit Kumar",
-		avatar: "/avatars/amit.png",
-		status: "Pending",
-		submitted: "2024-06-01",
-		aadharUrl: "/uploads/amit_aadhar.pdf",
-		panUrl: "/uploads/amit_pan.pdf",
-		type: "User"
-	},
-	{
-		id: 2,
-		user: "Priya Sharma",
-		avatar: "/avatars/priya.png",
-		status: "Approved",
-		submitted: "2024-05-28",
-		aadharUrl: "/uploads/priya_aadhar.pdf",
-		panUrl: "/uploads/priya_pan.pdf",
-		type: "User"
-	},
-	{
-		id: 3,
-		user: "Rahul Gupta",
-		avatar: "/avatars/rahul.png",
-		status: "Rejected",
-		submitted: "2024-06-02",
-		aadharUrl: "/uploads/rahul_aadhar.pdf",
-		panUrl: "/uploads/rahul_pan.pdf",
-		type: "User"
-	},
-	// B2B requests
-	{
-		id: 4,
-		user: "Tech Solutions Pvt Ltd",
-		avatar: "/avatars/tech.png",
-		status: "Pending",
-		submitted: "2024-06-03",
-		aadharUrl: "/uploads/tech_gst.pdf",
-		panUrl: "/uploads/tech_pan.pdf",
-		type: "B2B"
-	},
-	{
-		id: 5,
-		user: "Global Services Inc",
-		avatar: "/avatars/global.png",
-		status: "Approved",
-		submitted: "2024-05-30",
-		aadharUrl: "/uploads/global_gst.pdf",
-		panUrl: "/uploads/global_pan.pdf",
-		type: "B2B"
-	},
-	{
-		id: 6,
-		user: "Innovate Corp",
-		avatar: "/avatars/innovate.png",
-		status: "Pending",
-		submitted: "2024-06-04",
-		aadharUrl: "/uploads/innovate_gst.pdf",
-		panUrl: "/uploads/innovate_pan.pdf",
-		type: "B2B"
-	},
-	// Partner requests
-	{
-		id: 7,
-		user: "Strategic Partners LLC",
-		avatar: "/avatars/strategic.png",
-		status: "Approved",
-		submitted: "2024-05-25",
-		aadharUrl: "/uploads/strategic_agreement.pdf",
-		panUrl: "/uploads/strategic_pan.pdf",
-		type: "Partner"
-	},
-	{
-		id: 8,
-		user: "Alliance Group",
-		avatar: "/avatars/alliance.png",
-		status: "Pending",
-		submitted: "2024-06-05",
-		aadharUrl: "/uploads/alliance_agreement.pdf",
-		panUrl: "/uploads/alliance_pan.pdf",
-		type: "Partner"
-	}
-];
+// Type definitions based on your API response
+type KycStatus = "PENDING" | "APPROVED" | "REJECTED";
+type UserType = "USER" | "B2B" | "PARTNER";
+
+interface KycRequest {
+    id: number;
+    userId: number;
+    userType: UserType;
+    aadharUrl?: string | null;
+    panUrl?: string | null;
+    gstCertificateUrl?: string | null;
+    addressProofUrl?: string | null;
+    bankStatementUrl?: string | null;
+    status: KycStatus;
+    submittedAt: string;
+	panCardUrl?: string | null
+}
 
 type ModalState = { url: string; label: string } | null;
 
 const KYC = () => {
-	const [modal, setModal] = useState<ModalState>(null);
-	const [requests, setRequests] = useState(kycRequests);
-	const [activeTab, setActiveTab] = useState<"User" | "B2B" | "Partner">("User");
-	const [currentPage, setCurrentPage] = useState<Record<string, number>>({
-		User: 1,
-		B2B: 1,
-		Partner: 1
-	});
-	const itemsPerPage = 3;
+    const [modal, setModal] = useState<ModalState>(null);
+    const [requests, setRequests] = useState<KycRequest[]>([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
 
-	const handleStatusChange = (id: number, status: string) => {
-		setRequests((prev) =>
-			prev.map((req) =>
-				req.id === id ? { ...req, status } : req
-			)
-		);
-	};
+    const [activeTab, setActiveTab] = useState<UserType>("USER");
+    const [currentPage, setCurrentPage] = useState<Record<UserType, number>>({
+        USER: 1,
+        B2B: 1,
+        PARTNER: 1,
+    });
+    const [totalPages, setTotalPages] = useState<Record<UserType, number>>({
+        USER: 1,
+        B2B: 1,
+        PARTNER: 1,
+    });
+    const [totalElements, setTotalElements] = useState<Record<UserType, number>>({
+        USER: 0,
+        B2B: 0,
+        PARTNER: 0,
+    });
+    const itemsPerPage = 5;
 
-	const getStatusIcon = (status: string) => {
-		switch (status) {
-			case "Approved":
-				return <FaCheckCircle className="text-xs sm:text-sm" />;
-			case "Pending":
-				return <FaHourglassHalf className="text-xs sm:text-sm" />;
-			case "Rejected":
-				return <FaTimesCircle className="text-xs sm:text-sm" />;
-			default:
-				return null;
-		}
-	};
+    // Fetch data from API
+    const fetchKycRequests = useCallback(async () => {
+        setLoading(true);
+        setError(null);
+        try {
+            // API uses 0-indexed pages, so we subtract 1
+            const pageIndex = currentPage[activeTab] - 1;
+            const url = `/api/kyc/admin?userType=${activeTab}&page=${pageIndex}&size=${itemsPerPage}`;
+            
+            const response = await axiosInstance.get(url);
+            
+            setRequests(response.data.content);
+            setTotalPages(prev => ({ ...prev, [activeTab]: response.data.totalPages }));
+            setTotalElements(prev => ({...prev, [activeTab]: response.data.totalElements }));
 
-	const getStatusColor = (status: string) => {
-		switch (status) {
-			case "Approved":
-				return "bg-green-100 text-green-700";
-			case "Pending":
-				return "bg-[#fbeaf0] text-[#7a1335]";
-			case "Rejected":
-				return "bg-red-100 text-red-700";
-			default:
-				return "bg-gray-100 text-gray-700";
-		}
-	};
+        } catch (err) {
+            console.error(`Failed to fetch KYC requests for ${activeTab}:`, err);
+            setError(`Could not load requests for ${activeTab}. Please try again.`);
+            setRequests([]); // Clear requests on error
+        } finally {
+            setLoading(false);
+        }
+    }, [activeTab, currentPage]);
 
-	const getTabIcon = (type: string) => {
-		switch (type) {
-			case "User":
-				return <FaUser className="text-sm" />;
-			case "B2B":
-				return <FaBuilding className="text-sm" />;
-			case "Partner":
-				return <FaHandshake className="text-sm" />;
-			default:
-				return null;
-		}
-	};
+    useEffect(() => {
+        fetchKycRequests();
+    }, [fetchKycRequests]);
 
-	const getFilteredRequests = (type: string) => {
-		return requests.filter(req => req.type === type);
-	};
+    // Handle status update with optimistic UI change
+    const handleStatusChange = async (id: number, status: KycStatus) => {
+        const originalRequests = [...requests];
+        
+        // Optimistic update
+        const updatedRequests = requests.map(req => 
+            req.id === id ? { ...req, status } : req
+        );
+        setRequests(updatedRequests);
 
-	const getPaginatedRequests = (type: string) => {
-		const filtered = getFilteredRequests(type);
-		const startIndex = (currentPage[type] - 1) * itemsPerPage;
-		const endIndex = startIndex + itemsPerPage;
-		return filtered.slice(startIndex, endIndex);
-	};
+        try {
+            await axiosInstance.put(`/api/kyc/admin/${id}/status?status=${status}`);
+        } catch (err) {
+            console.error("Failed to update status:", err);
+            alert("Failed to update status. Reverting change.");
+            // Revert on error
+            setRequests(originalRequests);
+        }
+    };
 
-	const getTotalPages = (type: string) => {
-		const filtered = getFilteredRequests(type);
-		return Math.ceil(filtered.length / itemsPerPage);
-	};
+    const getStatusColor = (status: KycStatus) => {
+        switch (status) {
+            case "APPROVED": return "bg-green-100 text-green-700";
+            case "PENDING": return "bg-[#fbeaf0] text-[#7a1335]";
+            case "REJECTED": return "bg-red-100 text-red-700";
+            default: return "bg-gray-100 text-gray-700";
+        }
+    };
 
-	const handlePageChange = (type: string, page: number) => {
-		setCurrentPage(prev => ({
-			...prev,
-			[type]: page
-		}));
-	};
+    const getTabIcon = (type: UserType) => {
+        switch (type) {
+            case "USER": return <FaUser className="text-sm" />;
+            case "B2B": return <FaBuilding className="text-sm" />;
+            case "PARTNER": return <FaHandshake className="text-sm" />;
+        }
+    };
 
-	const getDocumentLabel = (type: string) => {
-		switch (type) {
-			case "User":
-				return { first: "Aadhaar", second: "PAN" };
-			case "B2B":
-				return { first: "GST", second: "PAN" };
-			case "Partner":
-				return { first: "Agreement", second: "PAN" };
-			default:
-				return { first: "Document 1", second: "Document 2" };
-		}
-	};
+    const handlePageChange = (type: UserType, page: number) => {
+        if (page > 0 && page <= totalPages[type]) {
+            setCurrentPage(prev => ({ ...prev, [type]: page }));
+        }
+    };
 
-	const renderPagination = (type: string) => {
-		const totalPages = getTotalPages(type);
+    const getDocumentInfo = (req: KycRequest) => {
+        switch (req.userType) {
+            case "USER": return {
+                firstDoc: { label: "Aadhaar", url: req.aadharUrl },
+                secondDoc: { label: "PAN", url: req.panUrl }
+            };
+            case "B2B": return {
+                firstDoc: { label: "GST Cert.", url: req.gstCertificateUrl },
+                secondDoc: { label: "PAN", url: req.panCardUrl }
+            };
+            case "PARTNER": return {
+                firstDoc: { label: "Address Proof", url: req.addressProofUrl },
+                secondDoc: { label: "Bank Statement", url: req.bankStatementUrl }
+            };
+            default: return {
+                firstDoc: { label: "Doc 1", url: null },
+                secondDoc: { label: "Doc 2", url: null }
+            };
+        }
+    };
+    
+    const renderPagination = (type: UserType) => {
+		const totalP = totalPages[type];
 		const current = currentPage[type];
+        const totalE = totalElements[type];
 		
-		if (totalPages <= 1) return null;
+		if (totalP <= 1) return null;
 
 		return (
 			<div className="flex items-center justify-between mt-4 px-4">
 				<div className="text-xs sm:text-sm text-gray-500">
-					Showing {((current - 1) * itemsPerPage) + 1} to {Math.min(current * itemsPerPage, getFilteredRequests(type).length)} of {getFilteredRequests(type).length} results
+					Showing {((current - 1) * itemsPerPage) + 1} to {Math.min(current * itemsPerPage, totalE)} of {totalE} results
 				</div>
 				<div className="flex items-center gap-2">
 					<button
@@ -202,24 +158,10 @@ const KYC = () => {
 					>
 						<FaChevronLeft className="text-xs" />
 					</button>
-					<div className="flex gap-1">
-						{Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-							<button
-								key={page}
-								onClick={() => handlePageChange(type, page)}
-								className={`px-3 py-1 rounded-lg text-xs sm:text-sm font-medium transition-colors ${
-									current === page
-										? "bg-[#7a1335] text-white"
-										: "bg-gray-100 text-gray-700 hover:bg-gray-200"
-								}`}
-							>
-								{page}
-							</button>
-						))}
-					</div>
+					<span className="text-sm font-medium">{current} / {totalP}</span>
 					<button
 						onClick={() => handlePageChange(type, current + 1)}
-						disabled={current === totalPages}
+						disabled={current === totalP}
 						className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
 					>
 						<FaChevronRight className="text-xs" />
@@ -228,90 +170,98 @@ const KYC = () => {
 			</div>
 		);
 	};
+    
+    const renderTable = () => {
+        if (loading) return <div className="text-center py-10">Loading requests...</div>;
+        if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
+        if (requests.length === 0) return (
+            <div className="text-center py-8 text-gray-400 text-sm">No {activeTab} KYC requests found.</div>
+        );
 
+        const { firstDoc, secondDoc } = getDocumentInfo(requests[0]);
+
+        return (
+            <div className="overflow-x-auto rounded-lg border border-gray-200">
+                <table className="min-w-full bg-white">
+                    <thead>
+                        <tr className="bg-[#fbeaf0] border-b border-gray-200">
+                            <th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-left text-sm">{activeTab}</th>
+                            <th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-center text-sm">{firstDoc.label}</th>
+                            <th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-center text-sm">{secondDoc.label}</th>
+                            <th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-center text-sm">Status</th>
+                            <th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-center text-sm">Submitted</th>
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                        {requests.map((req) => {
+                            const { firstDoc, secondDoc } = getDocumentInfo(req);
+                            return (
+                                <tr key={req.id} className="hover:bg-[#fbeaf0] transition-colors">
+                                    <td className="px-3 py-4 sm:px-6 sm:py-4 flex items-center gap-3">
+                                        <div className="w-8 h-8 sm:w-12 sm:h-12 rounded-full bg-gray-200 flex items-center justify-center border-2 border-[#7a1335] shadow-sm">
+                                            {getTabIcon(req.userType)}
+                                        </div>
+                                        <div>
+                                            <div className="font-semibold text-[#7a1335] text-sm">{req.userType} ID: {req.userId}</div>
+                                            <div className="text-xs text-gray-400">Request ID: {req.id}</div>
+                                        </div>
+                                    </td>
+                                    <td className="px-3 py-4 sm:px-6 sm:py-4 text-center">
+                                        {firstDoc.url ? (
+                                            <button
+                                                className="flex items-center gap-1 mx-auto text-blue-600 hover:text-blue-800 font-medium underline transition-colors text-sm"
+                                                onClick={() => setModal({ url: firstDoc.url!, label: `${req.userType} ID ${req.userId} - ${firstDoc.label}` })}
+                                            >
+                                                <FaRegEye className="text-xs sm:text-sm" /> View
+                                            </button>
+                                        ) : <span className="text-gray-400 text-sm">-</span>}
+                                    </td>
+                                    <td className="px-3 py-4 sm:px-6 sm:py-4 text-center">
+                                        {secondDoc.url ? (
+                                            <button
+                                                className="flex items-center gap-1 mx-auto text-blue-600 hover:text-blue-800 font-medium underline transition-colors text-sm"
+                                                onClick={() => setModal({ url: secondDoc.url!, label: `${req.userType} ID ${req.userId} - ${secondDoc.label}` })}
+                                            >
+                                                <FaRegEye className="text-xs sm:text-sm" /> View
+                                            </button>
+                                        ) : <span className="text-gray-400 text-sm">-</span>}
+                                    </td>
+                                    <td className="px-3 py-4 sm:px-6 sm:py-4 text-center">
+                                        <select
+                                            value={req.status}
+                                            onChange={(e) => handleStatusChange(req.id, e.target.value as KycStatus)}
+                                            className={`appearance-none px-3 py-2 pr-8 rounded-full text-xs font-bold cursor-pointer transition-all border-2 border-transparent hover:border-[#7a1335] focus:border-[#7a1335] focus:outline-none ${getStatusColor(req.status)}`}
+                                        >
+                                            <option value="PENDING">Pending</option>
+                                            <option value="APPROVED">Approved</option>
+                                            <option value="REJECTED">Rejected</option>
+                                        </select>
+                                    </td>
+                                    <td className="px-3 py-4 sm:px-6 sm:py-4 text-center text-gray-500 text-sm">{new Date(req.submittedAt).toLocaleDateString()}</td>
+                                </tr>
+                            )
+                        })}
+                    </tbody>
+                </table>
+            </div>
+        )
+    };
+    
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-[#fbeaf0] to-white p-1 sm:p-6">
-			{/* Modal for viewing documents */}
 			{modal && (
-				<div
-					style={{
-						position: "fixed",
-						inset: 0,
-						zIndex: 50,
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "center",
-						background: "rgba(0,0,0,0.4)",
-						padding: "8px"
-					}}
-				>
-					<div
-						style={{
-							background: "#fff",
-							borderRadius: "1rem",
-							boxShadow: "0 8px 32px rgba(0,0,0,0.18)",
-							width: "98vw",
-							maxWidth: "700px",
-							padding: "24px",
-							position: "relative",
-							animation: "fade-in 0.2s"
-						}}
-					>
+				<div className="fixed top-0 inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-2">
+					<div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl p-6 relative animate-fade-in">
 						<button
-							style={{
-								position: "absolute",
-								top: 12,
-								right: 16,
-								color: "#9ca3af",
-								fontSize: 28,
-								background: "none",
-								border: "none",
-								cursor: "pointer",
-								transition: "color 0.2s"
-							}}
+							className="absolute top-3 right-4 text-gray-400 text-3xl hover:text-red-500 transition-colors"
 							onClick={() => setModal(null)}
 							aria-label="Close"
-							onMouseOver={e => (e.currentTarget.style.color = "#ef4444")}
-							onMouseOut={e => (e.currentTarget.style.color = "#9ca3af")}
-						>
-							&times;
-						</button>
-						<h2
-							style={{
-								fontSize: "1.25rem",
-								fontWeight: 700,
-								marginBottom: 16,
-								color: "#7a1335",
-								display: "flex",
-								alignItems: "center",
-								gap: 8
-							}}
-						>
-							<FaRegEye style={{ color: "#7a1335" }} />
-							{modal.label}
+						>×</button>
+						<h2 className="text-lg font-bold mb-4 text-[#7a1335] flex items-center gap-2">
+							<FaRegEye /> {modal.label}
 						</h2>
-						<div
-							style={{
-								width: "100%",
-								height: "56vh",
-								borderRadius: "0.75rem",
-								border: "1px solid #fbeaf0",
-								background: "#fbeaf0",
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center"
-							}}
-						>
-							<iframe
-								src={modal.url}
-								title={modal.label}
-								style={{
-									width: "100%",
-									height: "100%",
-									borderRadius: "0.75rem",
-									border: "none"
-								}}
-							/>
+						<div className="w-full h-[75vh] rounded-lg border bg-gray-100">
+							<iframe src={modal.url} title={modal.label} className="w-full h-full rounded-lg border-none" />
 						</div>
 					</div>
 				</div>
@@ -320,18 +270,16 @@ const KYC = () => {
 			<div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-2 sm:p-6 w-full max-w-full sm:max-w-6xl mx-auto">
 				<div className="flex flex-col sm:flex-row items-center justify-between mb-4 sm:mb-6 gap-2">
 					<h1 className="text-lg sm:text-2xl font-bold text-[#7a1335] flex items-center gap-2">
-						<FaIdCard className="text-xl sm:text-2xl text-[#7a1335]" />
-						KYC Requests
+						<FaIdCard className="text-xl sm:text-2xl" /> KYC Requests
 					</h1>
-					<span className="text-xs sm:text-sm text-gray-500">{requests.length} total requests</span>
+					<span className="text-xs sm:text-sm text-gray-500">{totalElements[activeTab]} total requests</span>
 				</div>
 
-				{/* Tab Navigation */}
 				<div className="flex border-b border-gray-200 mb-6">
-					{["User", "B2B", "Partner"].map((tab) => (
+					{(["USER", "B2B", "PARTNER"] as UserType[]).map((tab) => (
 						<button
 							key={tab}
-							onClick={() => setActiveTab(tab as "User" | "B2B" | "Partner")}
+							onClick={() => setActiveTab(tab)}
 							className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
 								activeTab === tab
 									? "border-[#7a1335] text-[#7a1335] bg-[#fbeaf0]"
@@ -339,87 +287,12 @@ const KYC = () => {
 							}`}
 						>
 							{getTabIcon(tab)}
-							{tab}
-							<span className="bg-gray-100 text-gray-600 px-2 py-1 rounded-full text-xs">
-								{getFilteredRequests(tab).length}
-							</span>
+							{tab.charAt(0) + tab.slice(1).toLowerCase()}
 						</button>
 					))}
 				</div>
-
-				{/* Table for Active Tab */}
-				<div className="overflow-x-auto rounded-lg border border-gray-200">
-					<table className="min-w-full bg-white">
-						<thead>
-							<tr className="bg-[#fbeaf0] border-b border-gray-200">
-								<th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-left text-sm">{activeTab}</th>
-								<th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-center text-sm">{getDocumentLabel(activeTab).first}</th>
-								<th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-center text-sm">{getDocumentLabel(activeTab).second}</th>
-								<th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-center text-sm">Status</th>
-								<th className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-center text-sm">Submitted</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-gray-200">
-							{getPaginatedRequests(activeTab).map((req) => (
-								<tr
-									key={req.id}
-									className="hover:bg-[#fbeaf0] transition-colors"
-								>
-									<td className="px-3 py-4 sm:px-6 sm:py-4 flex items-center gap-3">
-										<img
-											src={req.avatar}
-											alt={req.user}
-											className="w-8 h-8 sm:w-12 sm:h-12 rounded-full object-cover border-2 border-[#7a1335] shadow-sm"
-										/>
-										<div>
-											<div className="font-semibold text-[#7a1335] text-sm">{req.user}</div>
-											<div className="text-xs text-gray-400">ID: {req.id}</div>
-										</div>
-									</td>
-									<td className="px-3 py-4 sm:px-6 sm:py-4 text-center">
-										<button
-											className="flex items-center gap-1 mx-auto text-blue-600 hover:text-blue-800 font-medium underline transition-colors text-sm"
-											onClick={() => setModal({ url: req.aadharUrl, label: `${req.user} - ${getDocumentLabel(activeTab).first}` })}
-										>
-											<FaRegEye className="text-xs sm:text-sm" />
-											View
-										</button>
-									</td>
-									<td className="px-3 py-4 sm:px-6 sm:py-4 text-center">
-										<button
-											className="flex items-center gap-1 mx-auto text-blue-600 hover:text-blue-800 font-medium underline transition-colors text-sm"
-											onClick={() => setModal({ url: req.panUrl, label: `${req.user} - ${getDocumentLabel(activeTab).second}` })}
-										>
-											<FaRegEye className="text-xs sm:text-sm" />
-											View
-										</button>
-									</td>
-									<td className="px-3 py-4 sm:px-6 sm:py-4 text-center">
-										<select
-											value={req.status}
-											onChange={(e) => handleStatusChange(req.id, e.target.value)}
-											className={`appearance-none px-3 py-2 pr-8 rounded-full text-xs font-bold cursor-pointer transition-all border-2 border-transparent hover:border-[#7a1335] focus:border-[#7a1335] focus:outline-none ${getStatusColor(req.status)}`}
-										>
-											<option value="Pending">Pending</option>
-											<option value="Approved">Approved</option>
-											<option value="Rejected">Rejected</option>
-										</select>
-									</td>
-									<td className="px-3 py-4 sm:px-6 sm:py-4 text-center text-gray-500 text-sm">{req.submitted}</td>
-								</tr>
-							))}
-							{getPaginatedRequests(activeTab).length === 0 && (
-								<tr>
-									<td colSpan={5} className="text-center py-8 text-gray-400 text-sm">
-										No {activeTab} KYC requests found.
-									</td>
-								</tr>
-							)}
-						</tbody>
-					</table>
-				</div>
-
-				{/* Pagination */}
+                
+                {renderTable()}
 				{renderPagination(activeTab)}
 			</div>
 		</div>
