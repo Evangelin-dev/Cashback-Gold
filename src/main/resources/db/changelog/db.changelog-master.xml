@@ -277,6 +277,7 @@
             <column name="purity" type="VARCHAR(100)"/>
             <column name="quality" type="VARCHAR(100)"/>
             <column name="warranty" type="VARCHAR(100)"/>
+            <column name="item_type " type="VARCHAR(100)"/>
             <column name="details" type="TEXT"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>

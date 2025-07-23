@@ -18,7 +18,8 @@ public class OrnamentRequest {
     private String material;
     private String purity;
     private String quality;
-    private String warranty; // Added warranty field
+    private String warranty;
+    private String itemType;
     private String details;
     private List<PriceBreakupDTO> priceBreakups; // New field
 }

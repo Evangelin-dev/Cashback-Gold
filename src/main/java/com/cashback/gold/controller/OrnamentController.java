@@ -24,6 +24,12 @@ public class OrnamentController {
         return ResponseEntity.ok(service.getAll(page, size));
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<OrnamentResponse> getById(@PathVariable Long id) {
+        return ResponseEntity.ok(service.getById(id));
+    }
+
+
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<OrnamentResponse> create(
             @RequestPart("mainImage") MultipartFile mainImage,

@@ -30,6 +30,12 @@ public class OrnamentService {
     private final S3Service s3Service;
     private final ObjectMapper objectMapper;
 
+    public OrnamentResponse getById(Long id) {
+        Ornament ornament = repo.findById(id)
+                .orElseThrow(() -> new InvalidArgumentException("Ornament not found with id: " + id));
+        return toResponse(ornament);
+    }
+
     public List<OrnamentResponse> getAll(int page, int size) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
         return repo.findAll(pageable)
