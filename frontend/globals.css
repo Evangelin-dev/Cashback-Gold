@@ -182,13 +182,7 @@ body {
 .dropdown-nav > .dropdown-nav-toggle:active {
   pointer-events: none;
 } */
-.navbar:hover {
-  background: rgb(255, 255, 255);
-  color: rgb(0, 0, 0);
-}
-.navbar {
-  background: rgba(255, 255, 255, 0.292);
-}
+
 
 @media only screen and (max-width: 768px) {
   .custom-container-fluid {
@@ -719,12 +713,6 @@ hr {
   }
 }
 
-.fixed {
-  position: fixed;
-  top: 50%;
-  right: 0;
-  z-index: 999;
-}
 .button {
   display: block;
   border: 0;

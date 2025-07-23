@@ -1,338 +1,137 @@
 import { Award, Calendar, ChevronDown, ChevronUp, Gem, Shield } from 'lucide-react';
-import { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import axiosInstance from '../../../utils/axiosInstance';
+import Portal from '../Portal'; // 1. IMPORT THE PORTAL
 
-// Define interfaces for plan and FAQ
-interface Plan {
-  id: number;
-  name: string;
-  duration: string;
-  amount: string;
-  description: string;
-  monthlyPayment: string;
-  popular: boolean;
-  features: string[];
-}
-
-interface FAQ {
-  question: string;
-  answer: string;
-}
+// --- Interfaces & Helpers ---
+interface PlanFromApi { id: number; name: string; duration: string; amount: string; description: string; status: "ACTIVE" | "INACTIVE"; keyPoint1: string; keyPoint2: string; keyPoint3: string; }
+interface ProcessedPlan extends PlanFromApi { monthlyPayment: string; features: string[]; popular: boolean; }
+interface Faq { id: number; question: string; answer: string; }
+const parseAmount = (amountStr: string): number => Number(amountStr.replace(/[^0-9.-]+/g, "")) || 0;
+const parseDuration = (durationStr: string): number => parseInt(durationStr, 10) || 0;
 
 const ChitJewelsPlans = () => {
-  const [openFaq, setOpenFaq] = useState<number | null>(null);
-  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [plans, setPlans] = useState<ProcessedPlan[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<ProcessedPlan | null>(null);
 
-  const toggleFaq = (index: number) => {
-    setOpenFaq(openFaq === index ? null : index);
-  };
+  useEffect(() => {
+    const fetchPlans = async () => {
+      try {
+        const response = await axiosInstance.get<PlanFromApi[]>('/api/saving-plans');
+        const activePlans = response.data.filter(plan => plan.status === 'ACTIVE');
+        const processedPlans = activePlans.map((plan, index) => {
+          const amount = parseAmount(plan.amount);
+          const durationMonths = parseDuration(plan.duration);
+          const monthlyPayment = durationMonths > 0 ? (amount / durationMonths) : 0;
+          return { ...plan, monthlyPayment: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(monthlyPayment), features: [plan.keyPoint1, plan.keyPoint2, plan.keyPoint3].filter(Boolean), popular: index === 1 };
+        });
+        setPlans(processedPlans);
+      } catch (err) { setError("Could not load plans at this time."); } finally { setLoading(false); }
+    };
+    fetchPlans();
+  }, []);
 
-  const plans: Plan[] = [
-    {
-      id: 1,
-      name: "Gold Starter",
-      duration: "12 Months",
-      amount: "₹50,000",
-      description: "Perfect for beginners looking to start their gold investment journey with flexible monthly payments.",
-      monthlyPayment: "₹4,167",
-      popular: false,
-      features: ["Digital gold storage", "Monthly payment flexibility", "Insurance coverage", "24/7 customer support"]
-    },
-    {
-      id: 2,
-      name: "Gold Premium",
-      duration: "18 Months",
-      amount: "₹1,00,000",
-      description: "Our most popular plan offering the best value with enhanced benefits and priority customer service.",
-      monthlyPayment: "₹5,556",
-      popular: true,
-      features: ["Premium digital gold storage", "Priority customer support", "Extended insurance coverage", "Bonus rewards", "Free delivery"]
-    },
-    {
-      id: 3,
-      name: "Gold Elite",
-      duration: "24 Months",
-      amount: "₹2,00,000",
-      description: "Premium plan for serious investors with maximum benefits and exclusive perks.",
-      monthlyPayment: "₹8,333",
-      popular: false,
-      features: ["Elite digital gold storage", "Dedicated relationship manager", "Comprehensive insurance", "Exclusive rewards", "Priority delivery", "Investment advisory"]
-    },
-    {
-      id: 4,
-      name: "Gold Platinum",
-      duration: "36 Months",
-      amount: "₹5,00,000",
-      description: "Ultimate investment plan with the highest returns and premium services for long-term wealth building.",
-      monthlyPayment: "₹13,889",
-      popular: false,
-      features: ["Platinum digital gold storage", "Personal investment advisor", "Maximum insurance coverage", "VIP customer service", "Complimentary services", "Exclusive events access"]
+  // This will now work correctly
+  useEffect(() => {
+    if (selectedPlan) {
+      document.body.classList.add('overflow-hidden');
+    } else {
+      document.body.classList.remove('overflow-hidden');
     }
-  ];
-
-  const faqs: FAQ[] = [
-    {
-      question: "What is digital gold and how does it work?",
-      answer: "Digital gold is a modern way to invest in gold without physical possession. You purchase gold online, and it's stored securely in insured vaults. You can buy, sell, or convert to physical gold anytime through our platform."
-    },
-    {
-      question: "Can I convert my digital gold to physical gold?",
-      answer: "Yes, you can convert your digital gold to physical gold at any time. We offer home delivery services for coins and bars, or you can collect from our authorized centers. Conversion charges may apply based on the quantity and location."
-    },
-    {
-      question: "Is my digital gold safe and insured?",
-      answer: "Absolutely! Your digital gold is stored in secure, insured vaults with 24/7 monitoring. We provide comprehensive insurance coverage and follow strict security protocols to ensure your investment is protected."
-    },
-    {
-      question: "How do I sell my digital gold?",
-      answer: "Selling digital gold is simple through our platform. You can sell partially or completely at current market rates. The proceeds are transferred to your registered bank account within 24-48 hours after the transaction."
-    }
-  ];
-
-  const showPlanDetails = (plan: Plan) => {
-    setSelectedPlan(plan);
-  };
-
-  const closePlanDetails = () => {
-    setSelectedPlan(null);
-  };
+    return () => { document.body.classList.remove('overflow-hidden'); };
+  }, [selectedPlan]);
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Banner */}
-      <div className="bg-gradient-to-r from-amber-600 to-yellow-500 text-white">
-        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <div className="flex justify-center mb-4">
-              <Gem className="h-16 w-16 text-yellow-200" />
-            </div>
-            <h1 className="text-4xl md:text-6xl font-bold mb-6">
-              Chit Jewels
-            </h1>
-            <p className="text-xl md:text-2xl mb-8 text-yellow-100">
-              Your Gateway to Smart Gold Investment
-            </p>
-            <p className="text-lg md:text-xl max-w-3xl mx-auto text-yellow-50">
-              Discover our flexible chit fund plans designed to help you build wealth through gold investments. 
-              Choose from our range of plans tailored to meet your financial goals.
-            </p>
-          </div>
-        </div>
-      </div>
+      {/* ... Hero, Info, and Plans sections remain unchanged ... */}
+      <div className="bg-gradient-to-r from-[#7a1335] to-[#991313] text-white"><div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 text-center"><Gem className="h-16 w-16 text-yellow-300 mx-auto mb-4" /><h1 className="text-4xl md:text-6xl font-bold mb-6">Chit Jewels</h1><p className="text-xl md:text-2xl mb-8 text-yellow-100">Your Gateway to Smart Gold Investment</p><p className="text-lg md:text-xl max-w-3xl mx-auto text-yellow-50/90">Discover our flexible chit fund plans designed to help you build wealth through gold investments.</p></div></div>
+      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8"><div className="text-center mb-12"><h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Why Choose Chit Jewels?</h2><p className="text-lg text-gray-600 max-w-4xl mx-auto">Our chit fund plans combine group savings with modern gold investment strategies, providing flexible payment options to build your gold portfolio over time.</p></div><div className="grid md:grid-cols-3 gap-8 mb-16"><div className="text-center p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow"><Shield className="h-12 w-12 text-[#bf7e1a] mx-auto mb-4" /><h3 className="text-xl font-semibold text-gray-900 mb-2">Secure & Insured</h3><p className="text-gray-600">Your investments are protected with comprehensive insurance and secure storage.</p></div><div className="text-center p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow"><Calendar className="h-12 w-12 text-[#bf7e1a] mx-auto mb-4" /><h3 className="text-xl font-semibold text-gray-900 mb-2">Flexible Plans</h3><p className="text-gray-600">Choose from various durations and payment options that suit your financial goals.</p></div><div className="text-center p-6 bg-white rounded-lg shadow-md hover:shadow-xl transition-shadow"><Award className="h-12 w-12 text-[#bf7e1a] mx-auto mb-4" /><h3 className="text-xl font-semibold text-gray-900 mb-2">Proven Returns</h3><p className="text-gray-600">Benefit from gold's historical performance and our investment expertise.</p></div></div></div>
+      <div className="bg-white py-16"><div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"><div className="text-center mb-12"><h2 className="text-3xl md:text-4xl font-bold text-gray-800 mb-6">Our Active Plans</h2><p className="text-lg text-gray-600">Select the plan that best fits your investment goals.</p></div>{loading && <div className="text-center text-gray-500">Loading plans...</div>}{error && <div className="text-center text-red-500">{error}</div>}<div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">{plans.map((plan) => (<div key={plan.id} className={`relative bg-white rounded-2xl shadow-lg border-2 flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:scale-105 ${plan.popular ? 'border-[#bf7e1a]' : 'border-gray-200'}`}>{plan.popular && <div className="absolute -top-4 left-1/2 transform -translate-x-1/2"><span className="bg-[#bf7e1a] text-white px-4 py-2 rounded-full text-sm font-semibold">Most Popular</span></div>}<div className="p-6 flex-1 flex flex-col"><div className="text-center mb-6"><h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3><div className="text-3xl font-bold text-[#7a1335] mb-2">{plan.amount}</div><div className="text-gray-600 mb-4">{plan.duration}</div><div className="bg-yellow-50 px-3 py-2 rounded-lg"><span className="text-sm font-semibold text-yellow-800">Monthly: {plan.monthlyPayment}</span></div></div><p className="text-gray-600 text-sm mb-6 h-20">{plan.description}</p><div className="space-y-2 mb-6">{plan.features.slice(0, 3).map((feature, index) => (<div key={index} className="flex items-center text-sm"><div className="h-2 w-2 bg-[#bf7e1a] rounded-full mr-3"></div><span className="text-gray-700">{feature}</span></div>))}</div><div className="mt-auto"><button onClick={() => setSelectedPlan(plan)} className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${plan.popular ? 'bg-[#7a1335] text-white hover:bg-[#991313]' : 'bg-gray-100 text-gray-800 hover:bg-gray-200'}`}>View Details</button></div></div></div>))}</div></div></div>
 
-      {/* Common Information Section */}
-      <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-            Why Choose Chit Jewels?
-          </h2>
-          <p className="text-lg text-gray-600 max-w-4xl mx-auto">
-            Our chit fund plans combine the traditional concept of group savings with modern gold investment strategies. 
-            Each plan is designed to provide you with flexible payment options while building your gold portfolio over time.
-          </p>
-        </div>
+      <FAQSection />
 
-        <div className="grid md:grid-cols-3 gap-8 mb-16">
-          <div className="text-center p-6 bg-white rounded-lg shadow-md">
-            <Shield className="h-12 w-12 text-amber-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Secure & Insured</h3>
-            <p className="text-gray-600">Your investments are protected with comprehensive insurance coverage and secure storage facilities.</p>
-          </div>
-          <div className="text-center p-6 bg-white rounded-lg shadow-md">
-            <Calendar className="h-12 w-12 text-amber-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Flexible Plans</h3>
-            <p className="text-gray-600">Choose from various duration and payment options that suit your financial capabilities and goals.</p>
-          </div>
-          <div className="text-center p-6 bg-white rounded-lg shadow-md">
-            <Award className="h-12 w-12 text-amber-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Proven Returns</h3>
-            <p className="text-gray-600">Benefit from gold's historical performance and our expertise in precious metal investments.</p>
-          </div>
-        </div>
-      </div>
-
-      {/* Active Plans Section */}
-      <div className="bg-white py-16">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-              Our Active Plans
-            </h2>
-            <p className="text-lg text-gray-600">
-              Select the plan that best fits your investment goals and budget
-            </p>
-          </div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            {plans.map((plan) => (
-              <div
-                key={plan.id}
-                className={`relative bg-white rounded-2xl shadow-lg border-2 flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:scale-105 ${plan.popular ? 'border-amber-500' : 'border-gray-200'}`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-amber-500 text-white px-4 py-2 rounded-full text-sm font-semibold">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-                <div className="p-6 flex-1 flex flex-col">
-                  <div className="text-center mb-6">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                    <div className="text-3xl font-bold text-amber-600 mb-2">{plan.amount}</div>
-                    <div className="text-gray-600 mb-4">{plan.duration}</div>
-                    <div className="bg-amber-50 px-3 py-2 rounded-lg">
-                      <span className="text-sm font-semibold text-amber-700">Monthly: {plan.monthlyPayment}</span>
-                    </div>
-                  </div>
-                  <p className="text-gray-600 text-sm mb-6">{plan.description}</p>
-                  <div className="space-y-2 mb-6">
-                    {plan.features.slice(0, 3).map((feature, index) => (
-                      <div key={index} className="flex items-center text-sm">
-                        <div className="h-2 w-2 bg-amber-500 rounded-full mr-3"></div>
-                        <span className="text-gray-700">{feature}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div className="mt-auto">
-                    <button
-                      onClick={() => showPlanDetails(plan)}
-                      className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-                        plan.popular
-                          ? 'bg-amber-600 text-white hover:bg-amber-700'
-                          : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
-                      }`}
-                    >
-                      View Details
-                    </button>
-                  </div>
+      {/* 2. WRAP THE POPUP JSX IN THE PORTAL COMPONENT */}
+      {selectedPlan && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-8 max-w-lg w-full max-h-[90vh] overflow-y-auto relative animate-fade-in">
+              <button onClick={() => setSelectedPlan(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">×</button>
+              <div className="text-center mb-6">
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedPlan.name}</h3>
+                <div className="text-4xl font-bold text-[#7a1335] mb-2">{selectedPlan.amount}</div>
+                <div className="text-gray-600 mb-4">{selectedPlan.duration}</div>
+                <div className="bg-yellow-50 px-4 py-2 rounded-lg inline-block"><span className="font-semibold text-yellow-800">Monthly Payment: {selectedPlan.monthlyPayment}</span></div>
+              </div>
+              <p className="text-gray-600 mb-6">{selectedPlan.description}</p>
+              <div className="mb-6">
+                <h4 className="font-semibold text-gray-900 mb-4">Plan Features:</h4>
+                <div className="space-y-3">
+                  {selectedPlan.features.map((feature, index) => (
+                    <div key={index} className="flex items-center"><div className="h-2 w-2 bg-[#bf7e1a] rounded-full mr-3"></div><span className="text-gray-700">{feature}</span></div>
+                  ))}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* FAQ Section */}
-      <div className="py-16" style={{ backgroundColor: '#7a1335' }}>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4" style={{ color: '#FFD700' }}>
-              Frequently Asked Questions
-            </h2>
-            <div className="w-24 h-1" style={{ backgroundColor: '#FFD700', margin: '0 auto' }}></div>
-          </div>
-
-          <div className="space-y-4">
-            {faqs.map((faq, index) => (
-              <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden">
-                <button
-                  onClick={() => toggleFaq(index)}
-                  className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors"
-                >
-                  <span className="font-semibold text-gray-900 flex items-center">
-                    <div className="w-6 h-6 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: '#7a1335' }}>
-                      <div className="w-3 h-3 bg-yellow-400 rounded-full"></div>
-                    </div>
-                    {faq.question}
-                  </span>
-                  <div style={{ color: '#7a1335' }}>
-                    {openFaq === index ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}
-                  </div>
-                </button>
-                
-                {openFaq === index && (
-                  <div className="px-6 pb-4">
-                    <div className="pl-9 text-gray-600">
-                      {faq.answer}
-                    </div>
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* Plan Details Popup */}
-      {selectedPlan && (
-        <div style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          bottom: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.5)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          zIndex: 1000,
-          padding: '20px'
-        }}>
-          <div style={{
-            backgroundColor: 'white',
-            borderRadius: '16px',
-            padding: '32px',
-            maxWidth: '600px',
-            width: '100%',
-            maxHeight: '80vh',
-            overflowY: 'auto',
-            position: 'relative'
-          }}>
-            <button
-              onClick={closePlanDetails}
-              style={{
-                position: 'absolute',
-                top: '16px',
-                right: '16px',
-                background: 'none',
-                border: 'none',
-                fontSize: '24px',
-                cursor: 'pointer',
-                color: '#666'
-              }}
-            >
-              ×
-            </button>
-            
-            <div className="text-center mb-6">
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">{selectedPlan.name}</h3>
-              <div className="text-4xl font-bold text-amber-600 mb-2">{selectedPlan.amount}</div>
-              <div className="text-gray-600 mb-4">{selectedPlan.duration}</div>
-              <div className="bg-amber-50 px-4 py-2 rounded-lg inline-block">
-                <span className="font-semibold text-amber-700">Monthly Payment: {selectedPlan.monthlyPayment}</span>
+              <div className="flex space-x-4">
+                <button onClick={() => setSelectedPlan(null)} className="flex-1 py-3 px-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors">Close</button>
+                <button className="flex-1 py-3 px-4 bg-[#7a1335] text-white rounded-lg font-semibold hover:bg-[#991313] transition-colors">Choose This Plan</button>
               </div>
             </div>
-            
-            <p className="text-gray-600 mb-6">{selectedPlan.description}</p>
-            
-            <div className="mb-6">
-              <h4 className="font-semibold text-gray-900 mb-4">Plan Features:</h4>
-              <div className="space-y-3">
-                {selectedPlan.features.map((feature, index) => (
-                  <div key={index} className="flex items-center">
-                    <div className="h-2 w-2 bg-amber-500 rounded-full mr-3"></div>
-                    <span className="text-gray-700">{feature}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-            
-            <div className="flex space-x-4">
-              <button
-                onClick={closePlanDetails}
-                className="flex-1 py-3 px-4 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
-              >
-                Close
-              </button>
-              <button className="flex-1 py-3 px-4 bg-amber-600 text-white rounded-lg font-semibold hover:bg-amber-700 transition-colors">
-                Choose This Plan
-              </button>
-            </div>
           </div>
-        </div>
+        </Portal>
       )}
+      <style>{`.animate-fade-in { animation: fadeIn 0.3s ease-out; } @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
     </div>
   );
 };
+
+// ... FAQSection component remains unchanged ...
+function FAQSection() {
+  const [openFaq, setOpenFaq] = useState<number | null>(0);
+  const [faqs, setFaqs] = useState<Faq[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      try {
+        const response = await axiosInstance.get('/api/faqs?type=CHIT&page=0&size=5');
+        setFaqs(response.data.content || []);
+      } catch (err) { console.error("Failed to fetch FAQs:", err); } finally { setLoading(false); }
+    };
+    fetchFaqs();
+  }, []);
+
+  const toggleFaq = (index: number) => { setOpenFaq(openFaq === index ? null : index); };
+
+  return (
+    <div className="py-16 bg-[#7a1335]">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="text-center mb-12">
+          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-yellow-300">Frequently Asked Questions</h2>
+          <div className="w-24 h-1 bg-yellow-300 mx-auto"></div>
+        </div>
+        <div className="space-y-4">
+          {loading ? <div className="text-center text-white">Loading FAQs...</div> : faqs.map((faq, index) => (
+            <div key={faq.id} className="bg-white rounded-lg shadow-md overflow-hidden">
+              <button onClick={() => toggleFaq(index)} className="w-full px-6 py-4 text-left flex items-center justify-between hover:bg-gray-50 transition-colors">
+                <span className="font-semibold text-gray-900 flex items-center">
+                  <div className="w-6 h-6 rounded-full flex items-center justify-center mr-3 bg-[#7a1335]"><div className="w-3 h-3 bg-yellow-400 rounded-full"></div></div>
+                  {faq.question}
+                </span>
+                <div className="text-[#7a1335]">{openFaq === index ? <ChevronUp className="h-5 w-5" /> : <ChevronDown className="h-5 w-5" />}</div>
+              </button>
+              {openFaq === index && (
+                <div className="px-6 pb-4 pt-2">
+                  <div className="pl-9 text-gray-600 border-l-2 border-gray-200 ml-3">{faq.answer}</div>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
 
 export default ChitJewelsPlans;

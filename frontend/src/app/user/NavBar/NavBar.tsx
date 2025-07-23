@@ -535,10 +535,10 @@ const NavBar = () => {
 												}}>B2B Dashboard</Link>
 											)}
 											{currentUser.role === 'PARTNER' && (
-												<Link to="/pdashboard" onClick={() => setIsUserMenuOpen(false)} style={{
+												<Link to="/bdashboard" onClick={() => setIsUserMenuOpen(false)} style={{
 													textDecoration: 'none', display: 'block', width: '100%', borderRadius: '0.25rem',
 													padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', color: '#374151'
-												}}>PARTNER Dashboard</Link>
+												}}>B2B Dashboard</Link>
 											)}
 											<button onClick={handleLogout} style={{
 												display: 'block', width: '100%', borderRadius: '0.25rem', padding: '0.5rem 1rem',

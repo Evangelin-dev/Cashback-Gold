@@ -1,6 +1,5 @@
 import { ChevronDown, Crown, LogOut, Mail, Menu, Phone, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import CustomImage from "../../components/custom/Image";
 
 export const MENU = [
 	{ name: "Home", link: "/LUserHome" },
@@ -242,9 +241,9 @@ const LNavBar = () => {
 				>
 					{/* Logo */}
 					<a href="/" style={{ display: "flex", alignItems: "center", minWidth: 50 }}>
-						<CustomImage
+						<img
 							src={"/logo.png"}
-							wrapperClss={`h-auto ${isMobile ? "w-[60px] min-w-[50px]" : "w-[80px] min-w-[70px]"}`}
+							alt="Logo"
 							height="auto"
 							width={isMobile ? "60px" : "80px"}
 						/>

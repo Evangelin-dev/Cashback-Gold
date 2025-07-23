@@ -51,7 +51,6 @@ import UserHome from "./src/app/user/UserHome";
 import UserLayout from "./src/app/user/UserLayout";
 import LPrivacyPlicyPage from "./src/app/loginuser/PrivacyPolicy/privacy";
 import LAboutUsPage from "./src/app/loginuser/AboutUs/aboutus";
-import LJewelryProductPage from "./src/app/loginuser/BuyOrnaments/ProductDetail/JewelryProductPage .tsx";
 import LContactUsPage from "./src/app/loginuser/ContactUs/contactus";
 import LFooter from "./src/app/loginuser/Footer/Footer";
 import LNavBar from "./src/app/loginuser/NavBar/NavBar";
@@ -78,7 +77,6 @@ import GoldOrders from "./src/app/admin/GoldOrderManage/goldorder";
 import AOrderHistory from "./src/app/admin/OrderHistory/orderhistory";
 import FAQManagement from "./src/app/admin/FAQ/faq";
 import B2BRegistration from "./src/app/B2BRegistration/b2bregistration.tsx";
-import LChitJewelsPlans from "./src/app/loginuser/ChitJewels/chitjewels.tsx";
 import ChitJewelsPlans from "./src/app/user/ChitJewels/chitjewels.tsx";
 import LGoldSIPPlans from "./src/app/loginuser/GoldSIP/goldSIP.tsx";
 import GoldSIPPlans from "./src/app/user/GoldSIP/goldSIP.tsx";
@@ -195,7 +193,6 @@ const AppRoutes: React.FC = () => {
           <Route path="/lfooter" element={<LFooter />} />
           <Route path="/lterms" element={<LTerms />} />
           <Route path="/lcontactus" element={<LContactUsPage />} />
-          <Route path="/lbuyornaments/:id" element={<LJewelryProductPage />} />
           <Route path="/laboutus" element={<LAboutUsPage />} />
           <Route path="/lprivacy" element={<LPrivacyPlicyPage />} />
           <Route path="/buynow" element={<BuyNow />} />
@@ -204,7 +201,6 @@ const AppRoutes: React.FC = () => {
           <Route path="paymentpopup" element={<PaymentPopup />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/lrefund" element={<LRefund />} />
-          <Route path="/lchit" element={<LChitJewelsPlans />} />
           <Route path="/lgoldsip" element={<LGoldSIPPlans />} />
           <Route path="/lschemes" element={<LGoldPlantSchemes />} />
           <Route path="/lSIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
