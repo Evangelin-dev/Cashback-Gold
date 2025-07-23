@@ -121,6 +121,7 @@ const AppRoutes: React.FC = () => {
       {/* B2B routes */}
 
       {/* <Route element={<B2BLayout/>}> */}
+      <Route path="/b2b/register" element={<B2BRegistration />} />
       <Route path="/b2b/login" element={<Login />} />
       <Route element={<B2BLayout />}>
         <Route path="bdashboard" element={<Dashboard />} />
