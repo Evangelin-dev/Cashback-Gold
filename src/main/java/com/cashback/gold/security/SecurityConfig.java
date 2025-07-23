@@ -59,9 +59,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/kyc").hasAnyAuthority("USER", "B2B", "PARTNER")
                         .requestMatchers("/wallet/**").hasAnyAuthority("B2B")
                         .requestMatchers("/api/gold/admin/**").hasAuthority("ADMIN") // ✅ Gold admin APIs
-                        .requestMatchers("/api/b2b/support").hasAuthority("B2B")
-                        .requestMatchers(HttpMethod.POST,"/api/b2b/support").hasAnyAuthority("B2B","PARTNER")
-                        .requestMatchers(HttpMethod.GET,"/api/b2b/support/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/b2b/support").hasAnyAuthority("B2B", "PARTNER")
+                                .requestMatchers("/api/b2b/support/admin/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/sips").hasAnyAuthority("B2B")
 
                         // ✅ Gold Purchase APIs for Users and B2B
