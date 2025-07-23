@@ -119,13 +119,47 @@ public class OrnamentService {
     }
 
     private void assignSubImages(Ornament ornament, List<MultipartFile> subImages) {
-        List<String> urls = subImages.stream().map(s3Service::uploadFile).toList();
+        // Step 1: Null or empty check
+        if (subImages == null || subImages.isEmpty()) {
+            throw new InvalidArgumentException("All 4 subImages (subImage1 to subImage4) are required.");
+        }
 
-        ornament.setSubImage1(urls.size() > 0 ? urls.get(0) : null);
-        ornament.setSubImage2(urls.size() > 1 ? urls.get(1) : null);
-        ornament.setSubImage3(urls.size() > 2 ? urls.get(2) : null);
-        ornament.setSubImage4(urls.size() > 3 ? urls.get(3) : null);
+        // Step 2: Validate content types before upload
+        for (int i = 0; i < subImages.size(); i++) {
+            MultipartFile file = subImages.get(i);
+            if (file == null || file.isEmpty()) {
+                throw new InvalidArgumentException("subImage" + (i + 1) + " is missing.");
+            }
+            if (!isValidImage(file)) {
+                throw new InvalidArgumentException("subImage" + (i + 1) + " must be a valid image (jpeg/png/webp).");
+            }
+        }
+
+        // Step 3: Ensure exactly 4 sub images are provided
+        if (subImages.size() < 4) {
+            throw new InvalidArgumentException("Exactly 4 subImages are required.");
+        }
+
+        // Step 4: Upload only after validation
+        List<String> urls = subImages.stream()
+                .map(s3Service::uploadFile)
+                .toList();
+
+        ornament.setSubImage1(urls.get(0));
+        ornament.setSubImage2(urls.get(1));
+        ornament.setSubImage3(urls.get(2));
+        ornament.setSubImage4(urls.get(3));
     }
+
+    private boolean isValidImage(MultipartFile file) {
+        String contentType = file.getContentType();
+        return contentType != null && (
+                contentType.equals("image/jpeg") ||
+                        contentType.equals("image/png") ||
+                        contentType.equals("image/webp")
+        );
+    }
+
 
     private OrnamentResponse toResponse(Ornament o) {
         return OrnamentResponse.builder()
