@@ -35,6 +35,8 @@ export interface OrnamentApiData {
   price: number;
   category: string;
   subCategory: string;
+  item: string;
+  customItem?: string;
   gender: string;
   description1: string;
   description2: string;

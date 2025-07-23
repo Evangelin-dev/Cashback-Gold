@@ -210,11 +210,7 @@ const GoldSIPPlansPage = () => {
                   <div className="mt-auto">
                     <button
                       onClick={() => handleChoosePlan(plan)}
-                      className={`w-full py-3 rounded-lg font-semibold transition-colors duration-300 ${
-                        plan.popular
-                          ? 'bg-gradient-to-r from-yellow-500 to-orange-500 text-white hover:from-yellow-600 hover:to-orange-600'
-                          : 'bg-gray-800 text-white hover:bg-gray-700'
-                      }`}
+                      className="w-full py-3 rounded-lg font-semibold transition-colors duration-300 bg-gray-800 text-white hover:bg-gray-700"
                     >
                       Choose Plan
                     </button>
@@ -312,7 +308,7 @@ const GoldSIPPlansPage = () => {
                   onClick={() => setShowModal(false)}
                   className="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300"
                 >
-                  View More Plans
+                  Buy This Plan
                 </button>
               </div>
             </div>

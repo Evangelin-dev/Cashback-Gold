@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from "react";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../store";
+import { setCurrentPage } from "../../features/slices/adminSlice";
 import {
   addOrnament,
   deleteOrnament,
@@ -8,7 +9,6 @@ import {
   updateOrnament,
   type OrnamentApiData,
 } from "../../features/thunks/adminThunks";
-import { setCurrentPage } from "../../features/slices/adminSlice";
 import type { Ornament } from "../../types/type";
 
 const CATEGORY_TREE = [
@@ -95,6 +95,8 @@ const emptyFormState = {
   description2: "",
   description3: "",
   priceBreakups: [],
+  warranty: "",
+  warrantyYears: "",
 };
 
 const emptyBreakup = { component: "", goldRate18kt: "", weightG: "", discount: "", finalValue: "" };
@@ -114,8 +116,8 @@ const ManageOrnaments: React.FC = () => {
 
   const [mainCategory, setMainCategory] = useState("");
   const [subCategory, setSubCategory] = useState("");
-  const [genderCategory, setGenderCategory] = useState("");
   const [item, setItem] = useState("");
+  const [customItem, setCustomItem] = useState("");
 
   useEffect(() => {
     dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
@@ -130,8 +132,8 @@ const ManageOrnaments: React.FC = () => {
     setShowPriceBreakup(false);
     setMainCategory("");
     setSubCategory("");
-    setGenderCategory("");
     setItem("");
+    setCustomItem("");
     setIsFormVisible(false);
   };
 
@@ -145,7 +147,8 @@ const ManageOrnaments: React.FC = () => {
     setForm({ ...product, price: product.price.toString() });
     setMainCategory(product.category);
     setSubCategory(product.subCategory);
-    setGenderCategory(product.gender);
+    setItem(product.item || "");
+    setCustomItem(product.customItem || "");
     setImagePreviews({
         main: product.mainImage,
         subs: product.subImages ? [...product.subImages, ...Array(4 - product.subImages.length).fill("")] : Array(4).fill("")
@@ -155,7 +158,13 @@ const ManageOrnaments: React.FC = () => {
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
-    setForm({ ...form, [e.target.name]: e.target.value });
+    const { name, value } = e.target;
+    // Reset warrantyYears if warranty changes and is not 'Other'
+    if (name === "warranty" && value !== "other") {
+      setForm({ ...form, warranty: value, warrantyYears: "" });
+    } else {
+      setForm({ ...form, [name]: value });
+    }
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, index?: number) => {
@@ -187,8 +196,8 @@ const ManageOrnaments: React.FC = () => {
         return;
       }
     }
-    if (!mainCategory || !subCategory || !genderCategory) {
-        alert("Please select all category levels.");
+    if (!mainCategory || !subCategory || !item || (item === "Other" && !customItem)) {
+        alert("Please select all category levels and item.");
         return;
     }
     if (!form.id && !mainImageFile) {
@@ -218,7 +227,8 @@ const ManageOrnaments: React.FC = () => {
       price: parseFloat(form.price),
       category: mainCategory,
       subCategory: subCategory,
-      gender: genderCategory,
+      item: item,
+      customItem: item === "Other" ? customItem : "",
       description1: form.description1,
       description2: form.description2,
       description3: form.description3,
@@ -289,11 +299,23 @@ const ManageOrnaments: React.FC = () => {
   };
 
   const subCategoryOptions = mainCategory ? CATEGORY_TREE.find(cat => cat.name === mainCategory)?.children || [] : [];
- 
-  const genderCategoryOptions = subCategory ? subCategoryOptions.filter(sub => sub.name === subCategory) : [];
-  const itemOptions = genderCategory && subCategory !== "Gold Coin" ? 
-    (genderCategoryOptions.find(g => g.name === genderCategory) as any)?.items || []
-    : [];
+
+  // Get items for selected subCategory
+  let itemOptions: string[] = [];
+  if (subCategory) {
+    const subCatObj = subCategoryOptions.find(sub => sub.name === subCategory);
+    if (subCatObj) {
+      if (Array.isArray(subCatObj.items)) {
+        // If items is array of strings
+        itemOptions = [...subCatObj.items as string[]];
+      } else if (Array.isArray(subCatObj.items)) {
+        // If items is array of objects (for Gold Coin)
+        itemOptions = (subCatObj.items as any[]).map((obj: any) => obj.name);
+      }
+    }
+  }
+  // Add 'Other' option
+  if (!itemOptions.includes("Other")) itemOptions.push("Other");
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fbeaf0] to-white p-2 sm:p-8">
@@ -326,18 +348,33 @@ const ManageOrnaments: React.FC = () => {
               <input type="text" name="name" placeholder="Name *" value={form.name} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               <input type="number" name="price" placeholder="Price *" value={form.price} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               <div className="mb-3 flex flex-col gap-3 bg-[#fbeaf0] p-4 rounded-lg shadow-inner">
-                <select name="mainCategory" value={mainCategory} onChange={e => { setMainCategory(e.target.value); setSubCategory(""); setGenderCategory(""); }} className="px-3 py-2 border rounded w-full" required>
+                <select name="mainCategory" value={mainCategory} onChange={e => { setMainCategory(e.target.value); setSubCategory(""); setItem(""); setCustomItem(""); }} className="px-3 py-2 border rounded w-full" required>
                   <option value="">Select Main Category *</option>
                   {CATEGORY_TREE.map(cat => (<option key={cat.name} value={cat.name}>{cat.name}</option>))}
                 </select>
-                {subCategoryOptions.length > 0 && <select name="subCategory" value={subCategory} onChange={e => { setSubCategory(e.target.value); setGenderCategory(""); }} className="px-3 py-2 border rounded w-full mt-2" required>
+                {subCategoryOptions.length > 0 && <select name="subCategory" value={subCategory} onChange={e => { setSubCategory(e.target.value); setItem(""); setCustomItem(""); }} className="px-3 py-2 border rounded w-full mt-2" required>
                   <option value="">Select Sub-Category *</option>
                   {subCategoryOptions.map(sub => (<option key={sub.name} value={sub.name}>{sub.name}</option>))}
                 </select>}
-                {subCategory && <select name="genderCategory" value={genderCategory} onChange={e => setGenderCategory(e.target.value)} className="px-3 py-2 border rounded w-full mt-2" required>
-                  <option value="">Select Gender/Type *</option>
-                  {genderCategoryOptions.map(g => (<option key={g.name} value={g.name}>{g.name}</option>))}
-                </select>}
+                {subCategory && (
+                  <>
+                    <select name="item" value={item} onChange={e => { setItem(e.target.value); if (e.target.value !== "Other") setCustomItem(""); }} className="px-3 py-2 border rounded w-full mt-2" required>
+                      <option value="">Select Item *</option>
+                      {itemOptions.map(opt => (<option key={opt} value={opt}>{opt}</option>))}
+                    </select>
+                    {item === "Other" && (
+                      <input
+                        type="text"
+                        name="customItem"
+                        value={customItem}
+                        onChange={e => setCustomItem(e.target.value)}
+                        placeholder="Enter custom item name"
+                        className="px-3 py-2 border rounded w-full mt-2"
+                        required
+                      />
+                    )}
+                  </>
+                )}
               </div>
             </div>
             
@@ -365,6 +402,38 @@ const ManageOrnaments: React.FC = () => {
                   </div>
                 ))}
               </div>
+
+              {/* Warranty Dropdown - moved below Gallery Images */}
+              <div className="mb-3 mt-6">
+                <label className="block font-semibold text-[#7a1335] mb-2">Warranty</label>
+                <select
+                  name="warranty"
+                  value={form.warranty}
+                  onChange={handleChange}
+                  className="px-3 py-2 border rounded w-full"
+                  required
+                >
+                  <option value="">Select Warranty *</option>
+                  <option value="lifetime">Life time warranty</option>
+                  <option value="none">No warranty</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              {form.warranty === "other" && (
+                <div className="mb-3">
+                  <label className="block font-semibold text-[#7a1335] mb-2">Warranty (years)</label>
+                  <input
+                    type="number"
+                    name="warrantyYears"
+                    min={1}
+                    placeholder="Enter warranty in years"
+                    value={form.warrantyYears}
+                    onChange={handleChange}
+                    className="px-3 py-2 border rounded w-full"
+                    required
+                  />
+                </div>
+              )}
             </div>
           </div>
 
@@ -418,7 +487,7 @@ const ManageOrnaments: React.FC = () => {
         </div>
       )}
 
-      <div className="bg-white rounded-2xl shadow-2xl p-8 mt-10">
+      {/* <div className="bg-white rounded-2xl shadow-2xl p-8 mt-10">
         <h2 className="text-2xl font-bold text-gray-700 mb-6">Existing Ornaments</h2>
         {status === 'loading' && !ornaments.length && <p>Loading ornaments...</p>}
         {error && <p className="text-red-500">Error: {error}</p>}
@@ -441,7 +510,7 @@ const ManageOrnaments: React.FC = () => {
           <span className="font-semibold">Page {currentPage + 1} of {totalPages}</span>
           <button onClick={() => handlePageChange(currentPage + 1)} disabled={currentPage >= totalPages - 1 || status === 'loading'} className="px-4 py-2 bg-[#7a1335] text-white rounded disabled:bg-gray-300">Next</button>
         </div>
-      </div>
+      </div> */}
     </div>
   );
 };
