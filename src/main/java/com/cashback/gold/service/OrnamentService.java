@@ -126,19 +126,23 @@ public class OrnamentService {
                 .category(r.getCategory()).subCategory(r.getSubCategory()).gender(r.getGender())
                 .description1(r.getDescription1()).description2(r.getDescription2()).description3(r.getDescription3())
                 .description(r.getDescription()).material(r.getMaterial())
-                .purity(r.getPurity()).quality(r.getQuality()).warranty(r.getWarranty()) // Added warranty
+                .purity(r.getPurity()).quality(r.getQuality()).warranty(r.getWarranty())
+                .itemType(r.getItemType()) // ✅ Add this line
                 .details(r.getDetails())
                 .build();
     }
+
 
     private void updateEntity(Ornament o, OrnamentRequest r) {
         o.setName(r.getName()); o.setPrice(r.getPrice());
         o.setCategory(r.getCategory()); o.setSubCategory(r.getSubCategory()); o.setGender(r.getGender());
         o.setDescription1(r.getDescription1()); o.setDescription2(r.getDescription2()); o.setDescription3(r.getDescription3());
         o.setDescription(r.getDescription()); o.setMaterial(r.getMaterial());
-        o.setPurity(r.getPurity()); o.setQuality(r.getQuality()); o.setWarranty(r.getWarranty()); // Added warranty
+        o.setPurity(r.getPurity()); o.setQuality(r.getQuality()); o.setWarranty(r.getWarranty());
+        o.setItemType(r.getItemType()); // ✅ Add this line
         o.setDetails(r.getDetails());
     }
+
 
     private void assignSubImages(Ornament ornament, List<MultipartFile> subImages) {
         // Step 1: Null or empty check
@@ -196,8 +200,8 @@ public class OrnamentService {
                         o.getSubImage4()
                 ).stream().filter(url -> url != null).collect(Collectors.toList()))
                 .material(o.getMaterial()).purity(o.getPurity()).quality(o.getQuality())
-                .warranty(o.getWarranty()) // Added warranty
-                .itemType(o.getItemType()) // ✅ added this line
+                .warranty(o.getWarranty())
+                .itemType(o.getItemType())
                 .details(o.getDetails())
                 .priceBreakups(o.getPriceBreakups().stream()
                         .map(this::toPriceBreakupDTO)
