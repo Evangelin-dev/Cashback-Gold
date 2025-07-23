@@ -37,10 +37,11 @@ public class SecurityConfig {
 //                        .requestMatchers("/api/kyc/**").hasAuthority("ADMIN") // for GET, PUT, DELETE, etc.
                         .requestMatchers("/api/saving-plans").hasAuthority("ADMIN")
                         .requestMatchers("/api/gold-plants").hasAuthority("ADMIN")
-                        .requestMatchers("/api/admin/campaigns").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET,"/api/admin/campaigns").hasAnyAuthority("ADMIN","USER","PARTNER","B2B")
+                        .requestMatchers("/api/admin/campaigns").hasAuthority("ADMIN")
                         .requestMatchers("/api/bank-accounts").hasAnyAuthority("ADMIN","USER","PARTNER","B2B")
                         .requestMatchers("/api/faqs").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.GET,"/api/faqs").permitAll()
                         // KYC endpoints for USER
                         .requestMatchers(HttpMethod.POST, "/api/kyc/user").hasAuthority("USER")
                         .requestMatchers(HttpMethod.GET, "/api/kyc/user").hasAuthority("USER")
@@ -59,7 +60,7 @@ public class SecurityConfig {
                         .requestMatchers("/wallet/**").hasAnyAuthority("B2B")
                         .requestMatchers("/api/gold/admin/**").hasAuthority("ADMIN") // ✅ Gold admin APIs
                         .requestMatchers("/api/b2b/support").hasAuthority("B2B")
-                        .requestMatchers(HttpMethod.POST,"/api/b2b/support").hasAuthority("B2B")
+                        .requestMatchers(HttpMethod.POST,"/api/b2b/support").hasAnyAuthority("B2B","PARTNER")
                         .requestMatchers(HttpMethod.GET,"/api/b2b/support/**").hasAuthority("ADMIN")
                         .requestMatchers("/api/sips").hasAnyAuthority("B2B")
 
