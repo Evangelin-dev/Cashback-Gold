@@ -197,6 +197,7 @@ public class OrnamentService {
                 ).stream().filter(url -> url != null).collect(Collectors.toList()))
                 .material(o.getMaterial()).purity(o.getPurity()).quality(o.getQuality())
                 .warranty(o.getWarranty()) // Added warranty
+                .itemType(o.getItemType()) // ✅ added this line
                 .details(o.getDetails())
                 .priceBreakups(o.getPriceBreakups().stream()
                         .map(this::toPriceBreakupDTO)
