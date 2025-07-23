@@ -55,6 +55,7 @@ public class SupportService {
         // Fetch the user details
         User user = userRepo.findById(ticket.getUserId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
+        System.out.println(user);
 
         return SupportTicketResponse.builder()
                 .id(ticket.getId())
@@ -82,6 +83,9 @@ public class SupportService {
 
     // Response Mapper
     private SupportTicketResponse toResponse(SupportTicket ticket) {
+        User user = userRepo.findById(ticket.getUserId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
         return SupportTicketResponse.builder()
                 .id(ticket.getId())
                 .userId(ticket.getUserId())
@@ -89,6 +93,8 @@ public class SupportService {
                 .message(ticket.getMessage())
                 .status(ticket.getStatus())
                 .submittedAt(ticket.getSubmittedAt())
+                .email(user.getEmail())
+                .mobile(user.getMobile())
                 .build();
     }
 }
