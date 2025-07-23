@@ -38,7 +38,6 @@ public class OrnamentService {
                 .toList();
     }
 
-
     public OrnamentResponse create(MultipartFile mainImage, List<MultipartFile> subImages, String dataJson) {
         OrnamentRequest req = parse(dataJson);
 
@@ -75,12 +74,9 @@ public class OrnamentService {
             assignSubImages(ornament, subImages);
         }
 
-        // ✅ Update price breakups safely (to avoid orphan removal issue)
+        // Update price breakups safely
         if (req.getPriceBreakups() != null) {
-            // First clear the existing collection
             ornament.getPriceBreakups().clear();
-
-            // Then add new ones into the *same* collection instance
             for (PriceBreakupDTO dto : req.getPriceBreakups()) {
                 PriceBreakup breakup = toPriceBreakupEntity(dto, ornament);
                 ornament.getPriceBreakups().add(breakup);
@@ -90,9 +86,8 @@ public class OrnamentService {
         return toResponse(repo.save(ornament));
     }
 
-
     public void delete(Long id) {
-        repo.deleteById(id); // Price breakups are deleted automatically due to cascade
+        repo.deleteById(id);
     }
 
     private OrnamentRequest parse(String json) {
@@ -109,7 +104,8 @@ public class OrnamentService {
                 .category(r.getCategory()).subCategory(r.getSubCategory()).gender(r.getGender())
                 .description1(r.getDescription1()).description2(r.getDescription2()).description3(r.getDescription3())
                 .description(r.getDescription()).material(r.getMaterial())
-                .purity(r.getPurity()).quality(r.getQuality()).details(r.getDetails())
+                .purity(r.getPurity()).quality(r.getQuality()).warranty(r.getWarranty()) // Added warranty
+                .details(r.getDetails())
                 .build();
     }
 
@@ -118,7 +114,8 @@ public class OrnamentService {
         o.setCategory(r.getCategory()); o.setSubCategory(r.getSubCategory()); o.setGender(r.getGender());
         o.setDescription1(r.getDescription1()); o.setDescription2(r.getDescription2()); o.setDescription3(r.getDescription3());
         o.setDescription(r.getDescription()); o.setMaterial(r.getMaterial());
-        o.setPurity(r.getPurity()); o.setQuality(r.getQuality()); o.setDetails(r.getDetails());
+        o.setPurity(r.getPurity()); o.setQuality(r.getQuality()); o.setWarranty(r.getWarranty()); // Added warranty
+        o.setDetails(r.getDetails());
     }
 
     private void assignSubImages(Ornament ornament, List<MultipartFile> subImages) {
@@ -142,7 +139,9 @@ public class OrnamentService {
                         o.getSubImage3(),
                         o.getSubImage4()
                 ).stream().filter(url -> url != null).collect(Collectors.toList()))
-                .material(o.getMaterial()).purity(o.getPurity()).quality(o.getQuality()).details(o.getDetails())
+                .material(o.getMaterial()).purity(o.getPurity()).quality(o.getQuality())
+                .warranty(o.getWarranty()) // Added warranty
+                .details(o.getDetails())
                 .priceBreakups(o.getPriceBreakups().stream()
                         .map(this::toPriceBreakupDTO)
                         .collect(Collectors.toList()))

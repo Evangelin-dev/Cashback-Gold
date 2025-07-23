@@ -23,6 +23,7 @@ public class OrnamentResponse {
     private String material;
     private String purity;
     private String quality;
+    private String warranty; // Added warranty field
     private String details;
     private List<PriceBreakupDTO> priceBreakups;
 }

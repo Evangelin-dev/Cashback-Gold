@@ -52,6 +52,7 @@ public class Ornament {
     private String material;
     private String purity;
     private String quality;
+    private String warranty;
     private String details;
 
     @OneToMany(mappedBy = "ornament", cascade = CascadeType.ALL, orphanRemoval = true)
