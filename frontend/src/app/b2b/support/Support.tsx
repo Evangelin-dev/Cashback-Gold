@@ -1,13 +1,13 @@
 import { useState } from "react";
 import { B2B_PRIMARY } from "../theme";
-import axiosInstance from "../../../utils/axiosInstance"; 
-import { Loader } from "lucide-react"; 
+import axiosInstance from "../../../utils/axiosInstance";
+import { Loader } from "lucide-react";
 
 export default function Support() {
   const [subject, setSubject] = useState("");
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
-  
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
 
@@ -70,7 +70,7 @@ export default function Support() {
           </div>
 
           {error && <p className="text-sm text-red-600">{error}</p>}
-          
+
           <button
             type="submit"
             disabled={isSubmitting}
@@ -89,7 +89,7 @@ export default function Support() {
         </form>
 
         {showSuccessPopup && (
-          <div className="absolute left-[70%] top-18  z-50 -translate-x-1/2 animate-fade-in-down">
+          <div className="fixed flex justify-center top-2 z-50 -translate-x-1/2 animate-fade-in-down">
             <div className="bg-white border-2 border-green-500 rounded-lg shadow-2xl px-8 py-4 text-center">
               <div className="text-green-700 font-bold text-base">
                 Ticket submitted successfully!

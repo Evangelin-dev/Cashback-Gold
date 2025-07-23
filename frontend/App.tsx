@@ -52,7 +52,6 @@ import UserLayout from "./src/app/user/UserLayout";
 import LPrivacyPlicyPage from "./src/app/loginuser/PrivacyPolicy/privacy";
 import LAboutUsPage from "./src/app/loginuser/AboutUs/aboutus";
 import LJewelryProductPage from "./src/app/loginuser/BuyOrnaments/ProductDetail/JewelryProductPage .tsx";
-import LBuyOrnamentsPage from "./src/app/loginuser/BuyOrnaments/buyOrnaments";
 import LContactUsPage from "./src/app/loginuser/ContactUs/contactus";
 import LFooter from "./src/app/loginuser/Footer/Footer";
 import LNavBar from "./src/app/loginuser/NavBar/NavBar";
@@ -196,7 +195,6 @@ const AppRoutes: React.FC = () => {
           <Route path="/lfooter" element={<LFooter />} />
           <Route path="/lterms" element={<LTerms />} />
           <Route path="/lcontactus" element={<LContactUsPage />} />
-          <Route path="/lbuyornaments" element={<LBuyOrnamentsPage />} />
           <Route path="/lbuyornaments/:id" element={<LJewelryProductPage />} />
           <Route path="/laboutus" element={<LAboutUsPage />} />
           <Route path="/lprivacy" element={<LPrivacyPlicyPage />} />

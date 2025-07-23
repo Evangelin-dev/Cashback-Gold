@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
-import { useDispatch } from 'react-redux'; // <-- Added for Redux
-import { logoutUser } from '../features/slices/authSlice'; // <-- Added for logout action
+import { useDispatch } from 'react-redux'; 
+import { logoutUser } from '../features/slices/authSlice'; 
 import Notifications from "./notifications/Notifications";
 
 const menuItems = [
@@ -14,7 +14,7 @@ const menuItems = [
   { label: "Wallet", icon: "👛", path: "/bwallet" },
   { label: "Marketing Resources", icon: "📢", path: "/bmarketing-resources" },
   { label: "Support", icon: "🛠️", path: "/bsupport" },
-  // Changed path to '#' as it's an action, not a direct route.
+  
   { label: "Logout", icon: "🚪", path: "#" },
 ];
 
@@ -27,22 +27,18 @@ const B2BLayout: React.FC = () => {
   const [notificationVisible, setNotificationVisible] = useState(false);
   const [showNotificationPage, setShowNotificationPage] = useState(false);
   
-  // --- START: Logout Functionality Added ---
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const dispatch = useDispatch();
-  // --- END: Logout Functionality Added ---
 
   const notificationRef = useRef<HTMLDivElement | null>(null);
   const notificationBtnRef = useRef<HTMLButtonElement | null>(null);
   const navigate = useNavigate();
 
-  // --- START: Logout Handler Added ---
   const handleLogout = () => {
     dispatch(logoutUser());
     navigate('/');
     setShowLogoutConfirm(false);
   };
-  // --- END: Logout Handler Added ---
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -157,7 +153,7 @@ const B2BLayout: React.FC = () => {
         <ul style={{ flex: 1, overflowY: "auto", padding: "0.8rem 0" }}>
           {menuItems.map(({ label, icon, path }, idx) => {
             const isActive = window.location.pathname === path;
-            // --- UPDATED CLICK HANDLER ---
+            
             const handleClick = () => {
               setSidebarVisible(false);
               if (label === 'Logout') {
@@ -220,7 +216,6 @@ const B2BLayout: React.FC = () => {
           © {new Date().getFullYear()} B2B Panel
         </div>
       </nav>
-      {/* --- NO CHANGES HERE --- */}
       <div className="flex-1 flex flex-col min-w-0 md:ml-72">
         <header className="fixed top-0 w-full md:w-[calc(100%-16rem)] md:left-64 z-30 bg-gradient-to-r from-[#8B1538] to-[#A91B47] text-white shadow-md h-16 flex justify-between items-center px-4 md:px-6">
           <div className="flex items-center gap-4">
@@ -230,7 +225,7 @@ const B2BLayout: React.FC = () => {
             >
               <span className="inline-block transform transition-transform duration-300 hover:rotate-90">☰</span>
             </button>
-            <h1 className="text-xl font-semibold tracking-wide">B2B Panel</h1>
+            <h1 className="text-xl font-semibold tracking-wide text-[#7a1436]">B2B Panel</h1>
           </div>
           <div className="relative">
             <button
@@ -267,7 +262,6 @@ const B2BLayout: React.FC = () => {
         </main>
       </div>
 
-      {/* --- LOGOUT MODAL JSX ADDED --- */}
       {showLogoutConfirm && (
         <div className="fixed inset-0 top-0 z-[100] flex items-center justify-center bg-black/30 backdrop-blur-sm">
           <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-sm m-4 text-center">
