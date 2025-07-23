@@ -1,11 +1,7 @@
 package com.cashback.gold.security;
 
-import com.cashback.gold.dto.common.ApiResponse; // ✅ Added
 import com.cashback.gold.service.UserAuthService;
 import com.cashback.gold.service.jwt.JwtService;
-import com.fasterxml.jackson.databind.ObjectMapper; // ✅ Added
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -16,6 +12,8 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.JwtException;
 
 import java.io.IOException;
 
@@ -41,23 +39,16 @@ public class JwtAuthFilter extends OncePerRequestFilter {
 
         final String token = authHeader.substring(7);
         String userId = null;
-        ObjectMapper mapper = new ObjectMapper(); // ✅ Added
 
         try {
             userId = jwtService.extractUserId(token);
         } catch (ExpiredJwtException e) {
-            // ✅ Handle expired token
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            ApiResponse apiResponse = ApiResponse.error("Token expired");
-            response.getWriter().write(mapper.writeValueAsString(apiResponse));
+            // Ignore expired token and proceed without authentication
+            filterChain.doFilter(request, response);
             return;
         } catch (JwtException | IllegalArgumentException e) {
-            // ✅ Handle invalid token
-            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-            response.setContentType("application/json");
-            ApiResponse apiResponse = ApiResponse.error("Invalid token");
-            response.getWriter().write(mapper.writeValueAsString(apiResponse));
+            // Ignore invalid token and proceed without authentication
+            filterChain.doFilter(request, response);
             return;
         }
 

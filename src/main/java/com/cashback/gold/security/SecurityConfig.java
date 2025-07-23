@@ -26,7 +26,9 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> req
                         // Public endpoints
                         .requestMatchers("/auth/**").permitAll()
-                        // Admin endpoints
+                                .requestMatchers(HttpMethod.GET, "/admin/sip-plans").permitAll()
+
+                                // Admin endpoints
                         .requestMatchers(HttpMethod.GET,"/admin/marketing-resources").hasAnyAuthority("ADMIN","B2B","PARTNER")
                                 .requestMatchers(HttpMethod.GET, "/admin/ornaments").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/admin/ornaments/*").permitAll()
@@ -42,6 +44,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET,"/api/saving-plans").permitAll()
 
                                 .requestMatchers("/api/saving-plans").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/gold-plants").permitAll()
                         .requestMatchers("/api/gold-plants").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.GET,"/api/admin/campaigns").hasAnyAuthority("ADMIN","USER","PARTNER","B2B")
                         .requestMatchers("/api/admin/campaigns").hasAuthority("ADMIN")
