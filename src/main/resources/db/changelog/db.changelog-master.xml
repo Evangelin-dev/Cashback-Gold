@@ -744,4 +744,24 @@
                 referencedColumnNames="id"/>
     </changeSet>
 
+    <changeSet id="26" author="azeem">
+        <createTable tableName="order_history">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="order_id" type="VARCHAR(50)"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="customer_name" type="VARCHAR(100)"/>
+            <column name="customer_type" type="VARCHAR(20)"/>
+            <column name="plan_type" type="VARCHAR(30)"/>
+            <column name="plan_name" type="VARCHAR(100)"/>
+            <column name="duration" type="VARCHAR(50)"/>
+            <column name="amount" type="DECIMAL(12,2)"/>
+            <column name="payment_method" type="VARCHAR(50)"/>
+            <column name="status" type="VARCHAR(30)"/>
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="address" type="VARCHAR(255)"/>
+        </createTable>
+    </changeSet>
+
 </databaseChangeLog>
