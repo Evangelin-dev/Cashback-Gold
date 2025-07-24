@@ -30,6 +30,14 @@ public class SecurityConfig {
 
                                 .requestMatchers(HttpMethod.POST, "/api/orders").hasAuthority("USER")
                                 .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyAuthority("USER", "ADMIN")
+                                .requestMatchers(HttpMethod.GET, "/api/orders/my").hasAnyAuthority("USER", "PARTNER", "B2B")
+
+                                // 🛒 Ornament Cart & Order APIs
+                                .requestMatchers("/api/cart/add").hasAuthority("USER")
+                                .requestMatchers(HttpMethod.GET, "/api/cart").hasAuthority("USER")
+                                .requestMatchers(HttpMethod.DELETE, "/api/cart/clear").hasAuthority("USER")
+                                .requestMatchers(HttpMethod.POST, "/api/orders/ornament").hasAuthority("USER")
+
                                 // Admin endpoints
                                 .requestMatchers(HttpMethod.GET, "/admin/marketing-resources").hasAnyAuthority("ADMIN", "B2B", "PARTNER")
                                 .requestMatchers(HttpMethod.GET, "/admin/ornaments").permitAll()

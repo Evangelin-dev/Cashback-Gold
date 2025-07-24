@@ -1,5 +1,6 @@
 package com.cashback.gold.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -57,7 +58,9 @@ public class Ornament {
     private String details;
 
     @OneToMany(mappedBy = "ornament", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<PriceBreakup> priceBreakups; // New field
+    @JsonManagedReference
+    private List<PriceBreakup> priceBreakups;
+
 
     @Column(name = "created_at", updatable = false, insertable = false)
     private Timestamp createdAt;

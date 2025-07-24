@@ -1,5 +1,6 @@
 package com.cashback.gold.entity;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -21,6 +22,7 @@ public class PriceBreakup {
 
     @ManyToOne
     @JoinColumn(name = "ornament_id", nullable = false)
+    @JsonBackReference
     private Ornament ornament;
 
     private String component;

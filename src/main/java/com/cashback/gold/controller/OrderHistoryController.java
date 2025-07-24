@@ -9,6 +9,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -25,6 +26,12 @@ public class OrderHistoryController {
     ) {
         OrderHistory saved = orderHistoryService.createOrderFromUser(request, userPrincipal);
         return ResponseEntity.ok(saved);
+    }
+
+    @PostMapping("/checkout-cart")
+    public ResponseEntity<?> checkoutOrnamentCart(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        OrderHistory order = orderHistoryService.createOrnamentOrderFromCart(userPrincipal);
+        return ResponseEntity.ok(order);
     }
 
     @GetMapping
@@ -49,4 +56,11 @@ public class OrderHistoryController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+
+    @GetMapping("/my")
+    public ResponseEntity<List<OrderHistory>> getMyOrders(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        List<OrderHistory> orders = orderHistoryService.getOrdersByUserId(userPrincipal.getId());
+        return ResponseEntity.ok(orders);
+    }
+
 }

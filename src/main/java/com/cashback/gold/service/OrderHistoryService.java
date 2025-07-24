@@ -1,8 +1,10 @@
 package com.cashback.gold.service;
 
 import com.cashback.gold.dto.OrderRequest;
+import com.cashback.gold.entity.CartItem;
 import com.cashback.gold.entity.OrderHistory;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.repository.CartItemRepository;
 import com.cashback.gold.repository.OrderHistoryRepository;
 import com.cashback.gold.repository.UserRepository;
 import com.cashback.gold.security.UserPrincipal;
@@ -14,11 +16,13 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -26,7 +30,9 @@ public class OrderHistoryService {
 
     private final OrderHistoryRepository repository;
     private final UserRepository userRepository;
+    private final CartItemRepository cartRepo;
 
+    @Transactional
     public OrderHistory createOrderFromUser(OrderRequest request, UserPrincipal userPrincipal) {
         User user = userRepository.findById(userPrincipal.getId())
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -100,4 +106,45 @@ public class OrderHistoryService {
 
         return response;
     }
+
+    public List<OrderHistory> getOrdersByUserId(Long userId) {
+        return repository.findByUserId(userId);
+    }
+
+    @Transactional
+    public OrderHistory createOrnamentOrderFromCart(UserPrincipal user) {
+        List<CartItem> cartItems = cartRepo.findByUserId(user.getId());
+        if (cartItems.isEmpty()) throw new RuntimeException("Cart is empty");
+
+        Double total = cartItems.stream()
+                .mapToDouble(item -> item.getOrnament().getPrice() * item.getQuantity())
+                .sum();
+
+        String items = cartItems.stream()
+                .map(item -> item.getOrnament().getName() + " x" + item.getQuantity())
+                .collect(Collectors.joining(", "));
+
+        String address = userRepository.findById(user.getId())
+                .map(u -> String.join(", ", u.getTown(), u.getCity(), u.getState(), u.getCountry()))
+                .orElse("Unknown");
+
+        OrderHistory order = OrderHistory.builder()
+                .orderId("ORD-" + LocalDateTime.now().getYear() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase())
+                .userId(user.getId())
+                .customerName(user.getUsername())
+                .customerType(user.getRole().toLowerCase())
+                .planType("ORNAMENT")
+                .planName(items)
+                .duration("-")
+                .amount(total)
+                .paymentMethod("COD") // or Razorpay later
+                .status("pending")
+                .address(address)
+                .createdAt(LocalDateTime.now())
+                .build();
+
+        cartRepo.deleteByUserId(user.getId());
+        return repository.save(order);
+    }
+
 }
