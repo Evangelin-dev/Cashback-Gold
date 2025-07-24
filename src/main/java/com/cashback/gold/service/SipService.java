@@ -3,6 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.SipRequest;
 import com.cashback.gold.entity.Sip;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.SipRepository;
 import com.cashback.gold.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -65,7 +66,7 @@ public class SipService {
 
     public Sip updateSip(Long sipId, SipRequest request) {
         Sip sip = sipRepository.findById(sipId)
-                .orElseThrow(() -> new RuntimeException("SIP not found"));
+                .orElseThrow(() -> new InvalidArgumentException("SIP not found"));
 
         User user = sip.getUser();
         user.setFullName(request.getName());
@@ -104,7 +105,7 @@ public class SipService {
 
     public Sip changeSipStatus(Long sipId, String status) {
         Sip sip = sipRepository.findById(sipId)
-                .orElseThrow(() -> new RuntimeException("SIP not found"));
+                .orElseThrow(() -> new InvalidArgumentException("SIP not found"));
         sip.setStatus(status);
         sip.setUpdatedAt(LocalDateTime.now());
         return sipRepository.save(sip);

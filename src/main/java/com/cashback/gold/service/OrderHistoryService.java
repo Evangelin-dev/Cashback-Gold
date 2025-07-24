@@ -4,6 +4,7 @@ import com.cashback.gold.dto.OrderRequest;
 import com.cashback.gold.entity.CartItem;
 import com.cashback.gold.entity.OrderHistory;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.CartItemRepository;
 import com.cashback.gold.repository.OrderHistoryRepository;
 import com.cashback.gold.repository.UserRepository;
@@ -35,7 +36,7 @@ public class OrderHistoryService {
     @Transactional
     public OrderHistory createOrderFromUser(OrderRequest request, UserPrincipal userPrincipal) {
         User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
 
         String fullAddress = String.join(", ",
                 user.getTown(), user.getCity(), user.getState(), user.getCountry());
@@ -114,7 +115,7 @@ public class OrderHistoryService {
     @Transactional
     public OrderHistory createOrnamentOrderFromCart(UserPrincipal user) {
         List<CartItem> cartItems = cartRepo.findByUserId(user.getId());
-        if (cartItems.isEmpty()) throw new RuntimeException("Cart is empty");
+        if (cartItems.isEmpty()) throw new InvalidArgumentException("Cart is empty");
 
         Double total = cartItems.stream()
                 .mapToDouble(item -> item.getOrnament().getPrice() * item.getQuantity())

@@ -3,6 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.SavingPlanRequest;
 import com.cashback.gold.dto.SavingPlanResponse;
 import com.cashback.gold.entity.SavingPlan;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.SavingPlanRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -57,7 +58,7 @@ public class SavingPlanService {
     }
 
     public SavingPlanResponse updatePlan(Long id, SavingPlanRequest request) {
-        SavingPlan plan = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+        SavingPlan plan = repository.findById(id).orElseThrow(() -> new InvalidArgumentException("Not found"));
         plan.setName(request.getName());
         plan.setDuration(request.getDuration());
         plan.setAmount(request.getAmount());
@@ -81,7 +82,7 @@ public class SavingPlanService {
     }
 
     public void changeStatus(Long id, String newStatus) {
-        SavingPlan plan = repository.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+        SavingPlan plan = repository.findById(id).orElseThrow(() -> new InvalidArgumentException("Not found"));
         plan.setStatus(SavingPlan.PlanStatus.valueOf(newStatus));
         repository.save(plan);
     }

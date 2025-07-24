@@ -68,7 +68,7 @@ public class OrnamentService {
 
     public OrnamentResponse update(Long id, MultipartFile mainImage, List<MultipartFile> subImages, String dataJson) {
         OrnamentRequest req = parse(dataJson);
-        Ornament ornament = repo.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
+        Ornament ornament = repo.findById(id).orElseThrow(() -> new InvalidArgumentException("Not found"));
 
         updateEntity(ornament, req);
 

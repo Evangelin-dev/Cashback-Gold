@@ -56,7 +56,7 @@ public class GoldPlantSchemeService {
 
     public void changeStatus(Long id, String status) {
         GoldPlantScheme scheme = repository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Gold Plant Scheme not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Gold Plant Scheme not found"));
 
         scheme.setStatus(status.toUpperCase()); // Ensures consistent status values
         repository.save(scheme);

@@ -4,6 +4,7 @@ import com.cashback.gold.dto.SupportTicketRequest;
 import com.cashback.gold.dto.SupportTicketResponse;
 import com.cashback.gold.entity.SupportTicket;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.SupportTicketRepository;
 import com.cashback.gold.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
@@ -50,11 +51,11 @@ public class SupportService {
     // Admin: Get Ticket by ID
     public SupportTicketResponse getTicketById(Long id) {
         SupportTicket ticket = supportRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Ticket not found"));
 
         // Fetch the user details
         User user = userRepo.findById(ticket.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
         System.out.println(user);
 
         return SupportTicketResponse.builder()
@@ -72,7 +73,7 @@ public class SupportService {
     // Admin: Update Status
     public SupportTicketResponse updateTicketStatus(Long id, String status) {
         SupportTicket ticket = supportRepo.findById(id)
-                .orElseThrow(() -> new RuntimeException("Ticket not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Ticket not found"));
 
         ticket.setStatus(status);
         ticket.setUpdatedAt(LocalDateTime.now());
@@ -84,7 +85,7 @@ public class SupportService {
     // Response Mapper
     private SupportTicketResponse toResponse(SupportTicket ticket) {
         User user = userRepo.findById(ticket.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
 
         return SupportTicketResponse.builder()
                 .id(ticket.getId())

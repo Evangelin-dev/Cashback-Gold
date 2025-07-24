@@ -3,6 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.FlyerResponse;
 import com.cashback.gold.entity.Flyer;
 import com.cashback.gold.enums.FlyerType;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.FlyerRepository;
 import com.cashback.gold.service.aws.S3Service;
 import lombok.RequiredArgsConstructor;
@@ -39,7 +40,7 @@ public class FlyerService {
 
     public void delete(Long id) {
         Flyer flyer = flyerRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Flyer not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Flyer not found"));
         s3Service.deleteFile(flyer.getUrl());
         flyerRepository.delete(flyer);
     }
