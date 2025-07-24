@@ -18,4 +18,6 @@ public class OtpVerifyRequest {
     private String country;
     private String password;
     private String role;
+    private String referralCode; // optional
+
 }

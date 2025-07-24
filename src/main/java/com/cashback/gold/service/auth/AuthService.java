@@ -15,9 +15,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.Random;
 
 @Service
@@ -162,6 +160,18 @@ public class AuthService {
             return new ApiResponse(false, "Mobile number already registered");
         }
 
+        // Check for referral code and extract partner ID
+        Long referredBy = null;
+        if (request.getReferralCode() != null && request.getReferralCode().startsWith("PARTNER-")) {
+            try {
+                Long partnerId = Long.parseLong(request.getReferralCode().substring(8));
+                if (userRepo.findById(partnerId).isPresent()) {
+                    referredBy = partnerId;
+                }
+            } catch (NumberFormatException ignored) {
+            }
+        }
+
         // Save new user
         User user = User.builder()
                 .fullName(request.getFullName())
@@ -177,11 +187,19 @@ public class AuthService {
                 .password(passwordEncoder.encode(request.getPassword()))
                 .role(request.getRole() != null ? request.getRole() : "USER")
                 .status("PENDING")
+                .referredBy(referredBy) // ✅ Save referrer
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
                 .build();
 
         userRepo.save(user);
+
+        // ✅ Set referral code for PARTNER after saving (based on user ID)
+        if ("PARTNER".equalsIgnoreCase(user.getRole())) {
+            String referralCode = "PARTNER-" + user.getId();
+            user.setReferralCode(referralCode);
+            userRepo.save(user); // update with referral code
+        }
 
         // Mark OTP verified
         otpVerification.setVerified(true);

@@ -798,4 +798,83 @@
                 onDelete="CASCADE"/>
     </changeSet>
 
+    <!-- Add referral_code and referred_by columns to users table -->
+    <changeSet id="27" author="azeem">
+        <addColumn tableName="users">
+            <column name="referral_code" type="VARCHAR(100)">
+                <constraints unique="true"/>
+            </column>
+            <column name="referred_by" type="BIGINT"/>
+        </addColumn>
+
+        <addForeignKeyConstraint
+                baseTableName="users"
+                baseColumnNames="referred_by"
+                constraintName="fk_users_referred_by"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="SET NULL"/>
+    </changeSet>
+
+    <!-- Create commissions table -->
+    <changeSet id="28" author="azeem">
+        <createTable tableName="commissions">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="partner_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="order_amount" type="DECIMAL(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="commission_amount" type="DECIMAL(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="status" type="VARCHAR(20)" defaultValue="Pending">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="commissions"
+                baseColumnNames="partner_id"
+                constraintName="fk_commission_partner"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+                baseTableName="commissions"
+                baseColumnNames="user_id"
+                constraintName="fk_commission_user"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="29" author="azeem">
+        <createTable tableName="payout_requests">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="partner_id" type="BIGINT"/>
+            <column name="amount" type="DECIMAL(12,2)"/>
+            <column name="method" type="VARCHAR(50)"/>
+            <column name="method_detail" type="VARCHAR(255)"/>
+            <column name="status" type="VARCHAR(20)" defaultValue="Pending"/>
+            <column name="requested_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
+        </createTable>
+    </changeSet>
+
+
 </databaseChangeLog>

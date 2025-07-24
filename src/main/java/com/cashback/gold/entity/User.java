@@ -69,6 +69,12 @@ public class User {
     @Builder.Default
     private LocalDateTime updatedAt = LocalDateTime.now();
 
+    @Column(name = "referred_by")
+    private Long referredBy; // this is the partner ID who referred this user
+
+    @Column(name = "referral_code", unique = true)
+    private String referralCode;
+
     @PrePersist
     @PreUpdate
     private void validateRoleAndStatus() {

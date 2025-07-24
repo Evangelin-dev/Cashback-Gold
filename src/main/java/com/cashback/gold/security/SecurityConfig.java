@@ -37,7 +37,9 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/cart").hasAuthority("USER")
                                 .requestMatchers(HttpMethod.DELETE, "/api/cart/clear").hasAuthority("USER")
                                 .requestMatchers(HttpMethod.POST, "/api/orders/ornament").hasAuthority("USER")
-
+                                .requestMatchers("/api/partner/**").hasAuthority("PARTNER")
+                                .requestMatchers("/admin/commissions/**").hasAuthority("ADMIN")
+                                .requestMatchers("/admin/payouts/**").hasAuthority("ADMIN")
                                 // Admin endpoints
                                 .requestMatchers(HttpMethod.GET, "/admin/marketing-resources").hasAnyAuthority("ADMIN", "B2B", "PARTNER")
                                 .requestMatchers(HttpMethod.GET, "/admin/ornaments").permitAll()

@@ -2,10 +2,12 @@ package com.cashback.gold.service;
 
 import com.cashback.gold.dto.OrderRequest;
 import com.cashback.gold.entity.CartItem;
+import com.cashback.gold.entity.Commission;
 import com.cashback.gold.entity.OrderHistory;
 import com.cashback.gold.entity.User;
 import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.CartItemRepository;
+import com.cashback.gold.repository.CommissionRepository;
 import com.cashback.gold.repository.OrderHistoryRepository;
 import com.cashback.gold.repository.UserRepository;
 import com.cashback.gold.security.UserPrincipal;
@@ -32,6 +34,7 @@ public class OrderHistoryService {
     private final OrderHistoryRepository repository;
     private final UserRepository userRepository;
     private final CartItemRepository cartRepo;
+    private final CommissionRepository commissionRepo;
 
     @Transactional
     public OrderHistory createOrderFromUser(OrderRequest request, UserPrincipal userPrincipal) {
@@ -56,7 +59,20 @@ public class OrderHistoryService {
                 .createdAt(LocalDateTime.now())
                 .build();
 
+        if (user.getReferredBy() != null) {
+            Commission commission = Commission.builder()
+                    .partnerId(user.getReferredBy())
+                    .userId(user.getId())
+                    .orderType(request.getPlanType())
+                    .orderAmount(request.getAmount())
+                    .commissionAmount(request.getAmount() * 0.10)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            commissionRepo.save(commission);
+        }
+
         return repository.save(order);
+
     }
 
 
@@ -145,6 +161,20 @@ public class OrderHistoryService {
                 .build();
 
         cartRepo.deleteByUserId(user.getId());
+
+        User userEntity = userRepository.findById(user.getId()).orElseThrow();
+        if (userEntity.getReferredBy() != null) {
+            Commission commission = Commission.builder()
+                    .partnerId(userEntity.getReferredBy())
+                    .userId(userEntity.getId())
+                    .orderType("ORNAMENT")
+                    .orderAmount(total)
+                    .commissionAmount(total * 0.10)
+                    .createdAt(LocalDateTime.now())
+                    .build();
+            commissionRepo.save(commission);
+        }
+
         return repository.save(order);
     }
 
