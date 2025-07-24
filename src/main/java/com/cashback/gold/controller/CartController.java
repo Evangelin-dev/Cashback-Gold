@@ -32,6 +32,15 @@ public class CartController {
         return ResponseEntity.ok("Cart cleared.");
     }
 
+    @DeleteMapping("/{cartItemId}")
+    public ResponseEntity<?> removeItem(
+            @PathVariable Long cartItemId,
+            @AuthenticationPrincipal UserPrincipal user
+    ) {
+        cartService.removeItemFromCart(cartItemId, user.getId());
+        return ResponseEntity.ok("Item removed from cart");
+    }
+
 
 }
 
