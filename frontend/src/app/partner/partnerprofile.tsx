@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../utils/axiosInstance"; // Ensure this path is correct
 import { FaUser, FaIdCard, FaUniversity, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaUpload, FaSpinner, FaFilePdf, FaSave } from "react-icons/fa";
 import { X } from "lucide-react";
+import { useSelector } from "react-redux";
+import { RootState } from "../../store";
 
 // --- Type Definitions ---
 type KycStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
@@ -30,6 +32,9 @@ const PartnerProfile = () => {
   const [loading, setLoading]               = useState(true);
   const [submitting, setSubmitting]           = useState({ kyc: false, bank: false }); // 'profile' submission state removed
   const [notification, setNotification]     = useState<NotificationState>({ show: false, message: '', type: 'success' });
+
+    const { currentUser } = useSelector((state: RootState) => state.auth);
+  
 
   // --- Notification Handler ---
   const showNotification = (message: string, type: NotificationType) => {
@@ -165,17 +170,15 @@ const PartnerProfile = () => {
             <Card title="My Profile" icon={<FaUser />}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 {/* Profile fields are now disabled */}
-                <InputField label="Name" name="name" value={profile.name} disabled />
-                <InputField label="Email" name="email" value={profile.email} type="email" disabled />
+                <InputField label="Name" name="name" value={''} disabled />
+                <InputField label="Email" name="email" value={currentUser?.email || ''} type="email" disabled />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
                   <div className="flex">
-                    <select name="countryCode" value={profile.countryCode} disabled className="border border-r-0 border-gray-300 rounded-l-md bg-gray-100 focus:outline-none px-2 cursor-not-allowed">{countryCodes.map(c => <option key={c.code} value={c.code}>{c.label}</option>)}</select>
-                    <input type="text" name="phone" value={profile.phone} disabled className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-r-md bg-gray-100 cursor-not-allowed" />
+                    <input type="text" name="phone" value={currentUser?.mobile || ''} disabled className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-r-md bg-gray-100 cursor-not-allowed" />
                   </div>
                 </div>
               </div>
-              {/* Save button for profile is removed */}
             </Card>
 
             <Card title="Bank & UPI Details" icon={<FaUniversity />}>

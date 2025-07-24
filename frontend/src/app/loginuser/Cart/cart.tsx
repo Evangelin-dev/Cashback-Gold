@@ -1,248 +1,203 @@
-import React, { useEffect, useState } from "react";
-import { products } from "../../../../constants"; // adjust path if needed
-import { Trash2, ShoppingBag } from "lucide-react";
+import React, { useEffect, useState } from 'react';
+import { Trash2, ShoppingBag, X, Loader2, Minus, Plus } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import axiosInstance from '../../../utils/axiosInstance'; // Adjust path
+import { useSelector } from 'react-redux';
+import { RootState } from '../../../store'; // Adjust path
+import Portal from '../../user/Portal'; // Make sure you have a Portal component
+
+// --- Interfaces to match the API response ---
+interface Ornament {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  mainImage: string;
+}
+
+interface CartItem {
+  id: number;
+  userId: number;
+  ornament: Ornament;
+  quantity: number;
+  createdAt: string;
+}
 
 const Cart = () => {
-  const [cart, setCart] = useState<number[]>([]);
-  const [cartProducts, setCartProducts] = useState<any[]>([]);
+  const navigate = useNavigate();
+  const { currentUser } = useSelector((state: RootState) => state.auth);
 
+  // --- STATE MANAGEMENT ---
+  const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [isUpdating, setIsUpdating] = useState<number | 'all' | 'checkout' | null>(null);
+  const [showConfirmPopup, setShowConfirmPopup] = useState(false);
+  const [actionToConfirm, setActionToConfirm] = useState<{ type: 'remove' | 'clear', itemId?: number } | null>(null);
+
+  // Redirect if not logged in
   useEffect(() => {
-    const stored = localStorage.getItem("cart");
-    const ids = stored ? JSON.parse(stored) : [];
-    setCart(ids);
-    setCartProducts(products.filter((p) => ids.includes(p.id)));
-  }, []);
+    if (!currentUser) {
+      navigate('/SignupPopup');
+    }
+  }, [currentUser, navigate]);
 
-  const removeFromCart = (id: number) => {
-    const updated = cart.filter((pid) => pid !== id);
-    setCart(updated);
-    setCartProducts(products.filter((p) => updated.includes(p.id)));
-    localStorage.setItem("cart", JSON.stringify(updated));
+  // --- DATA FETCHING ---
+  const fetchCartItems = async () => {
+    if (!currentUser) return;
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axiosInstance.get<CartItem[]>('/api/cart');
+      setCartItems(response.data || []);
+    } catch (err) {
+      console.error("Failed to fetch cart items:", err);
+      setError("Could not load your cart. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const total = cartProducts.reduce((sum, p) => {
-    // Remove non-numeric chars from price and parse as number
-    const price = Number(String(p.price).replace(/[^\d]/g, ""));
-    return sum + (isNaN(price) ? 0 : price);
-  }, 0);
+  useEffect(() => {
+    if (currentUser) {
+      fetchCartItems();
+    }
+  }, [currentUser]);
+
+  // --- HANDLER FUNCTIONS ---
+  const handleRemoveItem = (cartItemId: number) => {
+    setActionToConfirm({ type: 'remove', itemId: cartItemId });
+    setShowConfirmPopup(true);
+  };
+
+  const handleClearCart = () => {
+    setActionToConfirm({ type: 'clear' });
+    setShowConfirmPopup(true);
+  };
+
+  const handleConfirmAction = async () => {
+    if (!actionToConfirm) return;
+    const { type, itemId } = actionToConfirm;
+
+    if (type === 'remove' && itemId) {
+      setIsUpdating(itemId);
+      try {
+        await axiosInstance.delete(`/api/cart/${itemId}`);
+        setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
+      } catch (err) { alert("Failed to remove item."); }
+    }
+
+    if (type === 'clear') {
+      setIsUpdating('all');
+      try {
+        await axiosInstance.delete('/api/cart/clear');
+        setCartItems([]);
+      } catch (err) { alert("Failed to clear the cart."); }
+    }
+
+    setIsUpdating(null);
+    setShowConfirmPopup(false);
+    setActionToConfirm(null);
+  };
+
+  const handleCheckout = async () => {
+    setIsUpdating('checkout');
+    try {
+      await axiosInstance.post('/api/orders/checkout-cart');
+      alert("Checkout successful! Your order has been placed.");
+      setCartItems([]);
+      navigate('/order-confirmation');
+    } catch (err) {
+      console.error("Checkout failed:", err);
+      alert("Checkout failed. Please try again.");
+    } finally {
+      setIsUpdating(null);
+    }
+  };
+
+  // --- DYNAMIC CALCULATIONS ---
+  const subtotal = cartItems.reduce((sum, item) => sum + item.ornament.price * item.quantity, 0);
+  const tax = subtotal * 0.03;
+  const total = subtotal + tax;
+
+  // --- UI RENDER LOGIC ---
+  if (loading) return <div className="flex min-h-[80vh] items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-[#7a1436]" /></div>;
+  if (error) return <div className="flex min-h-[80vh] items-center justify-center bg-slate-50 p-6"><div className="text-center text-red-600"><p className="mb-2 text-xl font-semibold">Error</p><p>{error}</p></div></div>;
 
   return (
-    <div
-      style={{
-        padding: "40px 0",
-        minHeight: "80vh",
-        background: "#fafbfc",
-        fontFamily: "'Inter', sans-serif",
-      }}
-    >
-      <div
-        style={{
-          maxWidth: 900,
-          margin: "0 auto",
-          padding: "0 16px",
-        }}
-      >
-        <h1
-          style={{
-            fontSize: "2.2rem",
-            fontWeight: 800,
-            color: "#7a1335",
-            marginBottom: 32,
-            textAlign: "center",
-            letterSpacing: 0.1,
-          }}
-        >
-          Your Cart
-        </h1>
-        {cartProducts.length === 0 ? (
-          <div
-            style={{
-              textAlign: "center",
-              color: "#888",
-              fontSize: 20,
-              marginTop: 60,
-            }}
-          >
-            <span
-              style={{
-                fontSize: 48,
-                display: "block",
-                marginBottom: 16,
-              }}
-            >
-              🛒
-            </span>
-            Your cart is empty.
+    <>
+      <div className="min-h-screen bg-slate-50 py-12 pt-28 md:pt-32">
+        <div className="mx-auto max-w-6xl px-4">
+          <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <h1 className="text-3xl font-bold text-[#7a1436] sm:text-4xl mt-2">Your Shopping Cart</h1>
+            {cartItems.length > 0 && (
+              <button onClick={handleClearCart} disabled={isUpdating === 'all'} className="flex mt-10 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 disabled:cursor-not-allowed">
+                {isUpdating === 'all' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Clear All
+              </button>
+            )}
           </div>
-        ) : (
-          <div
-            style={{
-              display: "grid",
-              gridTemplateColumns: "1fr",
-              gap: 24,
-            }}
-          >
-            {cartProducts.map((product) => (
-              <div
-                key={product.id}
-                style={{
-                  background: "#fff",
-                  borderRadius: 18,
-                  boxShadow: "0 4px 24px #e6e6e6",
-                  padding: "24px 20px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  border: "1.5px solid #f9e9c7",
-                  minHeight: 120,
-                  transition: "box-shadow 0.2s, transform 0.2s",
-                }}
-              >
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 18,
-                  }}
-                >
-                  <img
-                    src={product.img}
-                    alt={product.title}
-                    style={{
-                      width: 80,
-                      height: 80,
-                      objectFit: "contain",
-                      borderRadius: 10,
-                      background: "#fafbfc",
-                    }}
-                  />
-                  <div>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        fontSize: 18,
-                        color: "#7a1335",
-                        marginBottom: 2,
-                      }}
-                    >
-                      {product.title}
+
+          {cartItems.length === 0 ? (
+            <div className="rounded-2xl bg-white p-8 text-center shadow-sm md:p-12">
+              <ShoppingBag className="mx-auto h-16 w-16 text-gray-300" />
+              <h2 className="mt-6 text-xl font-semibold text-gray-800 sm:text-2xl">Your cart is empty</h2>
+              <p className="mt-2 text-gray-500">Looks like you haven't added any ornaments yet.</p>
+              <button onClick={() => navigate('/buyornaments')} className="mt-6 rounded-lg bg-[#7a1436] px-6 py-3 font-semibold text-white transition-transform hover:scale-105">Start Shopping</button>
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-start">
+              <div className="space-y-4 lg:col-span-2">
+                {cartItems.map((item) => (
+                  <div key={item.id} className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center">
+                    <img src={item.ornament.mainImage} alt={item.ornament.name} className="h-28 w-28 flex-shrink-0 self-center rounded-lg bg-gray-100 object-cover sm:h-24 sm:w-24" />
+                    <div className="flex-grow">
+                      <h3 className="font-bold text-gray-800">{item.ornament.name}</h3>
+                      <p className="text-sm text-gray-500">{item.ornament.category}</p>
+                      <p className="mt-1 text-base font-semibold text-[#7a1436]">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.ornament.price)}</p>
                     </div>
-                    <div
-                      style={{
-                        color: "#888",
-                        fontSize: 14,
-                        marginBottom: 4,
-                      }}
-                    >
-                      {product.category}
-                    </div>
-                    <div
-                      style={{
-                        fontWeight: 700,
-                        color: "#bf7e1a",
-                        fontSize: 18,
-                      }}
-                    >
-                      {product.price}
+                    <div className="flex w-full items-center justify-between self-stretch sm:w-auto sm:flex-col sm:items-end">
+                      <div className="flex items-center gap-2"><button className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600" disabled><Minus className="h-4 w-4" /></button><span className="w-8 text-center font-medium">{item.quantity}</span><button className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600" disabled><Plus className="h-4 w-4" /></button></div>
+                      <button onClick={() => handleRemoveItem(item.id)} disabled={isUpdating === item.id} className="flex items-center gap-1.5 rounded-lg p-2 text-xs font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed">
+                        {isUpdating === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Remove
+                      </button>
                     </div>
                   </div>
-                </div>
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                  }}
-                >
-                  <button
-                    style={{
-                      background: "#fff",
-                      color: "#991313",
-                      border: "1.5px solid #f0e3d1",
-                      borderRadius: 10,
-                      padding: "10px 18px",
-                      fontWeight: 600,
-                      fontSize: 15,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 7,
-                      cursor: "pointer",
-                      transition: "background 0.18s, color 0.18s",
-                    }}
-                    onClick={() => removeFromCart(product.id)}
-                  >
-                    <Trash2 size={18} style={{ marginRight: 4 }} />
-                    Remove
-                  </button>
-                  <button
-                    style={{
-                      background: "#7a1335",
-                      color: "#fff",
-                      border: "none",
-                      borderRadius: 10,
-                      padding: "10px 18px",
-                      fontWeight: 600,
-                      fontSize: 15,
-                      display: "flex",
-                      alignItems: "center",
-                      gap: 7,
-                      cursor: "pointer",
-                      transition: "background 0.18s",
-                    }}
-                    // onClick={() => { /* Buy now logic here */ }}
-                  >
-                    <ShoppingBag size={18} style={{ marginRight: 4 }} />
-                    Buy Now
+                ))}
+              </div>
+
+              <div className="lg:col-span-1">
+                <div className="sticky top-32 rounded-2xl bg-white p-6 shadow-sm">
+                  <h2 className="mb-4 text-lg font-semibold text-gray-800">Order Summary</h2>
+                  <div className="space-y-3">
+                    <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</span></div>
+                    <div className="flex justify-between text-gray-600"><span>Taxes (3%)</span><span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(tax)}</span></div>
+                    <div className="flex justify-between border-t pt-3 text-lg font-bold text-gray-800"><span>Total</span><span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total)}</span></div>
+                  </div>
+                  <button onClick={handleCheckout} disabled={isUpdating === 'checkout'} className="mt-6 w-full rounded-lg bg-[#7a1436] py-3 font-semibold text-white transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:bg-gray-400">
+                    {isUpdating === 'checkout' ? <Loader2 className="mx-auto h-6 w-6 animate-spin" /> : 'Proceed to Checkout'}
                   </button>
                 </div>
               </div>
-            ))}
-          </div>
-        )}
-        <div
-          style={{
-            marginTop: 40,
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            background: "#fffbe8",
-            borderRadius: 14,
-            padding: "24px 32px",
-            boxShadow: "0 2px 8px #f9e9c7",
-            maxWidth: 600,
-            marginLeft: "auto",
-            marginRight: "auto",
-          }}
-        >
-          <span
-            style={{
-              fontSize: 22,
-              fontWeight: 700,
-              color: "#7a1335",
-            }}
-          >
-            Total: ₹{total}
-          </span>
-          <button
-            style={{
-              background: "#bf7e1a",
-              color: "#fff",
-              border: "none",
-              borderRadius: 10,
-              padding: "14px 38px",
-              fontWeight: 700,
-              fontSize: 18,
-              letterSpacing: 0.2,
-              boxShadow: "0 2px 8px #f9e9c7",
-              cursor: "pointer",
-              transition: "background 0.18s",
-            }}
-            // onClick={() => { /* Checkout logic here */ }}
-          >
-            Checkout
-          </button>
+            </div>
+          )}
         </div>
       </div>
-    </div>
+
+      {showConfirmPopup && (
+        <Portal>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+            <div className="m-4 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl">
+              <h3 className="text-xl font-bold text-gray-800">Are you sure?</h3>
+              <p className="mt-2 text-gray-600">{actionToConfirm?.type === 'clear' ? "This will remove all items from your cart." : "This will remove the item from your cart."}</p>
+              <div className="mt-6 flex justify-center gap-4">
+                <button onClick={() => setShowConfirmPopup(false)} className="rounded-lg bg-gray-200 px-6 py-2.5 font-semibold text-gray-800 transition-colors hover:bg-gray-300">Cancel</button>
+                <button onClick={handleConfirmAction} className="rounded-lg bg-red-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-red-700">Confirm</button>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+    </>
   );
 };
 

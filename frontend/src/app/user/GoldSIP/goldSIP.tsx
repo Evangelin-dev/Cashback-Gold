@@ -17,7 +17,7 @@ interface SIPPlanFromApi {
 }
 
 interface ProcessedSIPPlan extends SIPPlanFromApi {
-  returns: string; // This is mocked for now as it's not in the API
+  returns: string;
   popular: boolean;
   features: string[];
 }
@@ -28,28 +28,34 @@ interface Faq {
   answer: string;
 }
 
+
+const parseAmount = (amountStr: string): number => Number(amountStr.replace(/[^0-9.-]+/g, "")) || 0;
+
 const GoldSIPPlansPage = () => {
+  // --- EXISTING STATE ---
   const [plans, setPlans] = useState<ProcessedSIPPlan[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<ProcessedSIPPlan | null>(null);
   const [showModal, setShowModal] = useState(false);
 
+  // --- NEW STATE FOR ORDER SUBMISSION ---
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState<string | null>(null);
+
+  // --- DATA FETCHING (Unchanged) ---
   useEffect(() => {
     const fetchPlans = async () => {
       try {
         const response = await axiosInstance.get<SIPPlanFromApi[]>('/admin/sip-plans');
         const activePlans = response.data.filter(plan => plan.status === 'ACTIVE');
-
-        // Mock returns data and process features
         const mockReturns = ["8-12%", "10-14%", "12-16%", "14-18%"];
         const processedPlans = activePlans.map((plan, index) => ({
           ...plan,
-          returns: mockReturns[index % mockReturns.length], // Assign a mock return
-          popular: index === 0, // Make the first active plan popular
+          returns: mockReturns[index % mockReturns.length],
+          popular: index === 0,
           features: [plan.keyPoint1, plan.keyPoint2, plan.keyPoint3].filter(Boolean),
         }));
-        
         setPlans(processedPlans);
       } catch (err) {
         console.error("Failed to fetch SIP plans:", err);
@@ -58,13 +64,40 @@ const GoldSIPPlansPage = () => {
         setLoading(false);
       }
     };
-
     fetchPlans();
   }, []);
 
   const handleChoosePlan = (plan: ProcessedSIPPlan) => {
     setSelectedPlan(plan);
     setShowModal(true);
+    setSubmitError(null); // Clear previous errors when opening the modal
+  };
+
+  // --- NEW FUNCTION TO PLACE THE ORDER ---
+  const handlePlaceOrder = async () => {
+    if (!selectedPlan) return;
+
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    const orderPayload = {
+      planType: "SIP",
+      planName: selectedPlan.name,
+      duration: selectedPlan.tenure,
+      amount: parseAmount(selectedPlan.monthlyAmount),
+      paymentMethod: "Razorpay"
+    };
+
+    try {
+      await axiosInstance.post('/api/orders', orderPayload);
+      alert(`Your order for "${selectedPlan.name}" has been placed successfully!`);
+      setShowModal(false); // Close the modal on success
+    } catch (err) {
+      console.error("Failed to place order:", err);
+      setSubmitError("Failed to place the order. Please try again later.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   useEffect(() => {
@@ -79,22 +112,22 @@ const GoldSIPPlansPage = () => {
   }, [showModal]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-yellow-50 to-orange-50">
-      {/* Hero Banner */}
+    <div className="min-h-screen mt-18 bg-gradient-to-br from-yellow-50 to-orange-50">
+      {/* Hero Banner (Unchanged) */}
       <div className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-20 px-4">
         <div className="max-w-6xl mx-auto text-center">
           <div className="flex justify-center mb-6"><div className="bg-white bg-opacity-20 rounded-full p-4"><Award className="w-12 h-12 text-yellow-200" /></div></div>
-          <h1 className="text-5xl font-bold mb-6">Gold SIP Plans</h1>
-          <p className="text-xl mb-8 max-w-3xl mx-auto">Invest in gold systematically with our flexible SIP plans. Build wealth steadily with the timeless value of gold.</p>
+          <h1 className="text-5xl font-bold mb-6 text-black">Gold SIP Plans</h1>
+          <p className="text-xl mb-8 max-w-3xl mx-auto text-yellow-300">Invest in gold systematically with our flexible SIP plans. Build wealth steadily with the timeless value of gold.</p>
           <div className="flex flex-wrap justify-center gap-8 text-sm">
-            <div className="flex items-center gap-2"><Shield className="w-5 h-5" /><span>100% Secure & Insured</span></div>
-            <div className="flex items-center gap-2"><TrendingUp className="w-5 h-5" /><span>Guaranteed Returns</span></div>
-            <div className="flex items-center gap-2"><Star className="w-5 h-5" /><span>24/7 Support</span></div>
+            <div className="flex text-black items-center gap-2"><Shield className="w-5 h-5" /><span>100% Secure & Insured</span></div>
+            <div className="flex text-black items-center gap-2"><TrendingUp className="w-5 h-5" /><span>Guaranteed Returns</span></div>
+            <div className="flex text-black items-center gap-2"><Star className="w-5 h-5" /><span>24/7 Support</span></div>
           </div>
         </div>
       </div>
 
-      {/* Information Section */}
+      {/* Information Section (Unchanged) */}
       <div className="py-16 px-4 bg-white">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12"><h2 className="text-3xl font-bold text-gray-800 mb-4">Why Choose Gold SIP?</h2><p className="text-gray-600 max-w-3xl mx-auto">Gold SIP (Systematic Investment Plan) allows you to invest in gold regularly with small amounts. It's a disciplined approach to wealth creation that helps you benefit from rupee cost averaging and the long-term appreciation of gold prices.</p></div>
@@ -106,7 +139,7 @@ const GoldSIPPlansPage = () => {
         </div>
       </div>
 
-      {/* SIP Plans Section */}
+      {/* SIP Plans Section (Unchanged) */}
       <div className="py-16 px-4 bg-gray-50">
         <div className="max-w-6xl mx-auto">
           <div className="text-center mb-12"><h2 className="text-3xl font-bold text-gray-800 mb-4">Choose Your SIP Plan</h2><p className="text-gray-600">Select the plan that best fits your investment goals and budget</p></div>
@@ -130,23 +163,34 @@ const GoldSIPPlansPage = () => {
 
       <FAQSection />
 
+      {/* --- MODAL UPDATED WITH SUBMISSION LOGIC --- */}
       {showModal && selectedPlan && (
         <Portal>
           <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[2000] p-4 animate-fade-in-fast">
             <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative">
-              <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"><svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg></button>
+              <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700" disabled={isSubmitting}>
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+              </button>
               <div className="text-center">
                 <div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><Award className="w-8 h-8 text-yellow-600" /></div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">Plan Selected!</h3>
+                <h3 className="text-2xl font-bold text-gray-800 mb-2">Confirm Your Plan</h3>
                 <p className="text-gray-600 mb-6">You've chosen the {selectedPlan.name}</p>
                 <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
                   <div className="flex justify-between items-center mb-2"><span className="text-gray-600">Monthly Amount:</span><span className="font-semibold text-yellow-600">{selectedPlan.monthlyAmount}</span></div>
                   <div className="flex justify-between items-center mb-2"><span className="text-gray-600">Tenure:</span><span className="font-semibold">{selectedPlan.tenure}</span></div>
                   <div className="flex justify-between items-center"><span className="text-gray-600">Expected Returns:</span><span className="font-semibold text-green-600">{selectedPlan.returns}</span></div>
                 </div>
+
+                {/* NEW: Display submission error here */}
+                {submitError && <div className="text-center text-red-600 mb-4 bg-red-50 p-3 rounded-lg">{submitError}</div>}
+
                 <div className="space-y-3">
-                  <button className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 rounded-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-colors duration-300">Start SIP Now</button>
-                  <button onClick={() => setShowModal(false)} className="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300">Buy This Plan</button>
+                  <button onClick={handlePlaceOrder} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 rounded-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed" disabled={isSubmitting}>
+                    {isSubmitting ? 'Processing...' : 'Start SIP Now'}
+                  </button>
+                  <button onClick={handlePlaceOrder} className="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed" disabled={isSubmitting}>
+                    {isSubmitting ? 'Processing...' : 'Buy This Plan'}
+                  </button>
                 </div>
               </div>
             </div>
@@ -158,6 +202,7 @@ const GoldSIPPlansPage = () => {
   );
 };
 
+// --- FAQ SECTION (Unchanged) ---
 function FAQSection() {
     const [openFAQ, setOpenFAQ] = useState<number | null>(0);
     const [faqs, setFaqs] = useState<Faq[]>([]);
@@ -167,6 +212,7 @@ function FAQSection() {
     useEffect(() => {
         const fetchFaqs = async () => {
             try {
+                // Assuming FAQ type for SIP is 'SIP'
                 const response = await axiosInstance.get('/api/faqs?type=SIP');
                 setFaqs(response.data.content || []);
             } catch (err) {

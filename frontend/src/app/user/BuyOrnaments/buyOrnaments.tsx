@@ -1,4 +1,4 @@
-import { Award, Crown, Eye, Filter, Heart, ShoppingCart, Sparkles, Star, Loader } from 'lucide-react';
+import { Award, Eye, Heart, ShoppingCart, Sparkles, Star, Loader, Filter, Crown, Check } from 'lucide-react';
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from "react-router-dom";
 import axiosInstance from '../../../utils/axiosInstance';
@@ -11,12 +11,9 @@ const CustomImage: React.FC<{ src: string; alt: string; style?: React.CSSPropert
 );
 
 const BuyOrnamentsPage = () => {
-
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
-
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
   const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
   const [dropdownOpen, setDropdownOpen] = useState(false);
@@ -26,6 +23,9 @@ const BuyOrnamentsPage = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const navigate = useNavigate();
 
+  // State for Add to Cart functionality
+  const [isAddingToCart, setIsAddingToCart] = useState<number | null>(null);
+  const [addedToCart, setAddedToCart] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const fetchOrnaments = async () => {
@@ -51,6 +51,34 @@ const BuyOrnamentsPage = () => {
     setLikedItems(newLikedItems);
   };
 
+  const handleAddToCart = async (product: Product, e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); // Prevents navigating to the product page
+    setIsAddingToCart(product.id);
+
+    try {
+      // Assuming quantity is 1 when adding from the product list page
+      await axiosInstance.post(`/api/cart/add?ornamentId=${product.id}&qty=1`);
+      
+      const newAdded = new Set(addedToCart);
+      newAdded.add(product.id);
+      setAddedToCart(newAdded);
+
+      // Revert the icon back to the cart after 2 seconds
+      setTimeout(() => {
+        setAddedToCart(prev => {
+          const updated = new Set(prev);
+          updated.delete(product.id);
+          return updated;
+        });
+      }, 2000);
+
+    } catch (err) {
+      console.error("Failed to add to cart:", err);
+      alert(`Could not add "${product.name}" to cart. Please try again.`);
+    } finally {
+      setIsAddingToCart(null);
+    }
+  };
 
   const filteredProductsDropdown =
     dropdownMain === "All"
@@ -186,6 +214,7 @@ const BuyOrnamentsPage = () => {
                   onMouseEnter={() => setHoveredCard(idx)}
                   onMouseLeave={() => setHoveredCard(null)}
                   style={{ backgroundColor: '#ffffff', borderRadius: '24px', overflow: 'hidden', boxShadow: hoveredCard === idx ? '0 32px 64px rgba(122, 19, 53, 0.15)' : '0 4px 24px rgba(0, 0, 0, 0.04)', transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)', transform: hoveredCard === idx ? 'translateY(-12px)' : 'translateY(0)', cursor: 'pointer', position: 'relative', border: '1px solid #f7f8fc', display: 'flex', flexDirection: 'column' }}
+                  onClick={() => navigate(`/buyornaments/${product.id}`)}
                 >
                   <button onClick={(e) => toggleLike(product.id, e)} style={{ position: 'absolute', top: '20px', right: '20px', width: '44px', height: '44px', backgroundColor: likedItems.has(product.id) ? '#7a1335' : 'rgba(255, 255, 255, 0.9)', border: 'none', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', zIndex: 3, transition: 'all 0.3s ease', backdropFilter: 'blur(10px)', boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)' }}>
                     <Heart size={20} fill={likedItems.has(product.id) ? '#ffffff' : 'none'} color={likedItems.has(product.id) ? '#ffffff' : '#7a1335'} />
@@ -214,11 +243,23 @@ const BuyOrnamentsPage = () => {
                         <div style={{ fontSize: '0.85rem', color: '#64748b', marginTop: '4px' }}>Inclusive of all taxes</div>
                       </div>
                       <div style={{ display: 'flex', gap: '12px' }}>
-                        <button style={{ flex: 1, padding: '16px 24px', background: '#7a1335', color: '#ffffff', border: 'none', borderRadius: '16px', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }} onClick={() => navigate(`/buyornaments/${product.id}`)}>
+                        <button style={{ flex: 1, padding: '16px 24px', background: '#7a1335', color: '#ffffff', border: 'none', borderRadius: '16px', fontWeight: '600', fontSize: '0.95rem', cursor: 'pointer', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }} onClick={(e) => { e.stopPropagation(); navigate(`/buyornaments/${product.id}`); }}>
                           <Eye size={18} /> View Details
                         </button>
-                        <button style={{ width: '56px', height: '56px', backgroundColor: 'rgba(122, 19, 53, 0.1)', color: '#7a1335', border: '2px solid rgba(122, 19, 53, 0.2)', borderRadius: '16px', cursor: 'pointer', transition: 'all 0.3s ease', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                          <ShoppingCart size={20} />
+                        <button 
+                          style={{ 
+                            width: '56px', height: '56px', 
+                            backgroundColor: addedToCart.has(product.id) ? '#22c55e' : 'rgba(122, 19, 53, 0.1)', 
+                            color: addedToCart.has(product.id) ? '#ffffff' : '#7a1335', 
+                            border: '2px solid',
+                            borderColor: addedToCart.has(product.id) ? 'transparent' : 'rgba(122, 19, 53, 0.2)',
+                            borderRadius: '16px', cursor: 'pointer', transition: 'all 0.3s ease', 
+                            display: 'flex', alignItems: 'center', justifyContent: 'center' 
+                          }}
+                          onClick={(e) => handleAddToCart(product, e)}
+                          disabled={isAddingToCart === product.id}
+                        >
+                          {isAddingToCart === product.id ? <Loader size={20} className="animate-spin" /> : addedToCart.has(product.id) ? <Check size={20} /> : <ShoppingCart size={20} />}
                         </button>
                       </div>
                     </div>

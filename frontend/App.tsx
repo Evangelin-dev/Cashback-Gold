@@ -174,6 +174,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/privacy" element={<PrivacyPlicyPage />} />
         <Route path="/partnerpopup" element={<PartnerPopup open={true} onClose={() => { }} />} />
         <Route path="/signuppopup" element={<SignupPopup open={true} onClose={() => { }} />} />
+          <Route path="/cart" element={<Cart />} />
 
 
         <Route path="/refund" element={<Refund />} />
@@ -199,7 +200,6 @@ const AppRoutes: React.FC = () => {
           <Route path="/Wishlist" element={<Wishlist />} />
           <Route path="/lUserHome" element={<LUserHome />} />
           <Route path="paymentpopup" element={<PaymentPopup />} />
-          <Route path="/cart" element={<Cart />} />
           <Route path="/lrefund" element={<LRefund />} />
           <Route path="/lgoldsip" element={<LGoldSIPPlans />} />
           <Route path="/lschemes" element={<LGoldPlantSchemes />} />

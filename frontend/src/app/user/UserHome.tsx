@@ -40,8 +40,100 @@ function useScrollFadeInTailwind(direction: "left" | "right" | "up" | "down" = "
   return { ref: dom };
 }
 
+
+// NEW: Interface that matches the actual data from the /api/flyers endpoint
+interface ApiFlyerData {
+  id: number;
+  type: 'GOLD_PLANT' | 'SIP_PLAN' | 'SAVING_PLAN';
+  uploadDate: string;
+  url: string; // API sends 'url', not 'imageUrl'
+}
+
+// Interface for the processed data that the UI will use
+interface ProcessedFlyer {
+  id: number;
+  flyerName: string;
+  imageUrl: string;
+  redirectUrl: string;
+  type: 'GOLD_PLANT' | 'SIP_PLAN' | 'SAVING_PLAN';
+}
+
+
 const UserHome = () => {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
+  // NEW: State for the dynamic schemes section
+    const [dynamicSchemes, setDynamicSchemes] = useState<ProcessedFlyer[]>([]);
+  const [schemesLoading, setSchemesLoading] = useState(true);
+  const [schemesError, setSchemesError] = useState<string | null>(null);
+
+  // NEW: Fetch dynamic schemes on component mount
+  const getButtonLabel = (type: ProcessedFlyer['type']) => {
+    switch (type) {
+      case 'SAVING_PLAN': return 'Buy Chit';
+      case 'SIP_PLAN': return 'Start SIP';
+      case 'GOLD_PLANT': return 'Buy Gold';
+      default: return 'View Scheme';
+    }
+  };
+
+  // Helper to generate a descriptive name from the type
+  const getFlyerName = (type: ProcessedFlyer['type']) => {
+    switch (type) {
+      case 'SAVING_PLAN': return 'DIGI GOLD CHIT PLAN';
+      case 'SIP_PLAN': return 'DIGI GOLD SIP PLAN';
+      case 'GOLD_PLANT': return 'GOLD PLANT SCHEME';
+      default: return 'Gold Scheme';
+    }
+  };
+
+  // Helper to determine the navigation path from the type
+  const getRedirectUrl = (type: ProcessedFlyer['type']) => {
+    switch (type) {
+      case 'SAVING_PLAN': return '/chit';
+      case 'SIP_PLAN': return '/goldsip';
+      case 'GOLD_PLANT': return '/schemes';
+      default: return '/';
+    }
+  };
+
+
+  // Fetch and process dynamic schemes on component mount
+  useEffect(() => {
+    const fetchSchemes = async () => {
+      setSchemesLoading(true);
+      setSchemesError(null);
+      try {
+        const flyerTypes: ApiFlyerData['type'][] = ['SAVING_PLAN', 'SIP_PLAN', 'GOLD_PLANT'];
+        
+        const responses = await Promise.all(
+          flyerTypes.map(type => axiosInstance.get<ApiFlyerData[]>(`/api/flyers?type=${type}`))
+        );
+
+        // Map the raw API data to the structure our UI needs
+        const fetchedFlyers = responses
+          .map(response => response.data?.[0]) 
+          .filter((flyer): flyer is ApiFlyerData => !!flyer) // Filter out any empty responses
+          .map((flyer: ApiFlyerData): ProcessedFlyer => ({ // Transform the data
+            id: flyer.id,
+            type: flyer.type,
+            imageUrl: flyer.url, // Map 'url' to 'imageUrl'
+            flyerName: getFlyerName(flyer.type), // Generate the name
+            redirectUrl: getRedirectUrl(flyer.type), // Generate the redirect URL
+          }));
+
+        setDynamicSchemes(fetchedFlyers);
+
+      } catch (err) {
+        console.error("Failed to fetch schemes:", err);
+        setSchemesError("Could not load schemes at this time.");
+      } finally {
+        setSchemesLoading(false);
+      }
+    };
+
+    fetchSchemes();
+  }, []);
+
   const partners = [
     { src: "/assets/amazon.png", alt: "Amazon Pay" },
     { src: "/assets/axis.png", alt: "Axis Bank" },
@@ -178,100 +270,21 @@ const UserHome = () => {
           </div>
         </div>
       </div>
-      <section
-        className={`mb-5 mt-6 pt-6 ${style.home_scheme_section}`}
 
-      >
-        <h3
-          className="text-center"
-          style={{
-            fontSize: "2rem",
-            fontWeight: 700,
-            marginTop: "180px",
-            marginBottom: "24px",
-            position: "relative",
-            zIndex: 2,
-            color: "#bf7e1a",
-          }}
-        >
-          Quick overview of schemes
-        </h3>
 
-        <div
-          className="w-100 d-flex flex-column flex-md-row justify-content-center align-items-stretch gap-4 mt-4"
-          style={{ maxWidth: 1200, margin: "0 auto" }}
-        >
-          {schemes.map((scheme) => {
-            let buttonLabel = "Buy scheme";
-            const titleLower = scheme.title.toLowerCase();
-            if (titleLower.includes("chit")) buttonLabel = "Buy Chit";
-            else if (titleLower.includes("sip")) buttonLabel = "Start SIP";
-            else if (titleLower.includes("gold")) buttonLabel = "Buy Gold";
+          <section className={`mb-5 mt-6 pt-6 ${style.home_scheme_section}`}>
+        <h3 className="text-center" style={{ fontSize: "2rem", fontWeight: 700, marginTop: "180px", marginBottom: "24px", position: "relative", zIndex: 2, color: "#bf7e1a" }}>Quick overview of schemes</h3>
+        <div className="w-100 d-flex flex-column flex-md-row justify-content-center align-items-stretch gap-4 mt-4" style={{ maxWidth: 1200, margin: "0 auto", minHeight: 500 }}>
+          {schemesLoading && <div className="text-center w-100 text-gray-600">Loading schemes...</div>}
+          {schemesError && <div className="text-center w-100 text-red-600">{schemesError}</div>}
+          {!schemesLoading && !schemesError && dynamicSchemes.map((scheme) => {
+            const buttonLabel = getButtonLabel(scheme.type);
             return (
-              <div
-                key={scheme.id}
-                className="bg-white d-flex align-items-center justify-content-center position-relative"
-                style={{
-                  borderRadius: 18,
-                  maxWidth: 400,
-                  minWidth: 220,
-                  height: 500,
-                  overflow: "hidden",
-                  boxShadow: "0 4px 24px #e6d7b7",
-                  border: "10px solid #bf7e1a",
-                }}
-              >
-                <img
-                  src={scheme.image}
-                  alt={scheme.title}
-                  style={{ width: "100%", height: "100%", objectFit: "contain" }}
-                />
-                <button
-                  style={{
-                    position: "absolute",
-                    left: 14,
-                    bottom: 10,
-                    background: "#8a2342",
-                    color: "#fff",
-                    border: "none",
-                    borderRadius: 40,
-                    padding: "10px 28px 10px 22px",
-                    fontWeight: 500,
-                    fontSize: 18,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 10,
-                    boxShadow: "0 2px 8px #c4912e33",
-                    cursor: "pointer",
-                    transition: "background 0.2s",
-                  }}
-                  onClick={() => navigate(scheme.link)}
-                >
+              <div key={scheme.id} className="bg-white d-flex align-items-center justify-content-center position-relative" style={{ borderRadius: 18, maxWidth: 400, minWidth: 220, height: 500, overflow: "hidden", boxShadow: "0 4px 24px #e6d7b7", border: "10px solid #bf7e1a" }}>
+                <img src={scheme.imageUrl} alt={scheme.flyerName} style={{ width: "100%", height: "100%", objectFit: "contain" }}/>
+                <button style={{ position: "absolute", left: 14, bottom: 10, background: "#8a2342", color: "#fff", border: "none", borderRadius: 40, padding: "10px 28px 10px 22px", fontWeight: 500, fontSize: 18, display: "flex", alignItems: "center", gap: 10, boxShadow: "0 2px 8px #c4912e33", cursor: "pointer", transition: "background 0.2s" }} onClick={() => navigate(scheme.redirectUrl)}>
                   {buttonLabel}
-                  <span
-                    style={{
-                      fontSize: 22,
-                      marginLeft: 8,
-                      display: "flex",
-                      alignItems: "center",
-                    }}
-                  >
-                    <svg
-                      width="26"
-                      height="22"
-                      viewBox="0 0 26 22"
-                      fill="none"
-                      xmlns="http://www.w3.org/2000/svg"
-                    >
-                      <path
-                        d="M15.5 4L22 11M22 11L15.5 18M22 11H4"
-                        stroke="white"
-                        strokeWidth="2.5"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                      />
-                    </svg>
-                  </span>
+                  <span style={{ fontSize: 22, marginLeft: 8, display: "flex", alignItems: "center" }}><svg width="26" height="22" viewBox="0 0 26 22" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M15.5 4L22 11M22 11L15.5 18M22 11H4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg></span>
                 </button>
               </div>
             );

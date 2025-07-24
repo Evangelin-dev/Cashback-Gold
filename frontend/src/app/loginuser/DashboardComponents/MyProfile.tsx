@@ -10,27 +10,24 @@ import {
   Calendar,
   Users,
 } from 'lucide-react';
+import { RootState } from '../../../store';
+import { useSelector } from 'react-redux';
 
 // Define the profile structure
 type ProfileType = {
-  name: string;
-  dob: string;
-  gender: string;
-  email: string;
-  phone: string;
-  address: string;
+  email: string | null;
+  phone: string | null;
+  role: string | null;
 };
 
 const LMyProfile = () => {
   const [isEditing, setIsEditing] = useState<boolean>(false);
+    const { currentUser } = useSelector((state: RootState) => state.auth);
 
   const [profile, setProfile] = useState<ProfileType>({
-    name: 'John Doe',
-    dob: '1990-05-15',
-    gender: 'Male',
-    email: 'john.doe@example.com',
-    phone: '+1 (555) 123-4567',
-    address: '123 Main Street, City, State 12345',
+    email: currentUser?.email || '',
+    phone: currentUser?.mobile || '', 
+    role : currentUser?.role || '',
   });
 
   const [editedProfile, setEditedProfile] = useState<ProfileType>(profile);
