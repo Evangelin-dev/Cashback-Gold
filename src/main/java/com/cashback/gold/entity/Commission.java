@@ -20,7 +20,7 @@ public class Commission {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(name = "partner_id", insertable = false, updatable = false)
+    @Column(name = "partner_id")
     private Long partnerId;
     private Long userId;
     private String orderType; // SIP, CHIT, GOLD, ORNAMENT
