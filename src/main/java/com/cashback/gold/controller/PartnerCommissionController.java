@@ -1,5 +1,6 @@
 package com.cashback.gold.controller;
 
+import com.cashback.gold.dto.PayoutDTO;
 import com.cashback.gold.dto.PayoutRequestDto;
 import com.cashback.gold.dto.common.ApiResponse;
 import com.cashback.gold.entity.PayoutRequest;
@@ -43,8 +44,9 @@ public class PartnerCommissionController {
     }
 
     @GetMapping("/payout-history")
-    public ResponseEntity<List<PayoutRequest>> getPayoutHistory(@AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<List<PayoutDTO>> getPayoutHistory(@AuthenticationPrincipal UserPrincipal user) {
         return ResponseEntity.ok(payoutService.getPartnerPayoutHistory(user.getId()));
     }
+
 }
 

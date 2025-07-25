@@ -23,6 +23,11 @@ public class PayoutRequest {
 
     private LocalDateTime requestedAt;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "partnerId", referencedColumnName = "id", insertable = false, updatable = false)
+    private User partner;
+
+
     @PrePersist
     public void prePersist() {
         this.requestedAt = LocalDateTime.now();
