@@ -2,9 +2,8 @@ import { Award, Shield, Sparkles, Star, TrendingUp, X, CheckCircle, ShieldX, Cal
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
-import Portal from '../../user/Portal'; // Make sure this path is correct
+import Portal from '../../user/Portal';
 
-// --- INTERFACES for /api/orders/my response ---
 interface OrderFromApi {
   id: number;
   orderId: string;
