@@ -1,6 +1,8 @@
 //for feature use
 package com.cashback.gold.controller;
+import com.cashback.gold.dto.common.ApiResponse;
 import com.cashback.gold.service.PartnerCommissionService;
+import com.cashback.gold.service.PayoutService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -13,6 +15,7 @@ import java.util.Map;
 public class AdminCommissionController {
 
     private final PartnerCommissionService commissionService;
+    private final PayoutService payoutService;
 
     @GetMapping
     public ResponseEntity<Map<String, Object>> getAllCommissions(
@@ -32,5 +35,25 @@ public class AdminCommissionController {
         commissionService.updateCommissionStatus(id, status);
         return ResponseEntity.ok(Map.of("message", "Status updated"));
     }
+
+    @GetMapping("/payouts")
+    public ResponseEntity<Map<String, Object>> getAllPayouts(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(required = false) String userType // Optional filter: USER, PARTNER, B2B
+    ) {
+        return ResponseEntity.ok(payoutService.getAllPayouts(page, size, userType));
+    }
+
+    @PutMapping("/payouts/{id}/status")
+    public ResponseEntity<ApiResponse> updatePayoutStatus(
+            @PathVariable Long id,
+            @RequestParam String status // values: Paid, Rejected
+    ) {
+        payoutService.updatePayoutStatus(id, status);
+        return ResponseEntity.ok(new ApiResponse(true, "Status updated to " + status));
+    }
+
+
 }
 
