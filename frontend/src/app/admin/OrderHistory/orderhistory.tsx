@@ -1,17 +1,15 @@
 import { Building2, Calendar, ChevronLeft, ChevronRight, Eye, Filter, Search, User, X } from 'lucide-react';
 import React, { useEffect, useMemo, useState } from 'react';
-import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
+import axiosInstance from '../../../utils/axiosInstance';
 
-// --- INTERFACES ---
 
-// Type for a single order object coming directly from the API
 interface OrderFromApi {
   id: number;
   orderId: string;
   userId: number;
   customerName: string;
   customerType: 'user' | 'b2b';
-  planType: 'CHIT' | 'SIP' | 'SCHEME';
+  planType: 'CHIT' | 'SIP' | 'SCHEME' | 'ORNAMENT';
   planName: string;
   duration: string;
   amount: number;
@@ -21,7 +19,7 @@ interface OrderFromApi {
   address: string;
 }
 
-// Type for the overall API response structure
+
 interface ApiResponse {
   totalPages: number;
   currentPage: number;
@@ -29,13 +27,12 @@ interface ApiResponse {
   totalElements: number;
 }
 
-// The internal type used by the component for rendering
 type Order = {
   id: string;
   customerName: string;
   customerType: 'user' | 'b2b';
   goldType: string;
-  planType: 'CHIT' | 'SIP' | 'SCHEME';
+  planType: 'CHIT' | 'SIP' | 'SCHEME' | 'ORNAMENT';
   quantity: number;
   weight: string;
   price: number;
@@ -46,7 +43,6 @@ type Order = {
 };
 
 const AOrderHistory = () => {
-  // --- STATE MANAGEMENT ---
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -58,14 +54,13 @@ const AOrderHistory = () => {
   const [showOrderDetails, setShowOrderDetails] = useState(false);
   const itemsPerPage = 10;
 
-  // --- DATA FETCHING ---
   useEffect(() => {
     const fetchOrders = async () => {
       setLoading(true);
       setError(null);
       try {
         const customerTypes = ['user', 'b2b'];
-        const planTypes = ['SCHEME', 'SIP', 'CHIT'];
+        const planTypes = ['SCHEME', 'SIP', 'CHIT', 'ORNAMENT'];
         const endpoints: string[] = [];
 
         customerTypes.forEach(cType => {
@@ -86,10 +81,10 @@ const AOrderHistory = () => {
           customerType: order.customerType,
           goldType: order.planName,
           planType: order.planType,
-          quantity: 1, // Mocked data as it's not in the API response
-          weight: order.duration, // Using duration as a stand-in
+          quantity: 1,
+          weight: order.duration,
           price: order.amount,
-          date: new Date(order.createdAt).toLocaleDateString('en-CA'), // Formats to YYYY-MM-DD
+          date: new Date(order.createdAt).toLocaleDateString('en-CA'),
           status: order.status.toLowerCase(),
           paymentMethod: order.paymentMethod,
           address: order.address,
@@ -107,8 +102,7 @@ const AOrderHistory = () => {
     fetchOrders();
   }, []);
 
-
-  const availableProducts = ['CHIT', 'SIP', 'SCHEME'];
+  const availableProducts = ['CHIT', 'SIP', 'SCHEME', 'ORNAMENT'];
 
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
@@ -162,13 +156,11 @@ const AOrderHistory = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Order History</h1>
           <p className="text-gray-600">Manage and track all gold selling orders</p>
         </div>
 
-        {/* Statistics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between"><div><p className="text-sm font-medium text-gray-500">Total Orders</p><p className="text-2xl font-bold text-gray-900">{orders.length}</p></div><div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center"><Calendar className="h-6 w-6 text-blue-600" /></div></div>
@@ -181,14 +173,13 @@ const AOrderHistory = () => {
           </div>
         </div>
 
-        {/* Filters and Search */}
         <div className="bg-white rounded-lg shadow-sm p-6 mb-6">
           <div className="flex flex-col lg:flex-row gap-4 items-center justify-between">
             <div className="flex flex-col sm:flex-row gap-4 items-center w-full lg:w-auto">
-              <div className="relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" /><input type="text" placeholder="Search orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent w-full sm:w-80"/></div>
+              <div className="relative"><Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" /><input type="text" placeholder="Search orders..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent w-full sm:w-80" /></div>
               <div className="flex items-center gap-2"><Filter className="text-gray-400 h-4 w-4" /><select value={filterType} onChange={(e) => handleCustomerTypeChange(e.target.value as 'all' | 'user' | 'b2b')} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent"><option value="all">All Customers</option><option value="user">Individual Users</option><option value="b2b">B2B Customers</option></select></div>
               <div className="flex items-center gap-2">
-                <select value={productFilter} onChange={(e) => {setProductFilter(e.target.value); setCurrentPage(1);}} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
+                <select value={productFilter} onChange={(e) => { setProductFilter(e.target.value); setCurrentPage(1); }} className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent">
                   <option value="all">All Products</option>
                   {availableProducts.map((product) => (<option key={product} value={product.toLowerCase()}>{product}</option>))}
                 </select>
@@ -198,7 +189,6 @@ const AOrderHistory = () => {
           </div>
         </div>
 
-        {/* Orders Table */}
         <div className="bg-white rounded-lg shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
             {loading ? (
@@ -228,7 +218,6 @@ const AOrderHistory = () => {
           </div>
         </div>
 
-        {/* Pagination */}
         {totalPages > 1 && !loading && !error && (
           <div className="flex items-center justify-between mt-6">
             <div className="text-sm text-gray-700">Showing {((currentPage - 1) * itemsPerPage) + 1} to {Math.min(currentPage * itemsPerPage, filteredOrders.length)} of {filteredOrders.length} results</div>
@@ -241,7 +230,6 @@ const AOrderHistory = () => {
         )}
       </div>
 
-      {/* Order Details Modal */}
       {showOrderDetails && selectedOrder && (
         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backgroundColor: 'rgba(0, 0, 0, 0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000 }} onClick={closeOrderDetails}>
           <div style={{ backgroundColor: 'white', borderRadius: '8px', padding: '24px', width: '90%', maxWidth: '600px', maxHeight: '90vh', overflowY: 'auto', position: 'relative' }} onClick={(e) => e.stopPropagation()}>

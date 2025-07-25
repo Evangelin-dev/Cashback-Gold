@@ -97,12 +97,12 @@ const LChitJewelsSavingPlan = () => {
   // --- DYNAMIC STATS BASED ON USER ORDERS ---
   const stats = useMemo(() => {
     // These filters now work correctly on the full list of plans
-    const active = userChitPlans.filter(p => p.status === 'pending').length;
-    const completed = userChitPlans.filter(p => p.status === 'successful').length;
+    const active = userChitPlans.filter(p => p.status === 'successful').length;
+    const pending = userChitPlans.filter(p => p.status === 'pending').length;
     const rejected = userChitPlans.filter(p => p.status === 'rejected').length;
     return [
-      { label: 'Active', count: active, color: 'from-[#7a1335] to-pink-600', icon: TrendingUp },
-      { label: 'Successful', count: completed, color: 'from-green-400 to-emerald-500', icon: CheckCircle },
+      { label: 'Active', count: active, color: 'from-[#7a1335] to-pink-600', icon: CheckCircle },
+      { label: 'Pending', count: pending, color: 'from-green-400 to-emerald-500', icon: TrendingUp },
       { label: 'Rejected', count: rejected, color: 'from-rose-400 to-pink-500', icon: ShieldX }
     ];
   }, [userChitPlans]);
