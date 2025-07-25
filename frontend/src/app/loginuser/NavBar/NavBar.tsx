@@ -20,7 +20,9 @@ const LNavBar = () => {
 	const [isScrolled, setIsScrolled] = useState(false);
 	const { currentUser } = useSelector((state: RootState) => state.auth);
 	const navigate = useNavigate();
-
+	const cartItems = useSelector((state: RootState) => state.cart.items);
+	const cartLength = cartItems.length;
+console.log(cartLength,'cart')
 	useEffect(() => {
 		const handleResize = () => {
 			setScreenWidth(window.innerWidth);
@@ -930,7 +932,7 @@ const LNavBar = () => {
 					</div>
 
 					{currentUser && (
-						<CiShoppingCart size={34}  onClick={() => navigate("/cart") } />
+						<CiShoppingCart size={34} onClick={() => navigate("/cart")} />
 
 					)}
 					{/* Action Buttons */}

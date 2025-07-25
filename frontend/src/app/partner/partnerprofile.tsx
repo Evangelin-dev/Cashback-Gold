@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../utils/axiosInstance"; // Ensure this path is correct
-import { FaUser, FaIdCard, FaUniversity, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaUpload, FaSpinner, FaFilePdf, FaSave } from "react-icons/fa";
+import { FaUser, FaIdCard, FaUniversity, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaUpload, FaSpinner, FaFilePdf, FaSave, FaTrash } from "react-icons/fa";
 import { X } from "lucide-react";
 import { useSelector } from "react-redux";
 import { RootState } from "../../store";
@@ -10,18 +10,22 @@ type KycStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
 type NotificationType = 'success' | 'error';
 
 interface ProfileData { name: string; email: string; countryCode: string; phone: string; }
-interface BankDetails { bankName: string; accountNumber: string; ifsc: string; upiId: string; }
+// Updated to reflect the array structure from the API
+interface BankDetail { id: number; bank: string; account: string; ifsc: string; upiId: string; }
 interface KycData { status: KycStatus; aadharOrGstUrl?: string; panUrl?: string; rejectionReason?: string; }
 interface NotificationState { show: boolean; message: string; type: NotificationType; }
 
 // --- Initial State ---
 const initialProfile: ProfileData = { name: "", email: "", countryCode: "+91", phone: "" };
-const initialBankDetails: BankDetails = { bankName: "", accountNumber: "", ifsc: "", upiId: "" };
-const countryCodes = [{ code: "+91", label: "🇮🇳 +91" }, { code: "+1", label: "🇺🇸 +1" }, { code: "+44", label: "🇬🇧 +44" }];
+// Bank details now start as a single object for the form fields
+const initialBankDetailsForm = { bank: "", account: "", ifsc: "", upiId: "" };
 
 const PartnerProfile = () => {
   const [profile, setProfile]               = useState<ProfileData>(initialProfile);
-  const [bankDetails, setBankDetails]       = useState<BankDetails>(initialBankDetails);
+  // State to hold the array of bank accounts from the API
+  const [savedBankAccounts, setSavedBankAccounts] = useState<BankDetail[]>([]);
+  // State for the form input fields
+  const [bankDetailsForm, setBankDetailsForm] = useState(initialBankDetailsForm);
   const [kycData, setKycData]               = useState<KycData>({ status: 'NONE' });
 
   const [aadharFile, setAadhaarFile]         = useState<File | null>(null);
@@ -30,12 +34,11 @@ const PartnerProfile = () => {
   const [panPreview, setPanPreview]           = useState<string>("");
 
   const [loading, setLoading]               = useState(true);
-  const [submitting, setSubmitting]           = useState({ kyc: false, bank: false }); // 'profile' submission state removed
+  const [submitting, setSubmitting]           = useState({ kyc: false, bank: false, delete: false });
   const [notification, setNotification]     = useState<NotificationState>({ show: false, message: '', type: 'success' });
 
-    const { currentUser } = useSelector((state: RootState) => state.auth);
+  const { currentUser } = useSelector((state: RootState) => state.auth);
   
-
   // --- Notification Handler ---
   const showNotification = (message: string, type: NotificationType) => {
     setNotification({ show: true, message, type });
@@ -49,15 +52,23 @@ const PartnerProfile = () => {
       const [profileRes, kycRes, bankRes] = await Promise.all([
         axiosInstance.get('/api/partner/profile').catch(() => ({ data: null })),
         axiosInstance.get('/api/kyc/partner/kyc').catch(() => ({ data: { status: 'NONE' } })),
-        axiosInstance.get('/api/bank-accounts').catch(() => ({ data: [] })),
+        axiosInstance.get<BankDetail[]>('/api/bank-accounts').catch(() => ({ data: [] })),
       ]);
 
       if (profileRes.data) setProfile(profileRes.data);
       if (kycRes.data) setKycData({ ...kycRes.data, status: kycRes.data.status || 'NONE' });
-      if (bankRes.data && bankRes.data.length > 0) {
-        const primaryAccount = bankRes.data[0];
-        setBankDetails({ bankName: primaryAccount.bank, accountNumber: primaryAccount.account, ifsc: primaryAccount.ifsc, upiId: primaryAccount.upiId || "" });
+      
+      const accounts = bankRes.data || [];
+      setSavedBankAccounts(accounts);
+      if (accounts.length > 0) {
+        // Populate the form with the first (and likely only) account details
+        const primaryAccount = accounts[0];
+        setBankDetailsForm({ bank: primaryAccount.bank, account: primaryAccount.account, ifsc: primaryAccount.ifsc, upiId: primaryAccount.upiId || "" });
+      } else {
+        // If no accounts, reset the form
+        setBankDetailsForm(initialBankDetailsForm);
       }
+
     } catch (err) {
       showNotification("Could not load all profile data.", 'error');
     } finally {
@@ -68,8 +79,7 @@ const PartnerProfile = () => {
   useEffect(() => { fetchData(); }, [fetchData]);
 
   // --- Form Handlers ---
-  const handleBankChange = (e: React.ChangeEvent<HTMLInputElement>) => setBankDetails(prev => ({ ...prev, [e.target.name]: e.target.value }));
-
+  const handleBankChange = (e: React.ChangeEvent<HTMLInputElement>) => setBankDetailsForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, type: 'aadhaar' | 'pan') => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -79,18 +89,35 @@ const PartnerProfile = () => {
     previewSetter(URL.createObjectURL(file));
   };
 
-  // --- Save Handlers ---
+  // --- Save & Delete Handlers ---
   const handleBankSave = async () => {
     setSubmitting(p => ({ ...p, bank: true }));
-    const payload = { bank: bankDetails.bankName, account: bankDetails.accountNumber, ifsc: bankDetails.ifsc, upiId: bankDetails.upiId, status: "ACTIVE", description: "Primary Partner Account" };
+    const payload = { ...bankDetailsForm, status: "ACTIVE", description: "Primary Partner Account" };
     try {
       await axiosInstance.post('/api/bank-accounts', payload);
       showNotification("Bank details saved successfully!", 'success');
+      fetchData(); // Refresh data to get the new account and lock the fields
     } catch (err) {
       showNotification("Failed to save bank details.", 'error');
     } finally {
       setSubmitting(p => ({ ...p, bank: false }));
     }
+  };
+
+  const handleBankDelete = async () => {
+      const accountToDelete = savedBankAccounts[0];
+      if (!accountToDelete) return;
+
+      setSubmitting(p => ({ ...p, delete: true }));
+      try {
+          await axiosInstance.delete(`/api/bank-accounts/${accountToDelete.id}`);
+          showNotification("Bank details deleted successfully.", 'success');
+          fetchData(); // Refresh data to clear the form and enable fields
+      } catch (err) {
+          showNotification("Failed to delete bank details.", 'error');
+      } finally {
+          setSubmitting(p => ({ ...p, delete: false }));
+      }
   };
 
   const handleKycSubmit = async () => {
@@ -115,6 +142,7 @@ const PartnerProfile = () => {
   };
 
   // --- Render Logic ---
+  const hasSavedBankDetails = savedBankAccounts.length > 0;
   const renderKycContent = () => {
     const { status, aadharOrGstUrl, panUrl, rejectionReason } = kycData;
     const statusInfoMap = {
@@ -169,8 +197,7 @@ const PartnerProfile = () => {
           <div className="lg:col-span-2 space-y-8">
             <Card title="My Profile" icon={<FaUser />}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Profile fields are now disabled */}
-                <InputField label="Name" name="name" value={''} disabled />
+                <InputField label="Name" name="name" value={currentUser?.fullName || ''} disabled />
                 <InputField label="Email" name="email" value={currentUser?.email || ''} type="email" disabled />
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
@@ -183,13 +210,18 @@ const PartnerProfile = () => {
 
             <Card title="Bank & UPI Details" icon={<FaUniversity />}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField label="Bank Name" name="bankName" value={bankDetails.bankName} onChange={handleBankChange} />
-                <InputField label="Account Number" name="accountNumber" value={bankDetails.accountNumber} onChange={handleBankChange} />
-                <InputField label="IFSC Code" name="ifsc" value={bankDetails.ifsc} onChange={handleBankChange} />
-                <InputField label="UPI ID" name="upiId" value={bankDetails.upiId} onChange={handleBankChange} placeholder="your-upi@okhdfc" />
+                <InputField label="Bank Name" name="bank" value={bankDetailsForm.bank} onChange={handleBankChange} disabled={hasSavedBankDetails} />
+                <InputField label="Account Number" name="account" value={bankDetailsForm.account} onChange={handleBankChange} disabled={hasSavedBankDetails} />
+                <InputField label="IFSC Code" name="ifsc" value={bankDetailsForm.ifsc} onChange={handleBankChange} disabled={hasSavedBankDetails} />
+                <InputField label="UPI ID" name="upiId" value={bankDetailsForm.upiId} onChange={handleBankChange} placeholder="your-upi@okhdfc" disabled={hasSavedBankDetails} />
               </div>
-              <div className="flex justify-end mt-6">
-                <button onClick={handleBankSave} disabled={submitting.bank} className="bg-[#7a1335] text-white font-semibold py-2 px-6 rounded-lg hover:bg-[#5a0e28] transition flex items-center justify-center gap-2 disabled:bg-gray-400">
+              <div className="flex justify-end items-center gap-4 mt-6">
+                {hasSavedBankDetails && (
+                    <button onClick={handleBankDelete} disabled={submitting.delete} className="bg-red-600 text-white font-semibold py-2 px-6 rounded-lg hover:bg-red-700 transition flex items-center justify-center gap-2 disabled:bg-gray-400">
+                        {submitting.delete ? <FaSpinner className="animate-spin" /> : <FaTrash />} Delete
+                    </button>
+                )}
+                <button onClick={handleBankSave} disabled={submitting.bank || hasSavedBankDetails} className="bg-[#7a1335] text-white font-semibold py-2 px-6 rounded-lg hover:bg-[#5a0e28] transition flex items-center justify-center gap-2 disabled:bg-gray-400 disabled:cursor-not-allowed">
                   {submitting.bank ? <><FaSpinner className="animate-spin" />Saving...</> : <><FaSave /> Save Bank Details</>}
                 </button>
               </div>

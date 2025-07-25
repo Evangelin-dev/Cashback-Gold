@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+// Import useSearchParams to read URL query parameters
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 import { AppDispatch, RootState } from "../../store";
 import {
@@ -11,8 +12,7 @@ import {
 } from "../features/thunks/authThunks";
 import { clearAuthError } from "../features/slices/authSlice";
 
-
-import PhoneInput, { isValidPhoneNumber, isPossiblePhoneNumber } from 'react-phone-number-input';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import parsePhoneNumber from 'libphonenumber-js';
 
@@ -24,6 +24,8 @@ interface SignupPopupProps {
 const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
+  // Hook to access URL search parameters
+  const [searchParams] = useSearchParams();
 
   const { status, error: authError, currentUser } = useSelector((state: RootState) => state.auth);
 
@@ -32,10 +34,8 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
   const otpRefs = useRef<Array<HTMLInputElement | null>>([]);
 
-
   const [loginIdentifier, setLoginIdentifier] = useState("");
   const [loginCountryCode, setLoginCountryCode] = useState("+91");
-
 
   const [name, setName] = useState("");
   const [fullPhoneNumber, setFullPhoneNumber] = useState<string | undefined>();
@@ -48,14 +48,26 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
+  
+  // State to store the referral code from the URL
+  const [referralCode, setReferralCode] = useState<string | null>(null);
 
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const isLoginInputEmail = loginIdentifier.includes('@');
 
+  // NEW: useEffect to read the referral code from the URL
+  useEffect(() => {
+    const refCode = searchParams.get('ref');
+    if (refCode) {
+      setReferralCode(refCode);
+      // Optional: You might want to default to the signup form if a ref code is present
+      // setMode('signup'); 
+    }
+  }, [searchParams]);
+
   useEffect(() => {
     if (currentUser && status === 'succeeded') {
-
       if (mode === 'login') {
         if (currentUser.role === 'ADMIN') {
           navigate("/admin");
@@ -124,9 +136,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       setValidationError("Please enter your email or phone number.");
       return;
     }
-
     const finalIdentifier = isLoginInputEmail ? trimmedIdentifier : `${loginCountryCode}${trimmedIdentifier}`;
-
     setValidationError(null);
     dispatch(clearAuthError());
     dispatch(sendLoginOtp({ identifier: finalIdentifier }))
@@ -140,7 +150,6 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!fullPhoneNumber || !isValidPhoneNumber(fullPhoneNumber)) {
       setValidationError("Please enter a valid phone number.");
       return;
@@ -171,6 +180,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       return;
     }
 
+    // UPDATED: Pass the referralCode to the thunk
     dispatch(sendRegistrationOtp({
       fullName: name,
       gender: signupGender,
@@ -183,7 +193,8 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       state: signupState,
       country: signupCountry,
       password: signupPassword,
-      role: 'USER'
+      role: 'USER',
+      referralCode: referralCode, // Pass the code from state
     })).then(result => {
       if (sendRegistrationOtp.fulfilled.match(result)) {
         setStep("otp");
@@ -209,6 +220,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
         return;
       }
       try {
+        // UPDATED: Pass the referralCode to the verification thunk
         await dispatch(verifyOtpAndRegister({
           email: signupEmail,
           otp: fullOtp,
@@ -222,9 +234,9 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
           state: signupState,
           country: signupCountry,
           password: signupPassword,
-          role: 'USER'
+          role: 'USER',
+          referralCode: referralCode, // Pass the code from state
         })).unwrap();
-
 
         alert("Registration successful! Please log in.");
         switchMode("login");
@@ -236,6 +248,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   };
 
   const handleResendOtp = () => {
+    // This logic remains the same, assuming resend doesn't need the referral code.
     const identifier = mode === 'login' ? loginIdentifier : signupEmail;
     if (identifier) {
       dispatch(resendOtp({ email: identifier }));
@@ -253,6 +266,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const otpTargetIdentifier = mode === 'login' ? loginIdentifier : signupEmail;
 
   return (
+    // ... JSX remains the same, no changes needed here ...
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.38)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ background: "#fff", borderRadius: 32, maxWidth: 800, width: "98vw", padding: "32px 24px 24px 24px", boxShadow: "0 8px 32px #00000022", position: "relative", textAlign: "center", animation: "popup-fade-in 0.25s cubic-bezier(.4,0,.2,1)", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>

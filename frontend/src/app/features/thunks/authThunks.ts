@@ -61,7 +61,13 @@ export const sendRegistrationOtp = createAsyncThunk<ApiResponse, RegistrationDat
   'auth/sendRegistrationOtp',
   async (userData, { rejectWithValue }) => {
     try {
-      const response = await axios.post<ApiResponse>(`${API_BASE_URL}/register`, {
+    
+      let url = `${API_BASE_URL}/register`;
+      if (userData.referralCode) {
+        url += `?ref=${userData.referralCode}`;
+      }
+
+      const response = await axios.post<ApiResponse>(url, {
         fullName: userData.fullName,
         gender: userData.gender,
         dob: userData.dob,
@@ -92,7 +98,8 @@ export const verifyOtpAndRegister = createAsyncThunk<LoginResponse, Verification
   'auth/verifyOtpAndRegister',
   async (verificationData, { rejectWithValue }) => {
     try {
-      const response = await axios.post<any>(`${API_BASE_URL}/verify-otp`, {
+    
+      const payload: any = {
         identifier: verificationData.email,
         otp: verificationData.otp,
         fullName: verificationData.fullName,
@@ -106,7 +113,14 @@ export const verifyOtpAndRegister = createAsyncThunk<LoginResponse, Verification
         country: verificationData.country,
         password: verificationData.password,
         role: verificationData.role,
-      });
+      };
+
+      if (verificationData.referralCode) {
+        payload.referralCode = verificationData.referralCode;
+      }
+
+      const response = await axios.post<any>(`${API_BASE_URL}/verify-otp`, payload);
+
       if (!response.data.success) {
         return rejectWithValue(response.data.message);
       }
