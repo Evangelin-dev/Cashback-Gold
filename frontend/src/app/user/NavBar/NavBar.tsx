@@ -24,6 +24,10 @@ const NavBar = () => {
 	const { currentUser } = useSelector((state: RootState) => state.auth);
 	const dispatch = useDispatch<AppDispatch>();
 
+	const cartItems = useSelector((state: RootState) => state.cart.items);
+	const cartLength = cartItems.length;
+	console.log(cartLength, 'cart')
+
 	const userMenuRef = useRef<HTMLDivElement>(null);
 
 	// Handle clicking outside the user menu to close it
