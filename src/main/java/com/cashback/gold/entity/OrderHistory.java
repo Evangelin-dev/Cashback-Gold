@@ -2,6 +2,7 @@ package com.cashback.gold.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.time.LocalDateTime;
 
 @Entity
@@ -16,27 +17,38 @@ public class OrderHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String orderId;  // like ORD-2025-001
+    private String orderId;
 
-    private Long userId; // foreign key to user table (optional if anonymous)
+    private Long userId;
 
     private String customerName;
 
-    private String customerType; // "user" or "b2b"
+    private String customerType;
 
-    private String planType; // "CHIT", "SIP", "GOLD_PLANT"
+    private String planType;
 
     private String planName;
 
-    private String duration; // eg. "12 months", "36 months"
+    private String duration;
 
     private Double amount;
 
-    private String paymentMethod;
+    private String paymentMethod; // COD or RAZORPAY
 
-    private String status; // pending, completed, failed, etc.
+    private String status; // pending, completed, failed
 
     private LocalDateTime createdAt;
 
     private String address;
+
+    // 🔽 Razorpay-specific fields
+    private String razorpayOrderId;
+
+    private String razorpayPaymentId;
+
+    private String razorpaySignature;
+
+    private String receiptId;
+
+    private String paymentStatus; // created, success, failed
 }

@@ -876,5 +876,15 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="26-1" author="azeeem">
+        <addColumn tableName="order_history">
+            <column name="razorpay_order_id" type="varchar(100)"/>
+            <column name="razorpay_payment_id" type="varchar(100)"/>
+            <column name="razorpay_signature" type="varchar(255)"/>
+            <column name="receipt_id" type="varchar(100)"/>
+            <column name="payment_status" type="varchar(50)"/>
+        </addColumn>
+    </changeSet>
+
 
 </databaseChangeLog>
