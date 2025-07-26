@@ -13,7 +13,8 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:5173",
                         "http://localhost:5174",
-                        "https://www.greenheapgold.com"
+                        "https://www.greenheapgold.com",  // ✅ this
+                        "https://greenheapgold.com"       // ✅ add this too
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
