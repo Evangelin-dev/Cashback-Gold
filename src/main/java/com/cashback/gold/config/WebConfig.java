@@ -13,12 +13,15 @@ public class WebConfig implements WebMvcConfigurer {
                 .allowedOrigins(
                         "http://localhost:5173",
                         "http://localhost:5174",
-                        "https://www.greenheapgold.com",  // ✅ this
-                        "https://greenheapgold.com"       // ✅ add this too
+                        "http://greenheapgold.com",         // ✅ add this
+                        "http://www.greenheapgold.com",     // ✅ optionally add this
+                        "https://greenheapgold.com",        // future-proof
+                        "https://www.greenheapgold.com"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
                 .allowCredentials(true)
                 .maxAge(3600);
     }
+
 }
