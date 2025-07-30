@@ -886,5 +886,50 @@
         </addColumn>
     </changeSet>
 
+    <changeSet id="30" author="azeem">
+        <createTable tableName="user_saving_enrollments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="saving_plan_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="start_date" type="DATE"/>
+            <column name="status" type="VARCHAR(20)"/> <!-- ENROLLED, TERMINATED, COMPLETED -->
+            <column name="accumulated_gold_grams" type="DECIMAL(10,4)"/>
+            <column name="accumulated_amount" type="DECIMAL(10,2)"/>
+            <column name="total_bonus" type="DECIMAL(10,2)"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="30-1" author="azeem">
+        <addColumn tableName="user_saving_enrollments">
+            <column name="extra_months" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+
+    <changeSet id="31" author="azeem">
+        <createTable tableName="user_saving_payments">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="enrollment_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="month" type="INT"/>
+            <column name="payment_date" type="DATE"/>
+            <column name="amount_paid" type="DECIMAL(10,2)"/>
+            <column name="gold_grams" type="DECIMAL(10,4)"/>
+            <column name="bonus_applied" type="DECIMAL(10,2)"/>
+            <column name="on_time" type="BOOLEAN"/>
+        </createTable>
+    </changeSet>
+
 
 </databaseChangeLog>

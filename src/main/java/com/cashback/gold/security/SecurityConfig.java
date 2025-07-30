@@ -97,6 +97,7 @@ public class SecurityConfig {
                                 .requestMatchers(HttpMethod.GET, "/api/flyers").permitAll()
                                 .requestMatchers("/api/metal-rates").permitAll()
                                 .requestMatchers("/api/inventory").hasAnyAuthority("ADMIN", "B2B")
+                                .requestMatchers("/api/user-savings/**").hasAnyAuthority("USER")
                                 // All other requests require authentication
                                 .anyRequest().authenticated()
                 )
