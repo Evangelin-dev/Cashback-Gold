@@ -1,11 +1,14 @@
 import { ChevronDown, Crown, LogOut, Mail, Menu, Phone, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import CustomImage from "../../components/custom/Image";
+import { RootState } from "../../../store";
+import { useSelector } from "react-redux";
+import { CiShoppingCart } from "react-icons/ci";
+import { useNavigate } from "react-router-dom";
 
 export const MENU = [
 	{ name: "Home", link: "/LUserHome" },
 	{ name: "About Us", link: "/laboutus" },
-	{ name: "Buy Ornaments", link: "/lbuyornaments" },
+	{ name: "Buy Ornaments", link: "/buyornaments" },
 	{ name: "Contact Us", link: "/lcontactus" },
 ];
 
@@ -15,7 +18,11 @@ const LNavBar = () => {
 	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 	const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
 	const [isScrolled, setIsScrolled] = useState(false);
-
+	const { currentUser } = useSelector((state: RootState) => state.auth);
+	const navigate = useNavigate();
+	const cartItems = useSelector((state: RootState) => state.cart.items);
+	const cartLength = cartItems.length;
+console.log(cartLength,'cart')
 	useEffect(() => {
 		const handleResize = () => {
 			setScreenWidth(window.innerWidth);
@@ -51,180 +58,8 @@ const LNavBar = () => {
 
 	return (
 		<>
-			{/* Top Contact Bar */}
-			<div
-				style={{
-					background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
-					width: "100%",
-					minHeight: isMobile ? "40px" : "48px",
-					display: "flex",
-					alignItems: "center",
-					justifyContent: "space-between",
-					padding: isMobile ? "0 16px" : "0 24px",
-					borderBottom: "1px solid rgba(255, 255, 255, 0.2)",
-					fontFamily: "'Inter', 'Red Hat Display', 'DM Sans', Arial, sans-serif",
-					fontSize: isMobile ? "12px" : "14px",
-					fontWeight: 500,
-					position: "fixed",
-					top: 0,
-					left: 0,
-					right: 0,
-					zIndex: 1100,
-					boxShadow: isScrolled ? "0 2px 10px rgba(0,0,0,0.1)" : "none",
-					transition: "all 0.3s ease",
-					backdropFilter: "blur(10px)"
-				}}
-			>
-				{/* Contact Information */}
-				<div style={{ 
-					display: "flex", 
-					alignItems: "center", 
-					gap: isMobile ? "12px" : "20px",
-					flex: 1
-				}}>
-					<div style={{ 
-						color: "#fff", 
-						display: "flex", 
-						alignItems: "center", 
-						gap: "8px",
-						opacity: 0.95
-					}}>
-						<Phone size={isMobile ? 16 : 18} />
-						{!isMobile && (
-							<span style={{ 
-								fontWeight: 600, 
-								letterSpacing: "0.5px"
-							}}>
-								+91 81900 59995
-							</span>
-						)}
-					</div>
-					
-					{(isTablet || isDesktop) && (
-						<div style={{
-							color: "#fff",
-							display: "flex",
-							alignItems: "center",
-							gap: "8px",
-							paddingLeft: "16px",
-							borderLeft: "1px solid rgba(255, 255, 255, 0.3)",
-							opacity: 0.95
-						}}>
-							<Mail size={18} />
-							<span style={{ 
-								fontWeight: 600, 
-								letterSpacing: "0.5px",
-								fontSize: isTablet ? "13px" : "14px"
-							}}>
-								spprtgreenheapdigigold@gmail.com
-							</span>
-						</div>
-					)}
-				</div>
-
-				{/* Social Media Icons */}
-				<div style={{ 
-					display: "flex", 
-					alignItems: "center", 
-					gap: isMobile ? 4 : 8,
-					flexShrink: 0
-				 }}>
-					<a href="#" style={{ marginRight: isMobile ? 0 : 2 }}>
-						<img 
-							src="/home/Facebook.png" 
-							alt="Facebook" 
-							style={{ 
-								height: isMobile ? 20 : 26, 
-								width: isMobile ? 20 : 26, 
-								background: "transparent", 
-								padding: 3, 
-								display: "block", 
-								transition: "transform 0.15s" 
-							}} 
-						/>
-					</a>
-					<a href="#" style={{ marginRight: isMobile ? 0 : 2 }}>
-						<img 
-							src="/home/insta.png" 
-							alt="Instagram" 
-							style={{ 
-								height: isMobile ? 20 : 26, 
-								width: isMobile ? 20 : 26, 
-								background: "transparent", 
-								padding: 3, 
-								display: "block", 
-								transition: "transform 0.15s" 
-							}} 
-						/>
-					</a>
-					<a href="#" style={{ marginRight: isMobile ? 0 : 2 }}>
-						<img 
-							src="/home/X.png" 
-							alt="X" 
-							style={{ 
-								height: isMobile ? 20 : 26, 
-								width: isMobile ? 20 : 26, 
-								background: "transparent", 
-								padding: 3, 
-								display: "block", 
-								transition: "transform 0.15s" 
-							}} 
-						/>
-					</a>
-					{!isMobile && (
-						<>
-							<a href="#" style={{ marginRight: 2 }}>
-								<img 
-									src="/home/Youtube.png" 
-									alt="YouTube" 
-									style={{ 
-										height: 26, 
-										width: 26, 
-										background: "transparent", 
-										padding: 3, 
-										display: "block", 
-										transition: "transform 0.15s" 
-									}} 
-								/>
-							</a>
-							<a href="#">
-								<img 
-									src="/home/Linkedin.png" 
-									alt="LinkedIn" 
-									style={{ 
-										height: 26, 
-										width: 26, 
-										background: "transparent", 
-										padding: 3, 
-										display: "block", 
-										transition: "transform 0.15s" 
-									}} 
-								/>
-							</a>
-						</>
-					)}
-				</div>
-			</div>
-			
 			{/* Main Navigation */}
-			<nav
-				style={{
-					background: isScrolled ? "rgba(255, 255, 255, 0.95)" : "#fff",
-					backdropFilter: isScrolled ? "blur(20px)" : "none",
-					width: "100%",
-					boxShadow: isScrolled 
-						? "0 8px 32px rgba(0, 0, 0, 0.12)" 
-						: "0 2px 8px rgba(240, 227, 209, 0.3)",
-					position: "fixed",
-					top: isMobile ? "40px" : "48px",
-					left: 0,
-					right: 0,
-					zIndex: 1000,
-					minHeight: isMobile ? "60px" : "72px",
-					transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-					borderBottom: "1px solid rgba(240, 227, 209, 0.5)"
-				}}
-			>
+			<nav className={`fixed left-0 right-0 z-30 w-full border-b border-red-100/50 transition-all duration-300 ease-in-out md:top-0 top-0 ${isScrolled ? 'bg-white/95 shadow-xl backdrop-blur-lg' : 'bg-white shadow-sm'}`}>
 				<div
 					style={{
 						maxWidth: "1400px",
@@ -242,9 +77,9 @@ const LNavBar = () => {
 				>
 					{/* Logo */}
 					<a href="/" style={{ display: "flex", alignItems: "center", minWidth: 50 }}>
-						<CustomImage
+						<img
 							src={"/logo.png"}
-							wrapperClss={`h-auto ${isMobile ? "w-[60px] min-w-[50px]" : "w-[80px] min-w-[70px]"}`}
+							alt="Logo"
 							height="auto"
 							width={isMobile ? "60px" : "80px"}
 						/>
@@ -661,9 +496,9 @@ const LNavBar = () => {
 
 					{/* Desktop Navigation Menu */}
 					{!isMobile && (
-						<div style={{ 
-							display: "flex", 
-							alignItems: "center", 
+						<div style={{
+							display: "flex",
+							alignItems: "center",
 							justifyContent: "center",
 							flex: 1
 						}}>
@@ -687,10 +522,10 @@ const LNavBar = () => {
 											onMouseEnter={() => setHovered(menuItem.name)}
 											onMouseLeave={() => setHovered(null)}
 											style={{
-												color: selected === menuItem.name 
-													? "#fff" 
-													: hovered === menuItem.name 
-														? "#fff" 
+												color: selected === menuItem.name
+													? "#fff"
+													: hovered === menuItem.name
+														? "#fff"
 														: "#4A5568",
 												background: selected === menuItem.name
 													? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
@@ -716,7 +551,7 @@ const LNavBar = () => {
 										>
 											{menuItem.name}
 											{hovered === menuItem.name && (
-												<ChevronDown size={14} style={{ 
+												<ChevronDown size={14} style={{
 													transform: "rotate(-90deg)",
 													transition: "transform 0.3s ease"
 												}} />
@@ -730,9 +565,9 @@ const LNavBar = () => {
 
 					{/* Right Section - Desktop */}
 					{!isMobile && (
-						<div style={{ 
-							display: "flex", 
-							alignItems: "center", 
+						<div style={{
+							display: "flex",
+							alignItems: "center",
 							gap: "12px",
 							flex: "0 0 auto"
 						}}>
@@ -740,8 +575,8 @@ const LNavBar = () => {
 							<a
 								href="/PartnerPopup"
 								style={{
-									background: hovered === "partner" 
-										? "linear-gradient(135deg, #8a2342 0%, #a02f4a 100%)" 
+									background: hovered === "partner"
+										? "linear-gradient(135deg, #8a2342 0%, #a02f4a 100%)"
 										: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
 									color: "#fff",
 									borderRadius: "12px",
@@ -764,17 +599,17 @@ const LNavBar = () => {
 								<span style={{ fontSize: "16px" }}>🤝</span>
 								{isDesktop ? "Become a Partner" : "Partner"}
 							</a>
-							
+
 							{/* User Profile */}
 							<div style={{ position: "relative" }}>
 								<button
 									onClick={() => setHovered(hovered === "profile" ? null : "profile")}
 									style={{
-										background: hovered === "profile" 
-											? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)" 
+										background: hovered === "profile"
+											? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
 											: "#fff",
-										border: hovered === "profile" 
-											? "2px solid transparent" 
+										border: hovered === "profile"
+											? "2px solid transparent"
 											: "2px solid #E2E8F0",
 										borderRadius: "50%",
 										width: "48px",
@@ -783,8 +618,8 @@ const LNavBar = () => {
 										alignItems: "center",
 										justifyContent: "center",
 										cursor: "pointer",
-										boxShadow: hovered === "profile" 
-											? "0 8px 24px rgba(106, 8, 34, 0.4)" 
+										boxShadow: hovered === "profile"
+											? "0 8px 24px rgba(106, 8, 34, 0.4)"
 											: "0 2px 8px rgba(0, 0, 0, 0.1)",
 										transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
 										position: "relative",
@@ -824,7 +659,7 @@ const LNavBar = () => {
 										</div>
 									)}
 								</button>
-								
+
 								{/* Profile Dropdown */}
 								{hovered === "profile" && (
 									<div
@@ -871,14 +706,14 @@ const LNavBar = () => {
 												fontWeight: "600",
 												margin: "0 0 8px 0"
 											}}>
-												John Doe
+												{currentUser?.email || ""}
 											</h3>
 											<p style={{
 												color: "rgba(255, 255, 255, 0.8)",
 												fontSize: "14px",
 												margin: 0
 											}}>
-												Premium Member
+												{currentUser?.role || ""} Member
 											</p>
 										</div>
 
@@ -905,8 +740,8 @@ const LNavBar = () => {
 														marginBottom: index < 3 ? "4px" : "0"
 													}}
 													onMouseEnter={e => {
-														e.currentTarget.style.background = item.danger 
-															? "rgba(239, 68, 68, 0.1)" 
+														e.currentTarget.style.background = item.danger
+															? "rgba(239, 68, 68, 0.1)"
 															: "rgba(106, 8, 34, 0.1)";
 														e.currentTarget.style.transform = "translateX(4px)";
 													}}
@@ -935,8 +770,8 @@ const LNavBar = () => {
 								display: "flex",
 								alignItems: "center",
 								justifyContent: "center",
-								background: mobileMenuOpen 
-									? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)" 
+								background: mobileMenuOpen
+									? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
 									: "rgba(106, 8, 34, 0.1)",
 								border: "none",
 								borderRadius: "12px",
@@ -945,8 +780,8 @@ const LNavBar = () => {
 								cursor: "pointer",
 								transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
 								color: mobileMenuOpen ? "#fff" : "#6a0822",
-								boxShadow: mobileMenuOpen 
-									? "0 4px 16px rgba(106, 8, 34, 0.3)" 
+								boxShadow: mobileMenuOpen
+									? "0 4px 16px rgba(106, 8, 34, 0.3)"
 									: "0 2px 8px rgba(0, 0, 0, 0.1)",
 								transform: mobileMenuOpen ? "scale(1.1)" : "scale(1)"
 							}}
@@ -1071,18 +906,18 @@ const LNavBar = () => {
 											borderRadius: "12px",
 											textDecoration: "none",
 											color: selected === menuItem.name ? "#fff" : "#374151",
-											background: selected === menuItem.name 
-												? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)" 
+											background: selected === menuItem.name
+												? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
 												: "rgba(248, 250, 252, 0.8)",
 											fontWeight: selected === menuItem.name ? 600 : 500,
 											fontSize: "16px",
 											transition: "all 0.3s ease",
 											border: "1px solid",
-											borderColor: selected === menuItem.name 
-												? "transparent" 
+											borderColor: selected === menuItem.name
+												? "transparent"
 												: "rgba(226, 232, 240, 0.8)",
-											boxShadow: selected === menuItem.name 
-												? "0 4px 16px rgba(106, 8, 34, 0.3)" 
+											boxShadow: selected === menuItem.name
+												? "0 4px 16px rgba(106, 8, 34, 0.3)"
 												: "0 2px 8px rgba(0, 0, 0, 0.05)"
 										}}
 									>
@@ -1096,6 +931,10 @@ const LNavBar = () => {
 						</ul>
 					</div>
 
+					{currentUser && (
+						<CiShoppingCart size={34} onClick={() => navigate("/cart")} />
+
+					)}
 					{/* Action Buttons */}
 					<div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
 						<a
@@ -1122,7 +961,7 @@ const LNavBar = () => {
 							<span style={{ fontSize: "20px" }}>🤝</span>
 							Become a Partner
 						</a>
-						
+
 						<a
 							href="/logout"
 							onClick={closeMobileMenu}

@@ -54,6 +54,7 @@ export interface RegistrationData {
   state: string;
   country: string;
   password: string;
+  referralCode?: string | null;
   role: 'USER' | 'PARTNER' | 'B2B' | 'ADMIN';
 }
 
@@ -95,6 +96,9 @@ export interface Ornament {
   details: string;
   mainImage: string;
   subImages: string[];
+  priceBreakups: PriceBreakup[];
+  itemType: string | null;
+  warranty: string;
 }
 
 export interface AdminState {
@@ -123,4 +127,47 @@ export interface AdminProfileData {
   phone: string;
   role: string;
   avatarUrl: string | null;
+}
+
+export interface PriceBreakup {
+  id: number;
+  component: string;
+  goldRate18kt: number;
+  weightG: number;
+  discount: number;
+  finalValue: number;
+}
+
+export interface Product {
+  id: number;
+  name: string;
+  price: number;
+  category: string;
+  subCategory: string;
+  gender: string;
+  description: string;
+  mainImage: string;
+  subImages: string[];
+  material: string;
+  purity: string;
+  quality: string;
+  warranty: string;
+  details: string;
+  itemType: string | null;
+  priceBreakups: PriceBreakup[];
+}
+
+export interface CartItem {
+  id: number;         // This is the unique ID of the cart entry, e.g., 24, 25
+  userId: number;
+  ornament: Ornament; // The full product details are nested here
+  quantity: number;
+  createdAt: string;
+}
+
+
+export interface CartState {
+  items: CartItem[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  error: string | null;
 }

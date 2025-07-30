@@ -776,7 +776,7 @@ const LUserHome = () => {
                 transition: "background 0.2s",
                 letterSpacing: 0.5,
               }}
-              onClick={() => navigate("/lbuyornaments")}
+              onClick={() => navigate("/buyornaments")}
             >
               Buy Gold
               <span style={{ fontSize: 24, marginLeft: 10, display: "flex", alignItems: "center" }}>

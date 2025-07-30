@@ -35,9 +35,8 @@ export interface OrnamentApiData {
   price: number;
   category: string;
   subCategory: string;
-  item: string;
-  customItem?: string;
   gender: string;
+  itemType: string;
   description1: string;
   description2: string;
   description3: string;
@@ -45,6 +44,7 @@ export interface OrnamentApiData {
   material: string;
   purity: string;
   quality: string;
+  warranty: string;
   details: string;
   priceBreakups: Array<{
     component: string;

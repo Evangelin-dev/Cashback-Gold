@@ -1,15 +1,16 @@
 import { ChevronDown, User } from "lucide-react";
 import { useEffect, useState, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../../../store";
 import CustomImage from "../../components/custom/Image";
 import { logoutUser } from "../../features/slices/authSlice";
+import { CiShoppingCart } from "react-icons/ci";
 
 export const MENU = [
 	{ name: "Home", link: "/" },
 	{ name: "About Us", link: "/aboutus" },
-	{ name: "Buy Ornaments", link: "/buyornaments" },
+	{ name: "Buy Ornaments", link: "buyornaments" },
 	{ name: "Contact Us", link: "/contactus" },
 ];
 
@@ -19,9 +20,13 @@ const NavBar = () => {
 	const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 	const [isMobile, setIsMobile] = useState(false);
 	const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-
+	const navigate = useNavigate();
 	const { currentUser } = useSelector((state: RootState) => state.auth);
 	const dispatch = useDispatch<AppDispatch>();
+
+	const cartItems = useSelector((state: RootState) => state.cart.items);
+	const cartLength = cartItems.length;
+	console.log(cartLength, 'cart')
 
 	const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -502,8 +507,13 @@ const NavBar = () => {
 
 					{/* Right-side Actions & Mobile Menu Toggle */}
 					<div style={{ display: "flex", alignItems: "center", gap: isMobile ? 12 : 16 }}>
+						{currentUser && (
+							<CiShoppingCart className="cursor-pointer hover:text-[#7a1436]" size={38} onClick={() => navigate("/cart")} />
+
+						)}
 						{currentUser ? (
 							<div style={{ position: "relative" }} ref={userMenuRef}>
+
 								<button
 									type="button"
 									onClick={() => setIsUserMenuOpen(prev => !prev)}
@@ -534,6 +544,12 @@ const NavBar = () => {
 													padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', color: '#374151'
 												}}>B2B Dashboard</Link>
 											)}
+											{currentUser.role === 'PARTNER' && (
+												<Link to="/pdashboard" onClick={() => setIsUserMenuOpen(false)} style={{
+													textDecoration: 'none', display: 'block', width: '100%', borderRadius: '0.25rem',
+													padding: '0.5rem 1rem', textAlign: 'left', fontSize: '0.875rem', color: '#374151'
+												}}>PARTNER Dashboard</Link>
+											)}
 											<button onClick={handleLogout} style={{
 												display: 'block', width: '100%', borderRadius: '0.25rem', padding: '0.5rem 1rem',
 												textAlign: 'left', fontSize: '0.875rem', color: '#374151', background: 'none',
@@ -542,6 +558,7 @@ const NavBar = () => {
 										</div>
 									</div>
 								)}
+
 							</div>
 						) : (
 							// Desktop action buttons - hidden on mobile
