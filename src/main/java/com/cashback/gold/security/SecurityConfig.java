@@ -98,6 +98,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/metal-rates").permitAll()
                                 .requestMatchers("/api/inventory").hasAnyAuthority("ADMIN", "B2B")
                                 .requestMatchers("/api/user-savings/**").hasAnyAuthority("USER")
+                                .requestMatchers("/user/gold-plant/**").hasAnyAuthority("USER")
                                 // All other requests require authentication
                                 .anyRequest().authenticated()
                 )
