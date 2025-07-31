@@ -1,9 +1,9 @@
-import { ChevronDown, Crown, LogOut, Mail, Menu, Phone, User, X } from "lucide-react";
+import { ChevronDown, Crown, LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
-import { RootState } from "../../../store";
-import { useSelector } from "react-redux";
 import { CiShoppingCart } from "react-icons/ci";
+import { useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import { RootState } from "../../../store";
 
 export const MENU = [
 	{ name: "Home", link: "/LUserHome" },
@@ -13,16 +13,18 @@ export const MENU = [
 ];
 
 const LNavBar = () => {
-	const [selected, setSelected] = useState<string | null>(null);
-	const [hovered, setHovered] = useState<string | null>(null);
-	const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-	const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
-	const [isScrolled, setIsScrolled] = useState(false);
-	const { currentUser } = useSelector((state: RootState) => state.auth);
-	const navigate = useNavigate();
-	const cartItems = useSelector((state: RootState) => state.cart.items);
-	const cartLength = cartItems.length;
-console.log(cartLength,'cart')
+  const [selected, setSelected] = useState<string | null>(null);
+  const [hovered, setHovered] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
+  const [isScrolled, setIsScrolled] = useState(false);
+  const { currentUser } = useSelector((state: RootState) => state.auth);
+  const navigate = useNavigate();
+  const cartItems = useSelector((state: RootState) => state.cart.items);
+  const cartLength = cartItems.length;
+  // Only show Home if on My Account page
+  const currentPath = window.location.pathname;
+  const isMyAccount = currentPath === "/user" || currentPath === "/myaccount";
 	useEffect(() => {
 		const handleResize = () => {
 			setScreenWidth(window.innerWidth);
@@ -59,461 +61,100 @@ console.log(cartLength,'cart')
 	return (
 		<>
 			{/* Main Navigation */}
-			<nav className={`fixed left-0 right-0 z-30 w-full border-b border-red-100/50 transition-all duration-300 ease-in-out md:top-0 top-0 ${isScrolled ? 'bg-white/95 shadow-xl backdrop-blur-lg' : 'bg-white shadow-sm'}`}>
+  <nav className={`fixed left-0 right-0 z-30 w-full border-b border-red-100/50 transition-all duration-300 ease-in-out md:top-0 top-0 ${isScrolled ? 'bg-white/95 shadow-xl backdrop-blur-lg' : 'bg-white shadow-sm'}`}>
+	<div
+	  style={{
+		maxWidth: "1400px",
+		margin: "0 auto",
+		display: "flex",
+		alignItems: "center",
+		justifyContent: "space-between",
+		padding: isMobile ? "6px 8px" : "8px 16px",
+		width: "100%",
+		boxSizing: "border-box",
+		fontFamily: "'Inter', 'Red Hat Display', 'DM Sans', Arial, sans-serif",
+		position: "relative",
+		flexWrap: isMobile ? "wrap" : "nowrap",
+		minHeight: isMobile ? "44px" : "48px"
+	  }}
+	>
+		  {/* Logo and All Categories - always together on the left */}
+		  <div className="flex items-center gap-2 mr-auto">
+			<a href="/" style={{ display: "flex", alignItems: "center", minWidth: 32 }}>
+			  <img
+				src={"/logo.png"}
+				alt="Logo"
+				height="auto"
+				width={isMobile ? "32px" : "36px"}
+				style={{ maxHeight: isMobile ? "32px" : "36px" }}
+			  />
+			</a>
+			<div className="relative">
+			  <button
+				onClick={() => setHovered(hovered === "categories" ? null : "categories")}
+				onMouseEnter={() => setHovered("categories")}
+				className={`flex items-center gap-1 px-2 py-1 rounded-md font-semibold text-[12px] cursor-pointer transition-all duration-200 whitespace-nowrap border border-[#6a0822] text-[#6a0822] bg-white ${hovered === 'categories' ? 'ring-2 ring-[#6a0822]' : ''}`}
+				style={{ minWidth: 0 }}
+			  >
+				<ChevronDown size={12} className={`transition-transform duration-200 ${hovered === 'categories' ? 'rotate-180' : ''}`} />
+				<span className="text-[12px]">All Categories</span>
+			  </button>
+			  {/* Dropdown for both mobile and desktop */}
+			  {hovered === "categories" && (
 				<div
-					style={{
-						maxWidth: "1400px",
-						margin: "0 auto",
-						display: "flex",
-						alignItems: "center",
-						justifyContent: "space-between",
-						padding: isMobile ? "12px 16px" : "16px 24px",
-						width: "100%",
-						boxSizing: "border-box",
-						fontFamily: "'Inter', 'Red Hat Display', 'DM Sans', Arial, sans-serif",
-						position: "relative",
-						flexWrap: isMobile ? "wrap" : "nowrap"
-					}}
+				  className="absolute left-0 mt-1 bg-white rounded-lg shadow-lg min-w-[220px] z-[3000] border border-[#6a0822]/10 animate-slideIn"
+				  onMouseLeave={() => setHovered(null)}
 				>
-					{/* Logo */}
-					<a href="/" style={{ display: "flex", alignItems: "center", minWidth: 50 }}>
-						<img
-							src={"/logo.png"}
-							alt="Logo"
-							height="auto"
-							width={isMobile ? "60px" : "80px"}
-						/>
-					</a>
-
-					{/* All Category Dropdown - Responsive INSIDE NAVBAR for mobile */}
-					{isMobile && (
-						<div
-							style={{
-								width: "100%",
-								marginTop: "8px",
-								display: "flex",
-								justifyContent: "center"
-							}}
-						>
-							<button
-								onClick={() => setHovered(hovered === "categories" ? null : "categories")}
-								style={{
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									gap: "6px",
-									width: "98vw",
-									maxWidth: "420px",
-									padding: "12px 8px",
-									background: hovered === "categories"
-										? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
-										: "rgba(106, 8, 34, 0.1)",
-									color: hovered === "categories" ? "#fff" : "#6a0822",
-									border: "none",
-									borderRadius: "12px",
-									fontWeight: 600,
-									fontSize: "15px",
-									cursor: "pointer",
-									transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-									boxShadow: hovered === "categories"
-										? "0 4px 16px rgba(106, 8, 34, 0.3)"
-										: "0 2px 8px rgba(0, 0, 0, 0.1)",
-									transform: hovered === "categories" ? "translateY(-2px)" : "translateY(0)",
-									whiteSpace: "nowrap",
-									marginBottom: "8px",
-								}}
-							>
-								<span style={{ fontSize: "17px" }}></span>
-								<span style={{ fontSize: "15px" }}>All Categories</span>
-								<ChevronDown
-									size={16}
-									style={{
-										transform: hovered === "categories" ? "rotate(180deg)" : "rotate(0deg)",
-										transition: "transform 0.3s ease"
-									}}
-								/>
-							</button>
-							{/* Dropdown for mobile */}
-							{hovered === "categories" && (
-								<div
-									style={{
-										position: "fixed",
-										top: "calc(100px + 48px)",
-										left: 0,
-										right: 0,
-										background: "rgba(255, 255, 255, 0.98)",
-										backdropFilter: "blur(20px)",
-										borderRadius: "0",
-										boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
-										width: "100vw",
-										zIndex: 3000,
-										overflow: "hidden",
-										border: "1px solid rgba(255, 255, 255, 0.2)",
-										animation: "slideIn 0.3s ease-out",
-										padding: "0",
-										maxHeight: "calc(100vh - 160px)",
-										overflowY: "auto",
-									}}
-									onClick={() => setHovered(null)}
-								>
-									<div style={{
-										background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
-										padding: "12px",
-										textAlign: "center"
-									}}>
-										<h3 style={{
-											color: "#fff",
-											fontSize: "16px",
-											fontWeight: "600",
-											margin: "0 0 8px 0"
-										}}>
-											Browse by Category
-										</h3>
-										<p style={{
-											color: "rgba(255, 255, 255, 0.8)",
-											fontSize: "13px",
-											margin: 0
-										}}>
-											Discover our premium collection
-										</p>
-									</div>
-									<div
-										style={{
-											padding: "12px",
-											display: "grid",
-											gridTemplateColumns: "1fr ",
-											gap: "12px"
-										}}
-									>
-										{[
-											{
-												name: "Gold",
-												icon: "",
-												color: "#FFD700",
-												bgColor: "rgba(255, 215, 0, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Silver",
-												icon: "",
-												color: "#C0C0C0",
-												bgColor: "rgba(192, 192, 192, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Diamond",
-												icon: "",
-												color: "#E5E4E2",
-												bgColor: "rgba(229, 228, 226, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Gold coin",
-												icon: "",
-												color: "#FFD700",
-												bgColor: "rgba(229, 228, 226, 0.1)",
-												subcategories: ["22k coin", "24k coin"]
-											}
-										].map((category, index) => (
-											<div
-												key={category.name}
-												style={{
-													background: category.bgColor,
-													borderRadius: "16px",
-													padding: "12px",
-													border: `1px solid ${category.color}30`,
-													transition: "all 0.3s ease"
-												}}
-											>
-												<div style={{
-													display: "flex",
-													alignItems: "center",
-													gap: "12px",
-													marginBottom: "12px"
-												}}>
-													<span style={{ fontSize: "20px" }}>{category.icon}</span>
-													<h4 style={{
-														color: "#374151",
-														fontSize: "15px",
-														fontWeight: "600",
-														margin: 0
-													}}>
-														{category.name}
-													</h4>
-												</div>
-												<div style={{
-													display: "flex",
-													flexDirection: "row",
-													gap: "8px",
-													flexWrap: "wrap"
-												}}>
-													{category.subcategories.map((sub, subIndex) => (
-														<a
-															key={sub}
-															href={`/category/${category.name.toLowerCase()}/${sub.toLowerCase()}`}
-															style={{
-																display: "flex",
-																alignItems: "center",
-																gap: "6px",
-																padding: "7px 10px",
-																borderRadius: "8px",
-																textDecoration: "none",
-																color: "#6B7280",
-																fontWeight: 500,
-																fontSize: "13px",
-																transition: "all 0.3s ease"
-															}}
-															onClick={() => setHovered(null)}
-														>
-															<span style={{ fontSize: "14px" }}>
-																{sub === "Men" ? "" : sub === "Women" ? "" : sub === "Kids" ? "" : ""}
-															</span>
-															{sub}
-														</a>
-													))}
-												</div>
-											</div>
-										))}
-									</div>
-								</div>
-							)}
+				  <div className="p-2 grid grid-cols-1 gap-2">
+					{[
+					  {
+						name: "Gold",
+						icon: "",
+						subcategories: ["Men", "Women", "Kids", "Unisex"]
+					  },
+					  {
+						name: "Silver",
+						icon: "",
+						subcategories: ["Men", "Women", "Kids", "Unisex"]
+					  },
+					  {
+						name: "Gold coin",
+						icon: "",
+						subcategories: ["22k coin", "24k coin"]
+					  }
+					].map((category, index) => (
+					  <div
+						key={category.name}
+						className="rounded-md p-2 border border-[#6a0822]/10 transition-all duration-200 bg-white"
+					  >
+						<div className="flex items-center gap-2 mb-1">
+						  <span className="text-[12px]">{category.icon}</span>
+						  <h4 className="text-black text-[11px] font-semibold m-0">{category.name}</h4>
 						</div>
-					)}
-					{/* Desktop All Category */}
-					{!isMobile && (
-						<div
-							style={{
-								position: "relative",
-								marginLeft: "24px",
-								flex: "0 0 auto",
-								width: "auto",
-								marginTop: 0,
-								display: "flex",
-								justifyContent: "flex-start",
-							}}
-						>
-							<button
-								onClick={() => setHovered(hovered === "categories" ? null : "categories")}
-								onMouseEnter={() => setHovered("categories")}
-								style={{
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									gap: "8px",
-									width: "auto",
-									padding: "12px 20px",
-									background: hovered === "categories"
-										? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
-										: "rgba(106, 8, 34, 0.1)",
-									color: hovered === "categories" ? "#fff" : "#6a0822",
-									border: "none",
-									borderRadius: "12px",
-									fontWeight: 600,
-									fontSize: "15px",
-									cursor: "pointer",
-									transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-									boxShadow: hovered === "categories"
-										? "0 4px 16px rgba(106, 8, 34, 0.3)"
-										: "0 2px 8px rgba(0, 0, 0, 0.1)",
-									transform: hovered === "categories" ? "translateY(-2px)" : "translateY(0)",
-									whiteSpace: "nowrap",
-									marginBottom: 0,
-								}}
+						<div className="flex flex-row gap-1 flex-wrap">
+						  {category.subcategories.map((sub, subIndex) => (
+							<a
+							  key={sub}
+							  href={`/category/${category.name.toLowerCase()}/${sub.toLowerCase()}`}
+							  className="flex items-center gap-1 px-2 py-1 rounded bg-gray-50 text-gray-600 font-medium text-[10px] transition-all duration-200 hover:bg-[#6a0822]/10 hover:text-[#6a0822]"
+							  onClick={() => setHovered(null)}
 							>
-								<span style={{ fontSize: "18px" }}></span>
-								All Categories
-								<ChevronDown
-									size={16}
-									style={{
-										transform: hovered === "categories" ? "rotate(180deg)" : "rotate(0deg)",
-										transition: "transform 0.3s ease"
-									}}
-								/>
-							</button>
-							{/* Dropdown for desktop */}
-							{hovered === "categories" && (
-								<div
-									style={{
-										position: "absolute",
-										top: "60px",
-										left: 0,
-										background: "rgba(255, 255, 255, 0.98)",
-										backdropFilter: "blur(20px)",
-										borderRadius: "20px",
-										boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
-										minWidth: "600px",
-										width: "auto",
-										zIndex: 3000,
-										overflow: "hidden",
-										border: "1px solid rgba(255, 255, 255, 0.2)",
-										animation: "slideIn 0.3s ease-out",
-										padding: undefined,
-										maxHeight: undefined,
-										overflowY: undefined,
-									}}
-									onMouseLeave={() => setHovered(null)}
-								>
-									<div style={{
-										background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
-										padding: "20px 24px",
-										textAlign: "center"
-									}}>
-										<h3 style={{
-											color: "#fff",
-											fontSize: "18px",
-											fontWeight: "600",
-											margin: "0 0 8px 0"
-										}}>
-											Browse by Category
-										</h3>
-										<p style={{
-											color: "rgba(255, 255, 255, 0.8)",
-											fontSize: "14px",
-											margin: 0
-										}}>
-											Discover our premium collection
-										</p>
-									</div>
-									<div
-										style={{
-											padding: "32px",
-											display: "grid",
-											gridTemplateColumns: "1fr 1fr 1fr 1fr",
-											gap: "24px"
-										}}
-									>
-										{[
-											{
-												name: "Gold",
-												icon: "",
-												color: "#FFD700",
-												bgColor: "rgba(255, 215, 0, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Silver",
-												icon: "",
-												color: "#C0C0C0",
-												bgColor: "rgba(192, 192, 192, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Diamond",
-												icon: "",
-												color: "#E5E4E2",
-												bgColor: "rgba(229, 228, 226, 0.1)",
-												subcategories: ["Men", "Women", "Kids", "Unisex"]
-											},
-											{
-												name: "Gold coin",
-												icon: "",
-												color: "#FFD700",
-												bgColor: "rgba(229, 228, 226, 0.1)",
-												subcategories: ["22k coin", "24k coin"]
-											}
-										].map((category, index) => (
-											<div
-												key={category.name}
-												style={{
-													background: category.bgColor,
-													borderRadius: "16px",
-													padding: "20px",
-													border: `1px solid ${category.color}30`,
-													transition: "all 0.3s ease"
-												}}
-												onMouseEnter={e => {
-													e.currentTarget.style.transform = "translateY(-4px)";
-													e.currentTarget.style.boxShadow = `0 8px 24px ${category.color}40`;
-												}}
-												onMouseLeave={e => {
-													e.currentTarget.style.transform = "translateY(0)";
-													e.currentTarget.style.boxShadow = "none";
-												}}
-											>
-												<div style={{
-													display: "flex",
-													alignItems: "center",
-													gap: "12px",
-													marginBottom: "16px"
-												}}>
-													<span style={{ fontSize: "24px" }}>{category.icon}</span>
-													<h4 style={{
-														color: "#374151",
-														fontSize: "16px",
-														fontWeight: "600",
-														margin: 0
-													}}>
-														{category.name}
-													</h4>
-												</div>
-												<div style={{
-													display: "flex",
-													flexDirection: "column",
-													gap: "8px"
-												}}>
-													{category.subcategories.map((sub, subIndex) => (
-														<a
-															key={sub}
-															href={`/category/${category.name.toLowerCase()}/${sub.toLowerCase()}`}
-															style={{
-																display: "flex",
-																alignItems: "center",
-																gap: "8px",
-																padding: "8px 12px",
-																borderRadius: "8px",
-																textDecoration: "none",
-																color: "#6B7280",
-																fontWeight: 500,
-																fontSize: "14px",
-																transition: "all 0.3s ease"
-															}}
-															onMouseEnter={e => {
-																e.currentTarget.style.background = "rgba(106, 8, 34, 0.1)";
-																e.currentTarget.style.color = "#6a0822";
-																e.currentTarget.style.transform = "translateX(4px)";
-															}}
-															onMouseLeave={e => {
-																e.currentTarget.style.background = "transparent";
-																e.currentTarget.style.color = "#6B7280";
-																e.currentTarget.style.transform = "translateX(0)";
-															}}
-															onClick={() => setHovered(null)}
-														>
-															<span style={{ fontSize: "16px" }}>
-																{sub === "Men" ? "" : sub === "Women" ? "" : sub === "Kids" ? "" : ""}
-															</span>
-															{sub}
-														</a>
-													))}
-												</div>
-											</div>
-										))}
-									</div>
-								</div>
-							)}
+							  {sub}
+							</a>
+						  ))}
 						</div>
-					)}
+					  </div>
+					))}
+				  </div>
+				</div>
+			  )}
+			</div>
+		  </div>
 
 					{/* Desktop Navigation Menu */}
-					{!isMobile && (
-						<div style={{
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							flex: 1
-						}}>
-							<ul style={{
-								display: "flex",
-								alignItems: "center",
-								gap: isTablet ? "8px" : "16px",
-								margin: 0,
-								listStyle: "none",
-								background: "rgba(248, 250, 252, 0.8)",
-								borderRadius: "16px",
-								padding: "8px 12px",
-								backdropFilter: "blur(10px)",
-								border: "1px solid rgba(226, 232, 240, 0.8)"
-							}}>
+					{!isMobile && !isMyAccount && (
+						<div className="flex items-center justify-center flex-1">
+		  <ul className="flex items-center gap-2 md:gap-3 m-0 list-none bg-slate-50/80 rounded-2xl py-1 px-2 backdrop-blur border border-slate-200/80">
 								{MENU.map((menuItem, index) => (
 									<li key={menuItem.name}>
 										<a
@@ -521,40 +162,11 @@ console.log(cartLength,'cart')
 											onClick={() => setSelected(menuItem.name)}
 											onMouseEnter={() => setHovered(menuItem.name)}
 											onMouseLeave={() => setHovered(null)}
-											style={{
-												color: selected === menuItem.name
-													? "#fff"
-													: hovered === menuItem.name
-														? "#fff"
-														: "#4A5568",
-												background: selected === menuItem.name
-													? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
-													: hovered === menuItem.name
-														? "linear-gradient(135deg, #8a2342 0%, #a02f4a 100%)"
-														: "transparent",
-												fontWeight: selected === menuItem.name ? 600 : 500,
-												textDecoration: "none",
-												padding: isTablet ? "8px 12px" : "10px 16px",
-												borderRadius: "12px",
-												transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-												whiteSpace: "nowrap",
-												cursor: "pointer",
-												fontSize: isTablet ? "14px" : "15px",
-												display: "flex",
-												alignItems: "center",
-												gap: "6px",
-												boxShadow: selected === menuItem.name || hovered === menuItem.name
-													? "0 4px 12px rgba(106, 8, 34, 0.3)"
-													: "none",
-												transform: hovered === menuItem.name ? "translateY(-2px)" : "translateY(0)"
-											}}
+					className={`flex items-center gap-1 md:gap-1.5 font-medium md:text-[14px] text-[13px] px-2 md:px-3 py-1.5 rounded-xl whitespace-nowrap cursor-pointer transition-all duration-300 ${selected === menuItem.name || hovered === menuItem.name ? 'bg-gradient-to-tr from-[#6a0822] to-[#8a2342] text-white shadow-lg -translate-y-0.5' : 'bg-transparent text-gray-700'}`}
 										>
 											{menuItem.name}
 											{hovered === menuItem.name && (
-												<ChevronDown size={14} style={{
-													transform: "rotate(-90deg)",
-													transition: "transform 0.3s ease"
-												}} />
+												<ChevronDown size={14} className="-rotate-90 transition-transform duration-300" />
 											)}
 										</a>
 									</li>
@@ -563,204 +175,91 @@ console.log(cartLength,'cart')
 						</div>
 					)}
 
-					{/* Right Section - Desktop */}
-					{!isMobile && (
-						<div style={{
-							display: "flex",
-							alignItems: "center",
-							gap: "12px",
-							flex: "0 0 auto"
-						}}>
-							{/* Partner Button */}
-							<a
-								href="/PartnerPopup"
-								style={{
-									background: hovered === "partner"
-										? "linear-gradient(135deg, #8a2342 0%, #a02f4a 100%)"
-										: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
-									color: "#fff",
-									borderRadius: "12px",
-									padding: isTablet ? "8px 16px" : "10px 20px",
-									fontWeight: 600,
-									fontSize: isTablet ? "13px" : "14px",
-									display: "flex",
-									alignItems: "center",
-									gap: "8px",
-									textDecoration: "none",
-									transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-									whiteSpace: "nowrap",
-									cursor: "pointer",
-									boxShadow: "0 4px 16px rgba(106, 8, 34, 0.3)",
-									transform: hovered === "partner" ? "translateY(-2px)" : "translateY(0)"
-								}}
-								onMouseEnter={() => setHovered("partner")}
-								onMouseLeave={() => setHovered(null)}
-							>
-								<span style={{ fontSize: "16px" }}>🤝</span>
-								{isDesktop ? "Become a Partner" : "Partner"}
-							</a>
-
-							{/* User Profile */}
-							<div style={{ position: "relative" }}>
-								<button
-									onClick={() => setHovered(hovered === "profile" ? null : "profile")}
-									style={{
-										background: hovered === "profile"
-											? "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)"
-											: "#fff",
-										border: hovered === "profile"
-											? "2px solid transparent"
-											: "2px solid #E2E8F0",
-										borderRadius: "50%",
-										width: "48px",
-										height: "48px",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										cursor: "pointer",
-										boxShadow: hovered === "profile"
-											? "0 8px 24px rgba(106, 8, 34, 0.4)"
-											: "0 2px 8px rgba(0, 0, 0, 0.1)",
-										transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-										position: "relative",
-										zIndex: 1001,
-										transform: hovered === "profile" ? "scale(1.1)" : "scale(1)"
-									}}
-								>
-									<div style={{
-										width: "36px",
-										height: "36px",
-										borderRadius: "50%",
-										background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-										display: "flex",
-										alignItems: "center",
-										justifyContent: "center",
-										fontSize: "16px",
-										fontWeight: "bold",
-										color: "#fff"
-									}}>
-										👤
-									</div>
-									{hovered === "profile" && (
-										<div style={{
-											position: "absolute",
-											top: "-2px",
-											right: "-2px",
-											width: "20px",
-											height: "20px",
-											background: "linear-gradient(45deg, #FFD700, #FFA500)",
-											borderRadius: "50%",
-											display: "flex",
-											alignItems: "center",
-											justifyContent: "center",
-											animation: "pulse 2s infinite"
-										}}>
-											<Crown size={10} color="#fff" />
-										</div>
-									)}
-								</button>
-
-								{/* Profile Dropdown */}
-								{hovered === "profile" && (
-									<div
-										style={{
-											position: "absolute",
-											top: "60px",
-											right: 0,
-											background: "rgba(255, 255, 255, 0.98)",
-											backdropFilter: "blur(20px)",
-											borderRadius: "20px",
-											boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
-											minWidth: "300px",
-											zIndex: 2000,
-											overflow: "hidden",
-											border: "1px solid rgba(255, 255, 255, 0.2)",
-											animation: "slideIn 0.3s ease-out"
-										}}
-										onMouseLeave={() => setHovered(null)}
-									>
-										{/* Profile Header */}
-										<div style={{
-											background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
-											padding: "24px",
-											textAlign: "center",
-											position: "relative"
-										}}>
-											<div style={{
-												width: "80px",
-												height: "80px",
-												borderRadius: "50%",
-												background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-												margin: "0 auto 16px",
-												display: "flex",
-												alignItems: "center",
-												justifyContent: "center",
-												fontSize: "32px",
-												border: "4px solid rgba(255, 255, 255, 0.2)"
-											}}>
-												👤
-											</div>
-											<h3 style={{
-												color: "#fff",
-												fontSize: "18px",
-												fontWeight: "600",
-												margin: "0 0 8px 0"
-											}}>
-												{currentUser?.email || ""}
-											</h3>
-											<p style={{
-												color: "rgba(255, 255, 255, 0.8)",
-												fontSize: "14px",
-												margin: 0
-											}}>
-												{currentUser?.role || ""} Member
-											</p>
-										</div>
-
-										{/* Menu Items */}
-										<div style={{ padding: "16px" }}>
-											{[
-												{ icon: User, label: "Dashboard", href: "/user" },
-												{ icon: LogOut, label: "Logout", href: "/", danger: true }
-											].map((item, index) => (
-												<a
-													key={index}
-													href={item.href}
-													style={{
-														display: "flex",
-														alignItems: "center",
-														gap: "12px",
-														padding: "12px 16px",
-														borderRadius: "12px",
-														textDecoration: "none",
-														color: item.danger ? "#EF4444" : "#374151",
-														fontWeight: 500,
-														fontSize: "14px",
-														transition: "all 0.3s ease",
-														marginBottom: index < 3 ? "4px" : "0"
-													}}
-													onMouseEnter={e => {
-														e.currentTarget.style.background = item.danger
-															? "rgba(239, 68, 68, 0.1)"
-															: "rgba(106, 8, 34, 0.1)";
-														e.currentTarget.style.transform = "translateX(4px)";
-													}}
-													onMouseLeave={e => {
-														e.currentTarget.style.background = "transparent";
-														e.currentTarget.style.transform = "translateX(0)";
-													}}
-													onClick={() => setHovered(null)}
-												>
-													<item.icon size={18} />
-													{item.label}
-												</a>
-											))}
-										</div>
-									</div>
-								)}
-							</div>
-						</div>
-					)}
+		  {/* Right Section - Desktop */}
+		  {!isMobile && (
+			<div className="flex items-center gap-2 flex-shrink-0">
+			  {/* If My Account, show Home and Cart here */}
+			  {isMyAccount && (
+				<>
+				  <a
+					href={MENU[0].link}
+					className={`flex items-center gap-1 font-semibold text-[13px] px-2 py-1 rounded-md whitespace-nowrap cursor-pointer transition-all duration-200 ${selected === MENU[0].name ? 'bg-[#6a0822] text-white shadow' : 'bg-slate-50/80 text-gray-700'}`}
+					onClick={() => setSelected(MENU[0].name)}
+				  >
+					{MENU[0].name}
+				  </a>
+				  <button
+					className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-50/80 text-[#6a0822] hover:bg-[#6a0822] hover:text-white transition-all duration-200 shadow"
+					onClick={() => navigate("/cart")}
+					aria-label="Cart"
+				  >
+					<ShoppingCart size={18} />
+				  </button>
+				</>
+			  )}
+			  {/* Partner Button */}
+			  <a
+				href="/PartnerPopup"
+				className={`flex items-center gap-1 font-semibold bg-[#6a0822] text-white rounded-md px-2 py-1 shadow transition-all duration-200 whitespace-nowrap text-[13px] ${hovered === 'partner' ? 'opacity-90' : ''}`}
+				onMouseEnter={() => setHovered("partner")}
+				onMouseLeave={() => setHovered(null)}
+			  >
+				<span className="text-[13px]">🤝</span>
+				{isDesktop ? "Partner" : "Partner"}
+			  </a>
+			  {/* User Profile */}
+			  {!isMyAccount && (
+			  <div className="relative">
+				<button
+				  onClick={() => setHovered(hovered === "profile" ? null : "profile")}
+				  className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 relative z-[1001] ${hovered === 'profile' ? 'bg-[#6a0822] scale-110 shadow border-0 text-white' : 'bg-white border-2 border-slate-200 shadow text-[#6a0822]'}`}
+				>
+				  <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[#6a0822] font-bold text-[13px]">
+					👤
+				  </div>
+				  {hovered === "profile" && (
+					<div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
+					  <Crown size={8} color="#fff" />
+					</div>
+				  )}
+				</button>
+				{/* Profile Dropdown */}
+				{hovered === "profile" && (
+				  <div
+					className="absolute top-[40px] right-0 bg-white rounded-lg shadow-lg min-w-[180px] z-[2000] border border-white/20 animate-slideIn"
+					onMouseLeave={() => setHovered(null)}
+				  >
+					{/* Profile Header */}
+					<div className="bg-[#6a0822] p-3 text-center relative rounded-t-lg">
+					  <div className="w-10 h-10 rounded-full bg-slate-200 mx-auto mb-2 flex items-center justify-center text-[18px] border-2 border-white/20">
+						👤
+					  </div>
+					  <h3 className="text-white text-[13px] font-semibold mb-1">{currentUser?.email || ""}</h3>
+					  <p className="text-white/80 text-[11px] m-0">{currentUser?.role || ""} Member</p>
+					</div>
+					{/* Menu Items */}
+					<div className="p-2">
+					  {[
+						{ icon: User, label: "Dashboard", href: "/user" },
+						{ icon: LogOut, label: "Logout", href: "/", danger: true }
+					  ].map((item, index) => (
+						<a
+						  key={index}
+						  href={item.href}
+						  className={`flex items-center gap-2 px-2 py-2 rounded-md text-[12px] font-medium transition-all duration-200 mb-1 ${item.danger ? 'text-red-500 hover:bg-red-100' : 'text-slate-700 hover:bg-[#6a0822]/10 hover:text-[#6a0822]'} hover:translate-x-1`}
+						  onClick={() => setHovered(null)}
+						>
+						  <item.icon size={14} />
+						  {item.label}
+						</a>
+					  ))}
+					</div>
+				  </div>
+				)}
+			  </div>
+			  )}
+			</div>
+		  )}
 
 					{/* Mobile Menu Button */}
 					{isMobile && (
@@ -940,25 +439,9 @@ console.log(cartLength,'cart')
 						<a
 							href="/PartnerPopup"
 							onClick={closeMobileMenu}
-							style={{
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
-								gap: "12px",
-								padding: "16px 20px",
-								background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
-								color: "#fff",
-								borderRadius: "12px",
-								textDecoration: "none",
-								fontWeight: 600,
-								fontSize: "16px",
-								boxShadow: "0 4px 16px rgba(106, 8, 34, 0.3)",
-								transition: "transform 0.3s ease"
-							}}
-							onTouchStart={e => e.currentTarget.style.transform = "scale(0.98)"}
-							onTouchEnd={e => e.currentTarget.style.transform = "scale(1)"}
+							className="flex items-center justify-center gap-3 py-4 px-5 bg-[#6a0822] text-white rounded-xl no-underline font-semibold text-[16px] shadow transition-transform duration-300 active:scale-95"
 						>
-							<span style={{ fontSize: "20px" }}>🤝</span>
+							<span className="text-[20px]">🤝</span>
 							Become a Partner
 						</a>
 

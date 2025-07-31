@@ -84,10 +84,14 @@ import LGoldPlantSchemes from "./src/app/loginuser/GoldSchemes/goldschemes.tsx";
 import GoldPlantSchemes from "./src/app/user/GoldSchemes/goldschemes.tsx";
 import BCommission from "./src/app/b2b/commission/Commission";
 import AdminProtectedRoute from './src/app/protectedRoutes/AdminProtectedRoute';
+import UserProtectedRoute from './src/app/protectedRoutes/UserProtectedRoute';
+import B2BProtectedRoute from './src/app/protectedRoutes/B2BProtectedRoute';
 import SIPPlanDisclaimer from "./src/app/user/SIPDisclaimer/sipdisclaimer";
 import ShippingPolicy from "./src/app/user/ShippingPolicy/shippingpolicy";
 import LSIPPlanDisclaimer from "./src/app/loginuser/SIPDisclaimer/sipdisclaimer";
 import LShippingPolicy from "./src/app/loginuser/ShippingPolicy/shippingpolicy";
+import SchemesFlyer from "./src/app/admin/Schemes-Flyer/Schemeflyer";
+import SupportTicket from "./src/app/admin/Support-Ticket/SupportTicket";
 
 const AppRoutes: React.FC = () => {
   return (
@@ -104,15 +108,16 @@ const AppRoutes: React.FC = () => {
           <Route path="/savingplan" element={<SavingPlan />} />
           <Route path="/spiplan" element={<SPIPPlan />} />
           <Route path="/plantscheme" element={<PlantScheme />} />
+          <Route path="/flayerschemes" element={<SchemesFlyer />} />
           <Route path="/notification" element={<Notification />} />
           <Route path="/mybankaccounts" element={<MyBankAccounts />} />
           <Route path="/manageornaments" element={<ManageOrnaments />} />
-          <Route path="/manageusers" element={<ManageUsers />} />
           <Route path="/manageusers" element={<ManageUsers />} />
           <Route path="/campaigns" element={<AdminCampaigns />} />
           <Route path="/goldorders" element={<GoldOrders />} />
           <Route path="/orderhistory" element={<AOrderHistory />} />
           <Route path="/faq" element={<FAQManagement />} />
+          <Route path="/support-ticket" element={<SupportTicket />} />
         </Route>
       </Route>
 
@@ -136,7 +141,7 @@ const AppRoutes: React.FC = () => {
         <Route path="bnotifications" element={<Notifications />} />
         <Route path="logout" element={<Logout />} />
       </Route>
-
+      </Route>
       {/* </Route> */}
 
 
@@ -176,7 +181,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/chit" element={<ChitJewelsPlans />} />
         <Route path="/goldsip" element={<GoldSIPPlans />} />
         <Route path="/schemes" element={<GoldPlantSchemes />} />
-        <Route path="/shippingpolicy" element={<ShippingPolicy/>} />
+        <Route path="/shippingpolicy" element={<ShippingPolicy />} />
         <Route path="/SIPplandisclaimer" element={<SIPPlanDisclaimer />} />
       </Route >
 
@@ -203,19 +208,17 @@ const AppRoutes: React.FC = () => {
 
 
 
-        <Route path="/userdash" element={<LMyDashboard />} />
-        <Route path="/userprofile" element={<LMyProfile />} />
-        <Route path="/userkyc" element={<LKYC />} />
-        <Route path="/userbeneficiaries" element={<LNavBar />} />
-        <Route path="/usersavingplan" element={<LChitJewelsSavingPlan />} />
-        <Route path="/userspiplan" element={<LDigitalGoldSIPPlan />} />
-        <Route path="/userplantscheme" element={<LGoldPlantScheme />} />
-        <Route path="/usernotification" element={<LNotification />} />
-        <Route path="/usermybankaccounts" element={<MyBankAccounts />} />
-      </Route >
-
-      <Route path="/b2bregistration" element={<B2BRegistration />} />
-
+          <Route path="/userdash" element={<LMyDashboard />} />
+          <Route path="/userprofile" element={<LMyProfile />} />
+          <Route path="/userkyc" element={<LKYC />} />
+          <Route path="/userbeneficiaries" element={<LNavBar />} />
+          <Route path="/usersavingplan" element={<LChitJewelsSavingPlan />} />
+          <Route path="/userspiplan" element={<LDigitalGoldSIPPlan />} />
+          <Route path="/userplantscheme" element={<LGoldPlantScheme />} />
+          <Route path="/usernotification" element={<LNotification />} />
+          <Route path="/usermybankaccounts" element={<MyBankAccounts />} />
+        </Route >
+      </Route>
     </Routes>
 
   );

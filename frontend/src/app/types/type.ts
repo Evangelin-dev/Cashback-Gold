@@ -79,7 +79,9 @@ export interface LoginResponse extends ApiResponse {
 export interface Ornament {
   id: number;
   name: string;
-  price: number;
+  price: number; // total gram
+  gramPrice?: number; // per gram price (optional for backward compatibility)
+  totalPrice?: number; // calculated (optional for backward compatibility)
   meta: string;
   category: string;
   subCategory: string;

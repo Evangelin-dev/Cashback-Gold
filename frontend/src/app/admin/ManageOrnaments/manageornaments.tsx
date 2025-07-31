@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../store";
+import axiosInstance from "../../../utils/axiosInstance";
+
 import { setCurrentPage } from "../../features/slices/adminSlice";
 import {
   addOrnament,
@@ -37,7 +39,9 @@ const CATEGORY_TREE = [
 const emptyFormState = {
   id: null,
   name: "",
-  price: "",
+  price: "", // total gram
+  gramPrice: "", // per gram price
+  totalPrice: "", // calculated
   material: "",
   purity: "",
   quality: "",
@@ -60,6 +64,9 @@ const ManageOrnaments: React.FC = () => {
 
   const [isFormVisible, setIsFormVisible] = useState(false);
   const [form, setForm] = useState<any>(emptyFormState);
+  const [goldPrice, setGoldPrice] = useState<string>("");
+  const [loadingGoldPrice, setLoadingGoldPrice] = useState(false);
+  const [goldPriceError, setGoldPriceError] = useState<string | null>(null);
   const [showPriceBreakup, setShowPriceBreakup] = useState(false);
 
   const [mainImageFile, setMainImageFile] = useState<File | null>(null);
@@ -75,6 +82,25 @@ const ManageOrnaments: React.FC = () => {
   useEffect(() => {
     dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
   }, [currentPage, dispatch, pageSize]);
+
+  // Fetch gold price from API (same as AdminDashboard)
+  useEffect(() => {
+    const fetchGold = async () => {
+      setLoadingGoldPrice(true);
+      setGoldPriceError(null);
+      try {
+        const response = await axiosInstance.get('/api/metal-rates');
+        const { goldRateInrPerGram } = response.data;
+        setGoldPrice(goldRateInrPerGram.toFixed(2));
+        setForm((prev: any) => ({ ...prev, gramPrice: goldRateInrPerGram.toFixed(2) }));
+      } catch (err) {
+        setGoldPriceError("Failed to fetch gold price");
+      } finally {
+        setLoadingGoldPrice(false);
+      }
+    };
+    fetchGold();
+  }, []);
 
   const resetAndHideForm = () => {
     setForm(emptyFormState);
@@ -93,14 +119,17 @@ const ManageOrnaments: React.FC = () => {
   const handleAddNew = () => {
     resetAndHideForm();
     setIsFormVisible(true);
+    // Set gramPrice to latest fetched gold price
+    setForm((prev: any) => ({ ...prev, gramPrice: goldPrice }));
   };
 
   const handleEdit = (product: Ornament) => {
     setIsFormVisible(true);
-    // Populate form with product data
+    // Always use latest fetched gold price for gramPrice
     setForm({
       ...product,
       price: product.price.toString(),
+      gramPrice: goldPrice,
       warranty: product.warranty?.includes('years') ? 'other' : product.warranty,
       warrantyYears: product.warranty?.includes('years') ? product.warranty.match(/\d+/)?.[0] || '' : '',
     });
@@ -109,20 +138,16 @@ const ManageOrnaments: React.FC = () => {
     setMainCategory(product.category);
     setSubCategory(product.subCategory);
 
-      const subCatOptions = CATEGORY_TREE.find(c => c.name === product.category)?.children || [];
+    const subCatOptions = CATEGORY_TREE.find(c => c.name === product.category)?.children || [];
     const itemOptionsForSubCat = (subCatOptions.find(sc => sc.name === product.subCategory)?.items as any[]) || [];
     const itemExistsInList = itemOptionsForSubCat.some(i => (typeof i === 'string' ? i : i.name) === product.itemType);
-    
     if (product.itemType && itemExistsInList) {
-      // Case 1: The item exists in the predefined dropdown list.
       setItem(product.itemType);
       setCustomItem("");
     } else if (product.itemType) {
-      // Case 2: The item is a valid string but not in the list (e.g., "Jewelry").
       setItem("Other");
       setCustomItem(product.itemType);
     } else {
-      // Case 3: The item is null or an empty string. Reset dropdown.
       setItem("");
       setCustomItem("");
     }
@@ -138,6 +163,13 @@ const ManageOrnaments: React.FC = () => {
     const { name, value } = e.target;
     if (name === "warranty" && value !== "other") {
       setForm({ ...form, warranty: value, warrantyYears: "" });
+    } else if (name === "price") {
+      // When grams change, recalculate totalPrice
+      setForm((prev: any) => ({
+        ...prev,
+        price: value,
+        totalPrice: value && prev.gramPrice ? (parseFloat(value) * parseFloat(prev.gramPrice)).toFixed(2) : ""
+      }));
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -189,7 +221,9 @@ const ManageOrnaments: React.FC = () => {
     // --- CONSTRUCT PAYLOAD FROM DROPDOWN STATES ---
     const data: OrnamentApiData = {
       name: form.name,
-      price: parseFloat(form.price),
+      price: parseFloat(form.price), // total gram
+      gramPrice: form.gramPrice ? parseFloat(form.gramPrice as any) : undefined, // per gram price
+      totalPrice: form.price && form.gramPrice ? parseFloat(form.price) * parseFloat(form.gramPrice as any) : undefined, // calculated
       category: mainCategory,
       subCategory: subCategory,
       gender: subCategory, // The subCategory (Men, Women, etc.) maps to gender
@@ -261,7 +295,13 @@ const ManageOrnaments: React.FC = () => {
                 </div>
               </div>
               <input type="text" name="name" placeholder="Name *" value={form.name} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
-              <input type="number" name="price" placeholder="Price *" value={form.price} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
+              {/* Total Gram field (was Price) */}
+              <input type="number" name="price" placeholder="Total Gram *" value={form.price} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
+              {/* Gram Price field from API (read-only) */}
+              <input type="number" name="gramPrice" placeholder="Gram Price (from API) *" value={loadingGoldPrice ? "" : (form.gramPrice || '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" required />
+              {goldPriceError && <div className="text-red-500 text-xs mb-2">{goldPriceError}</div>}
+              {/* Total Price calculated field */}
+              <input type="number" name="totalPrice" placeholder="Total Price (auto-calculated)" value={form.totalPrice || (form.price && form.gramPrice ? (parseFloat(form.price) * parseFloat(form.gramPrice)).toFixed(2) : '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" />
 
               {/* --- RESTORED DROPDOWN UI --- */}
               <div className="mb-3 flex flex-col gap-3 bg-[#fbeaf0] p-4 rounded-lg shadow-inner">

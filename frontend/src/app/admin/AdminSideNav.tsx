@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 
 const menuItems = [
   { to: "/admin", label: "My Dashboard", icon: <FaTachometerAlt className="w-5 h-5 mr-2" /> },
-  { to: "/adminprofile", label: "My Profile", icon: <FaUser className="w-5 h-5 mr-2" /> },
+  { to: "/adminprofile", label: "My Profil", icon: <FaUser className="w-5 h-5 mr-2" /> },
   { to: "/manageornaments", label: "Manage Ornaments", icon: <FaBoxes className="w-5 h-5 mr-2" /> },
   { to: "/manageusers", label: "Manage User's", icon: <FaBoxes className="w-5 h-5 mr-2" /> },
   { to: "/commission", label: "Commission", icon: <FaPercent className="w-5 h-5 mr-2" /> },

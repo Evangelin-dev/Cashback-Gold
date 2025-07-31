@@ -32,7 +32,9 @@ const getErrorMessage = (error: unknown): string => {
 
 export interface OrnamentApiData {
   name: string;
-  price: number;
+  price: number; // total gram
+  gramPrice?: number; // per gram price (optional for backward compatibility)
+  totalPrice?: number; // calculated (optional for backward compatibility)
   category: string;
   subCategory: string;
   gender: string;

@@ -576,19 +576,7 @@ const NavBar = () => {
 									>
 										Become a partner / Login
 									</a>
-									<a
-										href="/b2b/register"
-										style={{
-											background: hovered === "B2B Register" ? "rgba(106, 8, 34, 0.05)" : "transparent",
-											color: "#7a1335", border: "1.5px solid #7a1335", borderRadius: 10,
-											padding: "6.5px 14.5px", fontWeight: 600, fontSize: 13, textDecoration: "none",
-											whiteSpace: "nowrap", cursor: "pointer", transition: "all 0.2s"
-										}}
-										onMouseEnter={() => setHovered("B2B Register")}
-										onMouseLeave={() => setHovered(null)}
-									>
-										B2B Register
-									</a>
+									
 									<a
 										href="/SignupPopup"
 										style={{

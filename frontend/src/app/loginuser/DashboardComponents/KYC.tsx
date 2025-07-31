@@ -56,8 +56,7 @@ const FileUploadArea: FC<FileUploadProps> = ({ type, file, onFileChange, icon: I
 );
 
 const LKYC: FC = () => {
-  const [aadharName, setAadharName] = useState('');
-  const [panName, setPanName] = useState('');
+  // Removed aadharName and panName as per requirements
   const [aadharNumber, setAadharNumber] = useState('');
   const [panNumber, setPanNumber] = useState('');
   const [aadharFile, setAadharFile] = useState<File | null>(null);
@@ -103,20 +102,20 @@ const LKYC: FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-white to-purple-50 p-4">
+    <div className="min-h-screen bg-white p-2">
       {/* Popup Modal */}
       {showPopup && (
         <div className="fixed inset-0 flex items-center justify-center z-50 bg-black/40">
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-xs w-full flex flex-col items-center">
-            <CheckCircle className="w-12 h-12 text-green-500 mb-4" />
-            <div className="text-lg font-semibold text-gray-800 mb-2 text-center">
+          <div className="bg-white rounded-xl shadow-lg p-4 max-w-xs w-full flex flex-col items-center">
+            <CheckCircle className="w-8 h-8 text-green-600 mb-2" />
+            <div className="text-base font-semibold text-gray-800 mb-1 text-center">
               Proof Sent for Verification
             </div>
-            <div className="text-gray-600 text-center mb-4">
+            <div className="text-gray-600 text-center mb-2 text-sm">
               Your proof has been sent to admin and will be verified soon.
             </div>
             <button
-              className="mt-2 px-6 py-2 bg-[#7a1335] text-white rounded-lg hover:bg-[#5a0f28] transition-all duration-200 font-medium"
+              className="mt-1 px-4 py-1 bg-[#6a0822] text-white rounded hover:bg-[#4a0617] text-sm font-medium"
               onClick={() => setShowPopup(false)}
             >
               OK
@@ -124,57 +123,39 @@ const LKYC: FC = () => {
           </div>
         </div>
       )}
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-2xl mx-auto">
         {/* Header */}
-        <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-[#7a1335] rounded-full mb-4">
-            <FileText className="w-8 h-8 text-white" />
+        <div className="text-center mb-4">
+          <div className="inline-flex items-center justify-center w-10 h-10 bg-[#6a0822] rounded-full mb-2">
+            <FileText className="w-5 h-5 text-white" />
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">KYC Verification</h1>
-          <p className="text-gray-600">Complete your identity verification to continue</p>
+          <h1 className="text-xl font-bold text-gray-900 mb-1">KYC Verification</h1>
+          <p className="text-gray-600 text-xs">Complete your identity verification to continue</p>
         </div>
 
         {/* Main Form */}
-        <div className="bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden">
+        <div className="bg-white rounded-xl shadow border border-gray-100 overflow-hidden">
           {/* Step Header */}
-          <div className="bg-[#7a1335] px-6 py-4">
-            <div className="flex items-center justify-between text-white">
-              <div className="flex items-center space-x-2">
-                <User className="w-5 h-5" />
-                <span className="font-semibold">Identity Documents</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <div className="w-2 h-2 bg-white rounded-full"></div>
-                <div className="w-2 h-2 bg-white/50 rounded-full"></div>
-                <div className="w-2 h-2 bg-white/50 rounded-full"></div>
-              </div>
+          <div className="bg-[#6a0822] px-4 py-2">
+            <div className="flex items-center text-white text-sm">
+              <User className="w-4 h-4 mr-2" />
+              <span className="font-semibold">Identity Documents</span>
             </div>
           </div>
 
-          <div className="p-6">
-            <div className="grid lg:grid-cols-2 gap-8">
+          <div className="p-3">
+            <div className="grid md:grid-cols-2 gap-4">
               {/* Aadhar Section */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 pb-3 border-b border-gray-100">
-                  <div className="p-2 bg-orange-100 rounded-lg">
-                    <CreditCard className="w-5 h-5 text-orange-600" />
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
+                  <div className="p-1 bg-orange-100 rounded">
+                    <CreditCard className="w-4 h-4 text-orange-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">Aadhar Card Details</h3>
+                  <h3 className="text-base font-semibold text-gray-900">Aadhar Card</h3>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name as on Aadhar Card
-                    </label>
-                    <input
-                      type="text"
-                      value={aadharName}
-                      onChange={(e) => setAadharName(e.target.value)}
-                      placeholder="Enter name exactly as on Aadhar"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1335] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-                    />
-                  </div>
+                <div className="space-y-3">
+
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -185,13 +166,13 @@ const LKYC: FC = () => {
                       value={aadharNumber}
                       onChange={handleAadharChange}
                       placeholder="XXXX XXXX XXXX"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1335] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white font-mono tracking-wider"
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#6a0822] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white font-mono tracking-wider text-sm"
                     />
                     <div className="text-xs text-gray-500 mt-1">12-digit Aadhar number</div>
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       Upload Aadhar Document
                     </label>
                     <FileUploadArea
@@ -205,27 +186,16 @@ const LKYC: FC = () => {
               </div>
 
               {/* PAN Section */}
-              <div className="space-y-6">
-                <div className="flex items-center space-x-3 pb-3 border-b border-gray-100">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <CreditCard className="w-5 h-5 text-blue-600" />
+              <div className="space-y-4">
+                <div className="flex items-center space-x-2 pb-2 border-b border-gray-100">
+                  <div className="p-1 bg-blue-100 rounded">
+                    <CreditCard className="w-4 h-4 text-blue-600" />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">PAN Card Details</h3>
+                  <h3 className="text-base font-semibold text-gray-900">PAN Card</h3>
                 </div>
 
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Name as on PAN Card
-                    </label>
-                    <input
-                      type="text"
-                      value={panName}
-                      onChange={(e) => setPanName(e.target.value)}
-                      placeholder="Enter name exactly as on PAN"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1335] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white"
-                    />
-                  </div>
+                <div className="space-y-3">
+
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -236,7 +206,7 @@ const LKYC: FC = () => {
                       value={panNumber}
                       onChange={handlePanChange}
                       placeholder="ABCDE1234F"
-                      className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-[#7a1335] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white font-mono tracking-wider uppercase"
+                      className="w-full px-3 py-2 border border-gray-300 rounded focus:ring-2 focus:ring-[#6a0822] focus:border-transparent transition-all duration-200 bg-gray-50 focus:bg-white font-mono tracking-wider uppercase text-sm"
                     />
                     <div className="text-xs text-gray-500 mt-1">
                       10-character alphanumeric PAN
@@ -244,7 +214,7 @@ const LKYC: FC = () => {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                    <label className="block text-xs font-medium text-gray-700 mb-1">
                       Upload PAN Document
                     </label>
                     <FileUploadArea
@@ -259,15 +229,15 @@ const LKYC: FC = () => {
             </div>
 
             {/* Actions */}
-            <div className="flex flex-col sm:flex-row gap-4 mt-8 pt-6 border-t border-gray-100">
+            <div className="flex flex-col sm:flex-row gap-2 mt-4 pt-4 border-t border-gray-100">
               <button
                 onClick={() => setIsEditing(!isEditing)}
-                className="flex-1 px-6 py-3 border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-all duration-200 font-medium"
+                className="flex-1 px-3 py-2 border border-gray-300 text-gray-700 rounded hover:bg-gray-50 transition-all duration-200 text-sm font-medium"
               >
                 {isEditing ? 'Cancel' : 'Edit Details'}
               </button>
               <button
-                className="flex-1 px-6 py-3 bg-[#7a1335] text-white rounded-lg hover:bg-[#5a0f28] transition-all duration-200 font-medium shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
+                className="flex-1 px-3 py-2 bg-[#6a0822] text-white rounded hover:bg-[#4a0617] transition-all duration-200 text-sm font-medium shadow"
                 onClick={() => setShowPopup(true)}
               >
                 Submit for Verification
@@ -275,10 +245,10 @@ const LKYC: FC = () => {
             </div>
 
             {/* Info Banner */}
-            <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <div className="flex items-start space-x-3">
-                <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5 flex-shrink-0" />
-                <div className="text-sm text-blue-800">
+            <div className="mt-4 p-2 bg-blue-50 border border-blue-200 rounded">
+              <div className="flex items-start space-x-2">
+                <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div className="text-xs text-blue-800">
                   <p className="font-medium mb-1">Important Information:</p>
                   <ul className="space-y-1 text-blue-700">
                     <li>• Ensure all details match exactly with your official documents</li>

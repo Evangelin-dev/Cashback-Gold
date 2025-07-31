@@ -1,8 +1,8 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Gem, TrendingUp, Calendar, Target, Eye, X, ShieldX, CheckCircle, ChevronRight, Star } from 'lucide-react';
+import { Calendar, CheckCircle, Gem, ShieldX, Star, TrendingUp, X } from 'lucide-react';
+import { useEffect, useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
 import Portal from '../../user/Portal'; // Make sure this path is correct
-import { useNavigate } from 'react-router-dom';
 
 // --- INTERFACES to match /api/orders/my response ---
 interface OrderFromApi {
@@ -117,70 +117,91 @@ const LChitJewelsSavingPlan = () => {
 
   console.log(plansToShow, 'plansToShow');
   return (
-    <div className="min-h-screen bg-gray-50 p-6">
-      <div className="max-w-7xl mx-auto">
-        <div className="bg-white rounded-2xl shadow-sm p-6 mb-8"><div className="flex items-center justify-between"><div className="flex items-center space-x-4"><div className="w-12 h-12 bg-gradient-to-tr from-[#7a1335] to-rose-500 rounded-xl flex items-center justify-center shadow-lg"><Gem className="w-6 h-6 text-white" /></div><div><h1 className="text-2xl font-bold text-gray-800">Chit Jewels</h1><p className="text-sm text-gray-500">My Saving Plans</p></div></div></div></div>
+    <div className="min-h-screen bg-gray-50 p-3">
+      <div className="max-w-5xl mx-auto">
+        <div className="bg-white rounded-lg shadow-sm p-3 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 bg-[#6a0822] rounded flex items-center justify-center">
+              <Gem className="w-4 h-4 text-white" />
+            </div>
+            <h1 className="text-lg font-bold text-[#6a0822]">Chit Jewels</h1>
+            <span className="text-xs text-gray-500 ml-2">My Saving Plans</span>
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+        <div className="grid grid-cols-3 gap-2 mb-4">
           {stats.map((stat) => (
-            <div key={stat.label} className={`relative overflow-hidden bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 cursor-pointer group ${selectedTab === stat.label.toLowerCase() ? 'ring-2 ring-[#7a1335]' : ''}`} onClick={() => setSelectedTab(stat.label.toLowerCase())}>
-              <div className={`absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-r ${stat.color} opacity-10 rounded-full group-hover:scale-150 transition-transform duration-300`}></div>
-              <div className="relative p-6">
-                <div className="flex items-center justify-between"><div className={`w-12 h-12 bg-gradient-to-r ${stat.color} rounded-xl flex items-center justify-center shadow-md`}><stat.icon className="w-6 h-6 text-white" /></div><ChevronRight className="w-5 h-5 text-gray-300 group-hover:text-gray-500 transition-colors" /></div>
-                <div className="mt-4"><p className="text-3xl font-bold text-gray-800">{stat.count}</p><p className="text-sm font-medium text-gray-500">{stat.label}</p></div>
-              </div>
+            <div
+              key={stat.label}
+              className={`bg-white rounded-lg p-2 flex flex-col items-center justify-center border border-[#6a0822] cursor-pointer transition-all duration-200 ${selectedTab === stat.label.toLowerCase() ? 'ring-2 ring-[#6a0822]' : ''}`}
+              onClick={() => setSelectedTab(stat.label.toLowerCase())}
+            >
+              <stat.icon className="w-4 h-4 mb-1 text-[#6a0822]" />
+              <div className="text-base font-bold text-[#6a0822]">{stat.count}</div>
+              <div className="text-xs text-gray-600 font-medium">{stat.label}</div>
             </div>
           ))}
         </div>
 
-        {loading ? (<div className="text-center py-20 text-gray-500">Loading your plans...</div>) :
-          error ? (<div className="text-center py-20 text-red-600 bg-red-50 rounded-2xl p-6">{error}</div>) : (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between">
-                <h2 className="text-xl font-bold text-[#7a1335] capitalize">{selectedTab} Saving Plans</h2>
-                <div className="flex items-center space-x-2 text-sm text-gray-500"><Calendar className="w-4 h-4" /><span>Updated today</span></div>
-              </div>
-              {plansToShow.length > 0 ? (
-                <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-                  {plansToShow?.map((plan) => (
-                    <div key={plan.id} className="bg-white rounded-2xl shadow-sm hover:shadow-xl transition-shadow duration-300 p-6 flex flex-col">
-                      <div className="flex items-start justify-between mb-4">
-                        <div><h3 className="text-lg font-bold text-gray-800">{plan.name}</h3><p className="text-sm text-gray-500">{plan.duration}</p></div><div className="w-10 h-10 bg-gray-100 rounded-lg flex-shrink-0"></div>
-                      </div>
-                      <div className="space-y-3">
-                        <div className="flex justify-between items-center text-sm"><span className="text-gray-500">Target Amount</span><span className="font-semibold text-gray-800">{plan.target}</span></div>
-                        <div className="pt-3 border-t"><div className="flex justify-between items-center text-sm"><span className="text-gray-500">Monthly Payment</span><span className="font-bold text-[#7a1335] text-base">{plan.monthly}</span></div></div>
-                      </div>
-                      <div className="flex items-center space-x-3 mt-auto pt-4 border-t">
-                        <button className="flex-1 bg-gray-100 text-gray-700 py-2.5 px-4 rounded-lg hover:bg-gray-200 transition-colors text-sm font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="bg-white rounded-2xl shadow-sm p-12 text-center"><div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-4"><Star className="w-8 h-8 text-gray-400" /></div><h3 className="text-lg font-medium text-[#7a1335]">No {selectedTab} Plans</h3><p className="text-gray-600">You do not have any {selectedTab} saving plans.</p></div>
-              )}
+        {loading ? (
+          <div className="text-center py-10 text-gray-500 text-sm">Loading your plans...</div>
+        ) : error ? (
+          <div className="text-center py-10 text-red-600 bg-red-50 rounded-xl p-4 text-sm">{error}</div>
+        ) : (
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <h2 className="text-base font-bold text-[#6a0822] capitalize">{selectedTab} Saving Plans</h2>
+              <div className="flex items-center space-x-1 text-xs text-gray-500"><Calendar className="w-3 h-3" /><span>Updated today</span></div>
             </div>
-          )}
+            {plansToShow.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+                {plansToShow?.map((plan) => (
+                  <div key={plan.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 flex flex-col">
+                    <div className="flex items-start justify-between mb-2">
+                      <div>
+                        <h3 className="text-sm font-bold text-gray-800">{plan.name}</h3>
+                        <p className="text-xs text-gray-500">{plan.duration}</p>
+                      </div>
+                      <div className="w-7 h-7 bg-gray-100 rounded flex-shrink-0"></div>
+                    </div>
+                    <div className="space-y-1">
+                      <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Target Amount</span><span className="font-semibold text-gray-800">{plan.target}</span></div>
+                      <div className="pt-2 border-t"><div className="flex justify-between items-center text-xs"><span className="text-gray-500">Monthly Payment</span><span className="font-bold text-[#6a0822]">{plan.monthly}</span></div></div>
+                    </div>
+                    <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
+                      <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-white rounded-xl shadow-sm p-6 text-center">
+                <div className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center mx-auto mb-2"><Star className="w-5 h-5 text-gray-400" /></div>
+                <h3 className="text-base font-medium text-[#6a0822]">No {selectedTab} Plans</h3>
+                <p className="text-gray-600 text-xs">You do not have any {selectedTab} saving plans.</p>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* --- VIEW DETAILS POPUP --- */}
       {viewedPlan && (
         <Portal>
-          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-2xl p-8 max-w-sm w-full mx-auto relative shadow-xl">
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+            <div className="bg-white rounded-xl p-4 max-w-xs w-full mx-auto relative shadow-xl">
               <button
                 onClick={() => setViewedPlan(null)}
-                className="absolute top-3 right-3 text-gray-400 hover:text-gray-600"
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
               >
-                <X size={24} />
+                <X size={18} />
               </button>
 
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-[#7a1335] mb-4">{viewedPlan.name}</h3>
+                <h3 className="text-lg font-bold text-[#6a0822] mb-2">{viewedPlan.name}</h3>
 
-                <div className="space-y-3 bg-gray-50 p-4 rounded-lg text-sm text-gray-600">
-                  <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold text-sm px-2 py-1 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'successful' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
+                <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600">
+                  <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'successful' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
                   <div className="flex justify-between items-center">
                     <span>Plan Type:</span>
                     <span className="font-semibold">{viewedPlan.planType}</span>

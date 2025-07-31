@@ -96,9 +96,6 @@ const LUserHome = () => {
   const convertRef = useScrollFadeIn("right", 700, 0);
   const faqRef = useScrollFadeIn("up", 700, 0);
 
-  // Add offset to push content below fixed navbar (top bar + nav = 44px + nav height)
-  // Adjust this value if your nav height changes
-  const NAVBAR_TOTAL_HEIGHT = 44 + 48; // 44px top bar + ~48px nav bar
 
   return (
     <div >
@@ -106,31 +103,31 @@ const LUserHome = () => {
         <Carousel />
         <div className="d-flex   justify-content-center ">
           <div
-            className="goldsiver-box bg-white p-4 mt-5"
+            className="goldsiver-box bg-white p-2 mt-3"
             style={{
-              borderRadius: 20,
-              boxShadow: "0 4px 16px #e6e6e6",
-              maxWidth: 650,
+              borderRadius: 12,
+              boxShadow: "0 2px 8px #e6e6e6",
+              maxWidth: 420,
               width: "100%",
               margin: "0 auto",
-              padding: "32px 28px 28px 28px",
+              padding: "12px 8px 8px 8px",
             }}
             ref={schemeRef}
           >
             <div>
-              <div className="mb-3" style={{ borderBottom: "2px solid #991313", paddingBottom: 8, display: "flex", alignItems: "center" }}>
-                <span style={{ color: "#991313", fontWeight: 600, fontSize: 28, marginRight: 18 }}>
+              <div className="mb-2" style={{ borderBottom: "2px solid #991313", paddingBottom: 4, display: "flex", alignItems: "center" }}>
+                <span style={{ color: "#991313", fontWeight: 600, fontSize: 16, marginRight: 8 }}>
                   Digital gold / Silver
                 </span>
               </div>
               <div className="row" style={{ fontFamily: "inherit" }}>
                 {/* 22k Gold */}
-                <div className="col-12 col-md-6 mb-2" style={{ borderRight: "1px solid #e0e0e0" }}>
+                <div className="col-12 col-md-6 mb-1" style={{ borderRight: "1px solid #e0e0e0" }}>
                   <div className="d-flex align-items-center mb-1">
-                    <span style={{ color: "#991313", fontSize: 18, marginRight: 8 }}>
-                      <i className="fa fa-dot-circle-o" style={{ color: "#991313", fontSize: 18 }}></i>
+                    <span style={{ color: "#991313", fontSize: 12, marginRight: 4 }}>
+                      <i className="fa fa-dot-circle-o" style={{ color: "#991313", fontSize: 12 }}></i>
                     </span>
-                    <span style={{ fontWeight: 500, color: "#7a1335", fontSize: 18 }}>
+                    <span style={{ fontWeight: 500, color: "#7a1335", fontSize: 12 }}>
                       Live Buy Price (Gold)
                     </span>
                     <span
@@ -138,10 +135,10 @@ const LUserHome = () => {
                         background: "#fff3cd",
                         color: "#bfa21a",
                         fontWeight: 600,
-                        fontSize: 15,
-                        borderRadius: 6,
-                        padding: "2px 10px",
-                        marginLeft: 10,
+                        fontSize: 10,
+                        borderRadius: 4,
+                        padding: "1px 6px",
+                        marginLeft: 5,
                         display: "inline-block",
                       }}
                     >
@@ -149,19 +146,19 @@ const LUserHome = () => {
                     </span>
                   </div>
                   <div className="d-flex align-items-end mb-1">
-                    <span style={{ fontWeight: 700, fontSize: 28, color: "#7a1335" }}>8000/gm</span>
-                    <span style={{ color: "#888", fontSize: 15, marginLeft: 12, marginBottom: 2 }}>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: "#7a1335" }}>8000/gm</span>
+                    <span style={{ color: "#888", fontSize: 10, marginLeft: 6, marginBottom: 1 }}>
                       +3% GST applicable
                     </span>
                   </div>
                 </div>
                 {/* 24k Gold */}
-                <div className="col-12 col-md-6 mb-2">
+                <div className="col-12 col-md-6 mb-1">
                   <div className="d-flex align-items-center mb-1">
-                    <span style={{ color: "#991313", fontSize: 18, marginRight: 8 }}>
-                      <i className="fa fa-dot-circle-o" style={{ color: "#991313", fontSize: 18 }}></i>
+                    <span style={{ color: "#991313", fontSize: 12, marginRight: 4 }}>
+                      <i className="fa fa-dot-circle-o" style={{ color: "#991313", fontSize: 12 }}></i>
                     </span>
-                    <span style={{ fontWeight: 500, color: "#7a1335", fontSize: 18 }}>
+                    <span style={{ fontWeight: 500, color: "#7a1335", fontSize: 12 }}>
                       Live Buy Price (Gold)
                     </span>
                     <span
@@ -169,10 +166,10 @@ const LUserHome = () => {
                         background: "#fff3cd",
                         color: "#bfa21a",
                         fontWeight: 600,
-                        fontSize: 15,
-                        borderRadius: 6,
-                        padding: "2px 10px",
-                        marginLeft: 10,
+                        fontSize: 10,
+                        borderRadius: 4,
+                        padding: "1px 6px",
+                        marginLeft: 5,
                         display: "inline-block",
                       }}
                     >
@@ -180,39 +177,30 @@ const LUserHome = () => {
                     </span>
                   </div>
                   <div className="d-flex align-items-end mb-1">
-                    <span style={{ fontWeight: 700, fontSize: 28, color: "#7a1335" }}>8705/gm</span>
-                    <span style={{ color: "#888", fontSize: 15, marginLeft: 12, marginBottom: 2 }}>
+                    <span style={{ fontWeight: 700, fontSize: 14, color: "#7a1335" }}>8705/gm</span>
+                    <span style={{ color: "#888", fontSize: 10, marginLeft: 6, marginBottom: 1 }}>
                       +3% GST applicable
                     </span>
                   </div>
                 </div>
                 {/* Silver */}
-                <div className="col-12 col-md-6 mt-2">
+                <div className="col-12 col-md-6 mt-1">
                   <div className="d-flex align-items-center mb-1">
-                    <span style={{ color: "#991313", fontSize: 18, marginRight: 8 }}>
-                      <i className="fa fa-dot-circle-o" style={{ color: "#991313", fontSize: 18 }}></i>
+                    <span style={{ color: "#991313", fontSize: 12, marginRight: 4 }}>
+                      <i className="fa fa-dot-circle-o" style={{ color: "#991313", fontSize: 12 }}></i>
                     </span>
-                    <span style={{ fontWeight: 500, color: "#7a1335", fontSize: 18 }}>
+                    <span style={{ fontWeight: 500, color: "#7a1335", fontSize: 12 }}>
                       Live Buy Price (Silver)
                     </span>
                     <span
-                      style={{
-                        background: "#fff3cd",
-                        color: "#bfa21a",
-                        fontWeight: 600,
-                        fontSize: 15,
-                        borderRadius: 6,
-                        padding: "2px 10px",
-                        marginLeft: 10,
-                        display: "inline-block",
-                      }}
+                      className="bg-[#fff3cd] text-[#bfa21a] font-semibold text-[10px] rounded px-[6px] py-[1px] ml-[5px] inline-block"
                     >
                       99.9%
                     </span>
                   </div>
-                  <div className="d-flex align-items-end mb-1">
-                    <span style={{ fontWeight: 700, fontSize: 28, color: "#7a1335" }}>107/gm</span>
-                    <span style={{ color: "#888", fontSize: 15, marginLeft: 12, marginBottom: 2 }}>
+                  <div className="flex items-end mb-1">
+                    <span className="font-bold text-[14px] text-[#7a1335]">107/gm</span>
+                    <span className="text-[#888] text-[10px] ml-[6px] mb-[1px]">
                       +3% GST applicable
                     </span>
                   </div>
@@ -223,30 +211,19 @@ const LUserHome = () => {
         </div>
       </div>
       <section
-      className={`mb-5 mt-6 pt-6 ${style.home_scheme_section}`}
+      className={`mb-5 mt-6  ${style.home_scheme_section}`}
       ref={bannerRef}
     >
       <h3
-        className="text-center"
-        style={{
-          fontSize: "2rem",
-          fontWeight: 700,
-          marginTop: "180px",
-          marginBottom: "24px",
-          position: "relative",
-          zIndex: 2,
-          color: "#bf7e1a",
-        }}
+        className="text-center text-[1.1rem] font-bold mt-[60px] mb-3 relative z-[2] text-[#bf7e1a]"
       >
         Quick overview of schemes
       </h3>
 
       <div
-        className="w-100 d-flex flex-column flex-md-row justify-content-center align-items-stretch gap-4 mt-4"
-        style={{ maxWidth: 1200, margin: "0 auto" }}
+        className="w-full flex flex-col md:flex-row justify-center items-stretch gap-2 mt-2 max-w-[900px] mx-auto"
       >
         {schemes.map((scheme) => {
-          // Determine button label based on scheme.title (since 'type' is not present)
           let buttonLabel = "Buy scheme";
           const titleLower = scheme.title.toLowerCase();
           if (titleLower.includes("chit")) buttonLabel = "Buy Chit";
@@ -255,67 +232,21 @@ const LUserHome = () => {
           return (
             <div
               key={scheme.id}
-              className="bg-white d-flex align-items-center justify-content-center position-relative"
-              style={{
-                borderRadius: 18,
-                maxWidth: 400,
-                minWidth: 220,
-                height: 500,
-                overflow: "hidden",
-                boxShadow: "0 4px 24px #e6d7b7",
-                border: "10px solid #bf7e1a",
-              }}
+              className="bg-white flex items-center justify-center relative rounded-[10px] max-w-[220px] min-w-[120px] h-[260px] overflow-hidden shadow-md border-4 border-[#bf7e1a]"
             >
               <img
                 src={scheme.image}
                 alt={scheme.title}
-                style={{ width: "100%", height: "100%", objectFit: "contain" }}
+                className="w-full h-full object-contain"
               />
               <button
-                style={{
-                  position: "absolute",
-                  left: 14,
-                  bottom: 10,
-                  background: "#8a2342",
-                  color: "#fff",
-                  border: "none",
-                  borderRadius: 40,
-                  padding: "10px 28px 10px 22px",
-                  fontWeight: 500,
-                  fontSize: 18,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 10,
-                  boxShadow: "0 2px 8px #c4912e33",
-                  cursor: "pointer",
-                  transition: "background 0.2s",
-                }}
+                className="absolute left-[6px] bottom-[6px] bg-[#8a2342] text-white border-none rounded-[20px] px-[14px] py-[5px] pl-[10px] font-medium text-xs flex items-center gap-[6px] shadow-sm cursor-pointer transition-colors"
                 onClick={() => navigate(scheme.link)}
               >
                 {buttonLabel}
-                <span
-                  style={{
-                    fontSize: 22,
-                    marginLeft: 8,
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                >
-                  <svg
-                    width="26"
-                    height="22"
-                    viewBox="0 0 26 22"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      d="M15.5 4L22 11M22 11L15.5 18M22 11H4"
-                      stroke="white"
-                      strokeWidth="2.5"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                    />
-                  </svg>
+                <span className="ml-1 flex items-center text-[14px]">
+                  {/* Lucide-react ArrowRight icon (solid color) */}
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><polyline points="12 5 19 12 12 19"/></svg>
                 </span>
               </button>
             </div>
@@ -328,73 +259,34 @@ const LUserHome = () => {
       {/* Discover Our Jewel Collection Banner */}
       <div
         ref={feedbackRef}
-        style={{
-          width: "100%",
-          minHeight: 220,
-          background: "#8a2342",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          margin: "0 0 0 0",
-          padding: 0,
-          overflow: "hidden"
-        }}>
+        className="w-full min-h-[220px] bg-[#8a2342] flex items-center justify-center m-0 p-0 overflow-hidden"
+      >
         <img
           src="/assets/red_banner.png"
           alt="Discover Our Jewel Collection"
-          style={{
-            width: "100%",
-            height: "auto",
-            objectFit: "cover"
-          }}
+          className="w-full h-auto object-cover"
         />
       </div>
 
       {/* Clients Say's Section */}
       <section
-        style={{ background: "#fff", padding: "48px 0 0 0" }}
+        className="bg-white pt-12 pb-0"
         ref={useScrollFadeIn("left", 700, 0)}
       >
-        <h3 style={{
-          textAlign: "center",
-          color: "#7a1335",
-          fontWeight: 700,
-          fontSize: 28,
-          marginBottom: 32,
-          fontFamily: "inherit"
-        }}>
-          <span style={{
-            display: "inline-block",
-            borderBottom: "2px solid #bf7e1a",
-            paddingBottom: 4,
-            marginBottom: 8
-          }}>Clients Say's?</span>
+        <h3 className="text-center text-[#7a1335] font-bold text-[28px] mb-8 font-sans">
+          <span className="inline-block border-b-2 border-[#bf7e1a] pb-1 mb-2">Clients Say's?</span>
         </h3>
         <ClientFeedbackCarousel />
       </section>
       {/* Grow your wealth smarter */}
       <div
         ref={wealthRef}
-        style={{
-          background: "#f3ffe8",
-          borderRadius: 32,
-          maxWidth: 98 + "%",
-          width: "98%",
-          margin: "40px auto",
-          padding: "0",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          boxShadow: "none",
-          border: "none",
-          position: "relative",
-          minHeight: 140,
-        }}
+        className="bg-[#f3ffe8] rounded-[32px] max-w-[98%] w-[98%] mx-auto my-10 p-0 flex items-center justify-between min-h-[140px] relative"
       >
         {/* Icon and text */}
-        <div style={{ display: "flex", alignItems: "center", gap: 24, paddingLeft: 48 }}>
+        <div className="flex items-center gap-6 pl-12">
           {/* Icon */}
-          <span style={{ display: "flex", alignItems: "center" }}>
+          <span className="flex items-center">
             <svg width="54" height="54" viewBox="0 0 54 54" fill="none">
               <rect x="8" y="32" width="8" height="14" rx="2" fill="#9B1C1C"/>
               <rect x="22" y="22" width="8" height="24" rx="2" fill="#9B1C1C"/>
@@ -404,52 +296,23 @@ const LUserHome = () => {
             </svg>
           </span>
           <div>
-            <div style={{
-              fontWeight: 700,
-              fontSize: 32,
-              color: "#7a1335",
-              marginBottom: 2,
-              lineHeight: 1.1,
-              letterSpacing: 0,
-            }}>
+            <div className="font-bold text-[32px] text-[#7a1335] mb-[2px] leading-[1.1] tracking-normal">
               Grow your wealth smarter
             </div>
-            <div style={{
-              fontSize: 20,
-              color: "#7a1335",
-              fontWeight: 400,
-              marginTop: 2,
-              lineHeight: 1.3,
-            }}>
+            <div className="text-[20px] text-[#7a1335] font-normal mt-[2px] leading-[1.3]">
               Start an SIP to invest in gold every month.
             </div>
           </div>
         </div>
         {/* Button on the right */}
         <button
-          style={{
-            background: "linear-gradient(90deg, #bf7e1a 0%, #8a2342 100%)",
-            color: "#fff",
-            border: "none",
-            borderRadius: 32,
-            padding: "18px 44px",
-            fontWeight: 500,
-            fontSize: 20,
-            marginRight: 48,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            boxShadow: "none",
-            cursor: "pointer",
-            transition: "background 0.18s, transform 0.18s",
-            outline: "none",
-          }}
+          className="bg-gradient-to-r from-[#bf7e1a] to-[#8a2342] text-white border-none rounded-[32px] px-[44px] py-[18px] font-medium text-[20px] mr-12 flex items-center gap-[10px] shadow-none cursor-pointer transition-transform duration-200 outline-none"
           onClick={() => navigate("/lgoldsip")}
           onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.04)"; }}
           onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
         >
           Start investing
-          <span style={{ fontSize: 24, marginLeft: 10, display: "flex", alignItems: "center" }}>
+          <span className="text-[24px] ml-[10px] flex items-center">
             <svg width="26" height="22" viewBox="0 0 26 22" fill="none" xmlns="http://www.w3.org/2000/svg">
               <path d="M15.5 4L22 11M22 11L15.5 18M22 11H4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
             </svg>
@@ -459,247 +322,84 @@ const LUserHome = () => {
       {/* Why choose digital gold */}
       <section
         ref={whyRef}
-        style={{
-          background: "#991313", // changed from gradient to new maroon
-          padding: "60px 0 40px 0",
-          margin: 0,
-        }}
+        className="bg-[#991313] py-[60px] pt-[60px] pb-[40px] m-0"
       >
         <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 48,
-            flexWrap: "wrap",
-          }}
+          className="max-w-[1200px] mx-auto flex flex-row items-center gap-12 flex-wrap"
         >
           {/* Left side image */}
-          <div
-            style={{
-              flex: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minWidth: 220,
-            }}
-          >
+          <div className="flex-1 flex items-center justify-center min-w-[220px]">
             <img
               src="/assets/physical.png"
               alt="Gold Jar"
-              style={{
-                width: 400,
-                height: 400,
-                objectFit: "contain",
-                borderRadius: 24,
-                background: "linear-gradient(135deg, #fffbe8 60%, #f9f7f6 100%)",
-                boxShadow: "0 8px 32px #e6d7b7",
-                display: "block",
-                border: "4px solid #bf7e1a",
-                padding: 0,
-                margin: 0,
-                transition: "transform 0.2s",
-                cursor: "pointer"
-              }}
+              className="w-[400px] h-[400px] object-contain rounded-[24px] bg-gradient-to-br from-[#fffbe8] to-[#f9f7f6] shadow-[0_8px_32px_#e6d7b7] block border-4 border-[#bf7e1a] p-0 m-0 transition-transform duration-200 cursor-pointer"
               onMouseOver={e => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1.04)"; }}
               onMouseOut={e => { (e.currentTarget as HTMLImageElement).style.transform = "scale(1)"; }}
             />
           </div>
           {/* Right side content */}
-          <div style={{ flex: 2, minWidth: 320 }}>
-            <div
-              style={{
-                textAlign: "left",
-                fontWeight: 700,
-                fontSize: 34,
-                color: "#bf7e1a",
-                marginBottom: 18,
-                fontFamily: "inherit",
-                letterSpacing: 0.5,
-                lineHeight: 1.2,
-              }}
-            >
-              Why Choose <span style={{ color: "#bf7e1a" }}>Digital Gold</span>?
+          <div className="flex-2 min-w-[320px]">
+            <div className="text-left font-bold text-[34px] text-[#bf7e1a] mb-[18px] font-inherit tracking-[0.5px] leading-[1.2]">
+              Why Choose <span className="text-[#bf7e1a]">Digital Gold</span>?
             </div>
-            <div
-              style={{
-                display: "flex",
-                flexDirection: "row",
-                gap: 24,
-                justifyContent: "flex-start",
-                flexWrap: "wrap",
-              }}
-            >
+            <div className="flex flex-row gap-6 justify-start flex-wrap">
               {/* Card 1 */}
               <div
-                style={{
-                  background: "#fff", // changed to white for contrast
-                  borderRadius: 18,
-                  boxShadow: "0 2px 12px #e6e6e6",
-                  padding: 32,
-                  flex: "1 1 220px",
-                  minWidth: 220,
-                  maxWidth: 320,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  border: "2px solid #f9e9c7",
-                  transition: "box-shadow 0.2s, transform 0.2s",
-                  position: "relative",
-                }}
+                className="bg-white rounded-[18px] shadow-[0_2px_12px_#e6e6e6] p-8 flex-1 min-w-[220px] max-w-[320px] flex flex-col items-center text-center border-2 border-[#f9e9c7] transition-shadow duration-200 relative"
               >
                 <img
                   src="/assets/0.png"
                   alt="Guaranteed 24K Gold"
-                  style={{ width: 54, height: 54, marginBottom: 16 }}
+                  className="w-[54px] h-[54px] mb-4"
                 />
-                <div
-                  style={{
-                    fontWeight: 700,
-                    color: "#991313",
-                    fontSize: 20,
-                    marginBottom: 10,
-                  }}
-                >
+                <div className="font-bold text-[#991313] text-[20px] mb-2.5">
                   Guaranteed 24K Gold
                 </div>
-                <div style={{ color: "#7a1335", fontSize: 15, marginBottom: 8 }}>
+                <div className="text-[#7a1335] text-[15px] mb-2">
                   100% purity, certified and insured. No risk of adulteration or fraud.
                 </div>
-                <span style={{
-                  position: "absolute",
-                  top: 18,
-                  right: 18,
-                  color: "#bf7e1a",
-                  fontSize: 22,
-                  opacity: 0.15,
-                  fontWeight: 900,
-                  pointerEvents: "none"
-                }}>01</span>
+                <span className="absolute top-[18px] right-[18px] text-[#bf7e1a] text-[22px] opacity-15 font-black pointer-events-none">01</span>
               </div>
               {/* Card 2 */}
               <div
-                style={{
-                  background: "#fff", // changed to white for contrast
-                  borderRadius: 18,
-                  boxShadow: "0 2px 12px #e6e6e6",
-                  padding: 32,
-                  flex: "1 1 220px",
-                  minWidth: 220,
-                  maxWidth: 320,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  border: "2px solid #f9e9c7",
-                  transition: "box-shadow 0.2s, transform 0.2s",
-                  position: "relative",
-                }}
+                className="bg-white rounded-[18px] shadow-[0_2px_12px_#e6e6e6] p-8 flex-1 min-w-[220px] max-w-[320px] flex flex-col items-center text-center border-2 border-[#f9e9c7] transition-shadow duration-200 relative"
               >
                 <img
                   src="/assets/1.png"
                   alt="Sell anytime from home"
-                  style={{ width: 54, height: 54, marginBottom: 16 }}
+                  className="w-[54px] h-[54px] mb-4"
                 />
-                <div
-                  style={{
-                    fontWeight: 700,
-                    color: "#991313",
-                    fontSize: 20,
-                    marginBottom: 10,
-                  }}
-                >
+                <div className="font-bold text-[#991313] text-[20px] mb-2.5">
                   Sell Anytime, Anywhere
                 </div>
-                <div style={{ color: "#7a1335", fontSize: 15, marginBottom: 8 }}>
+                <div className="text-[#7a1335] text-[15px] mb-2">
                   24x7 liquidity, instant sale and redemption. No need to visit a store.
                 </div>
-                <span style={{
-                  position: "absolute",
-                  top: 18,
-                  right: 18,
-                  color: "#bf7e1a",
-                  fontSize: 22,
-                  opacity: 0.15,
-                  fontWeight: 900,
-                  pointerEvents: "none"
-                }}>02</span>
+                <span className="absolute top-[18px] right-[18px] text-[#bf7e1a] text-[22px] opacity-15 font-black pointer-events-none">02</span>
               </div>
               {/* Card 3 */}
               <div
-                style={{
-                  background: "#fff", // changed to white for contrast
-                  borderRadius: 18,
-                  boxShadow: "0 2px 12px #e6e6e6",
-                  padding: 32,
-                  flex: "1 1 220px",
-                  minWidth: 220,
-                  maxWidth: 320,
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  textAlign: "center",
-                  border: "2px solid #f9e9c7",
-                  transition: "box-shadow 0.2s, transform 0.2s",
-                  position: "relative",
-                }}
+                className="bg-white rounded-[18px] shadow-[0_2px_12px_#e6e6e6] p-8 flex-1 min-w-[220px] max-w-[320px] flex flex-col items-center text-center border-2 border-[#f9e9c7] transition-shadow duration-200 relative"
               >
                 <img
                   src="/assets/2.png"
                   alt="Earn income on gold"
-                  style={{ width: 54, height: 54, marginBottom: 16 }}
+                  className="w-[54px] h-[54px] mb-4"
                 />
-                <div
-                  style={{
-                    fontWeight: 700,
-                    color: "#991313",
-                    fontSize: 20,
-                    marginBottom: 10,
-                  }}
-                >
+                <div className="font-bold text-[#991313] text-[20px] mb-2.5">
                   Earn Income on Gold
                 </div>
-                <div style={{ color: "#7a1335", fontSize: 15, marginBottom: 8 }}>
+                <div className="text-[#7a1335] text-[15px] mb-2">
                   Get rewards, cashback, and interest on your digital gold savings.
                 </div>
-                <span style={{
-                  position: "absolute",
-                  top: 18,
-                  right: 18,
-                  color: "#bf7e1a",
-                  fontSize: 22,
-                  opacity: 0.15,
-                  fontWeight: 900,
-                  pointerEvents: "none"
-                }}>03</span>
+                <span className="absolute top-[18px] right-[18px] text-[#bf7e1a] text-[22px] opacity-15 font-black pointer-events-none">03</span>
               </div>
             </div>
             {/* Bonus section - make visible and responsive */}
             <div
-              style={{
-                marginTop: 32,
-                color: "#fff",
-                fontWeight: 500,
-                fontSize: 17,
-                background: "#bf7e1a",
-                borderRadius: 12,
-                padding: "18px 28px",
-                boxShadow: "0 2px 8px #f3e6d7",
-                border: "1.5px solid #f9e9c7",
-                maxWidth: 600,
-                textAlign: "center",
-                alignSelf: "center",
-                // Remove absolute positioning and right, use margin auto for centering
-                position: "relative",
-                marginLeft: "auto",
-                marginRight: "auto",
-                zIndex: 2,
-              }}
+              className="mt-8 text-white font-medium text-[17px] bg-[#bf7e1a] rounded-[12px] px-7 py-[18px] shadow-[0_2px_8px_#f3e6d7] border border-[#f9e9c7] max-w-[600px] text-center self-center relative mx-auto z-[2]"
             >
-              <span style={{ fontWeight: 700, color: "#fff" }}>Bonus:</span> Digital gold is easy to gift, track, and manage. Start your journey to smarter wealth today!
+              <span className="font-bold text-white">Bonus:</span> Digital gold is easy to gift, track, and manage. Start your journey to smarter wealth today!
             </div>
           </div>
         </div>
@@ -707,121 +407,46 @@ const LUserHome = () => {
       {/* Convert digital to physical gold/silver */}
       <section
         ref={convertRef}
-        style={{
-          background: "linear-gradient(90deg, #fffbe8 60%, #f9f7f6 100%)",
-          padding: "60px 0 40px 0",
-          margin: 0,
-        }}
+        className="bg-gradient-to-r from-[#fffbe8] to-[#f9f7f6] py-[60px] pt-[60px] pb-[40px] m-0"
       >
         <div
-          style={{
-            maxWidth: 1200,
-            margin: "0 auto",
-            display: "flex",
-            flexDirection: "row",
-            alignItems: "center",
-            gap: 48,
-            flexWrap: "wrap",
-          }}
+          className="max-w-[1200px] mx-auto flex flex-row items-center gap-12 flex-wrap"
         >
           {/* Left content */}
-          <div style={{ flex: 2, minWidth: 320 }}>
-            <div
-              style={{
-                fontWeight: 700,
-                fontSize: 28,
-                color: "#7a1335",
-                marginBottom: 12,
-                fontFamily: "inherit",
-                letterSpacing: 0.5,
-              }}
-            >
+          <div className="flex-2 min-w-[320px]">
+            <div className="font-bold text-[28px] text-[#7a1335] mb-3 font-inherit tracking-[0.5px]">
               Convert Digital to Physical Gold & Silver
             </div>
-            <div
-              style={{
-                color: "#7a1335",
-                fontSize: 18,
-                marginBottom: 10,
-                fontWeight: 500,
-              }}
-            >
+            <div className="text-[#7a1335] text-[18px] mb-2.5 font-medium">
               24K Gold / Silver Coins & Bars delivered to your doorstep
             </div>
-            <div
-              style={{
-                color: "#7a1335",
-                fontSize: 16,
-                marginBottom: 22,
-                lineHeight: 1.6,
-              }}
-            >
+            <div className="text-[#7a1335] text-[16px] mb-6 leading-[1.6]">
               Convert your digital gold to physical gold by paying a nominal minting charge. Your delivery comes with free insurance, to ensure your coins and bars reach you safely. Enjoy the flexibility to redeem your investment in the form you desire, with complete transparency and security.
             </div>
             <button
-              style={{
-                background: "linear-gradient(90deg, #bf7e1a 0%, #8a2342 100%)",
-                color: "#fff",
-                border: "none",
-                borderRadius: 30,
-                padding: "12px 38px 12px 28px",
-                fontWeight: 600,
-                fontSize: 20,
-                marginTop: 8,
-                display: "flex",
-                alignItems: "center",
-                gap: 10,
-                boxShadow: "0 4px 16px #c4912e33",
-                cursor: "pointer",
-                transition: "background 0.2s",
-                letterSpacing: 0.5,
-              }}
+              className="bg-gradient-to-r from-[#bf7e1a] to-[#8a2342] text-white border-none rounded-[30px] px-[38px] py-[12px] font-semibold text-[20px] mt-2 flex items-center gap-[10px] shadow-[0_4px_16px_#c4912e33] cursor-pointer transition-transform duration-200 tracking-[0.5px]"
               onClick={() => navigate("/buyornaments")}
+              onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.04)"; }}
+              onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
             >
               Buy Gold
-              <span style={{ fontSize: 24, marginLeft: 10, display: "flex", alignItems: "center" }}>
+              <span className="text-[24px] ml-[10px] flex items-center">
                 <svg width="28" height="22" viewBox="0 0 26 22" fill="none" xmlns="http://www.w3.org/2000/svg">
                   <path d="M15.5 4L22 11M22 11L15.5 18M22 11H4" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
                 </svg>
               </span>
             </button>
-            <div
-              style={{
-                marginTop: 24,
-                color: "#bfa21a",
-                fontWeight: 500,
-                fontSize: 15,
-                display: "flex",
-                alignItems: "center",
-                gap: 8,
-              }}
-            >
-              <svg width="22" height="22" fill="#bfa21a" style={{ marginRight: 6 }} viewBox="0 0 24 24"><path d="M12 2L2 7v2c0 5.25 3.66 10.74 10 13 6.34-2.26 10-7.75 10-13V7l-10-5zm0 2.18L19.5 7.09V9c0 4.42-2.97 8.87-7.5 10.93C5.47 17.87 2.5 13.42 2.5 9V7.09l7.5-2.91z"/></svg>
+            <div className="mt-6 text-[#bfa21a] font-medium text-[15px] flex items-center gap-2">
+              <svg width="22" height="22" fill="#bfa21a" className="mr-1.5" viewBox="0 0 24 24"><path d="M12 2L2 7v2c0 5.25 3.66 10.74 10 13 6.34-2.26 10-7.75 10-13V7l-10-5zm0 2.18L19.5 7.09V9c0 4.42-2.97 8.87-7.5 10.93C5.47 17.87 2.5 13.42 2.5 9V7.09l7.5-2.91z"/></svg>
               100% insured delivery & purity guaranteed
             </div>
           </div>
           {/* Right image */}
-          <div
-            style={{
-              flex: 1.2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              minWidth: 260,
-            }}
-          >
+          <div className="flex-[1.2] flex items-center justify-center min-w-[260px]">
             <img
               src="/assets/golds.png"
               alt="Gold & Silver Coins"
-              style={{
-                width: 360,
-                height: 360,
-                objectFit: "contain",
-                borderRadius: 0,
-                background: "transparent",
-                boxShadow: "none",
-                display: "block"
-              }}
+              className="w-[360px] h-[360px] object-contain rounded-none bg-transparent shadow-none block"
             />
           </div>
         </div>
@@ -829,41 +454,12 @@ const LUserHome = () => {
       {/* FAQ Section */}
       <section
         ref={faqRef}
-        style={{
-          background: "#991313", // maroon background
-          padding: "60px 0 40px 0",
-          margin: 0,
-        }}
+        className="bg-[#991313] py-[60px] pt-[60px] pb-[40px] m-0"
       >
-        <div
-          style={{
-            maxWidth: 900,
-            margin: "0 auto",
-            color: "#7a1335",
-          }}
-        >
-          <div
-            style={{
-              textAlign: "center",
-              fontWeight: 700,
-              fontSize: 32,
-              marginBottom: 32,
-              fontFamily: "inherit",
-              color: "#ffe066",
-              letterSpacing: 0.5,
-            }}
-          >
+        <div className="max-w-[900px] mx-auto text-[#7a1335]">
+          <div className="text-center font-bold text-[32px] mb-8 font-inherit text-[#ffe066] tracking-[0.5px]">
             Frequently Asked Questions
-            <div
-              style={{
-                width: 120,
-                height: 6,
-                margin: "12px auto 0 auto",
-                background: "linear-gradient(90deg, #ffe066 0%, #fff 100%)",
-                borderRadius: 4,
-                opacity: 0.5,
-              }}
-            />
+            <div className="w-[120px] h-[6px] mt-3 mx-auto bg-gradient-to-r from-[#ffe066] to-[#fff] rounded opacity-50" />
           </div>
           <FAQList />
         </div>
@@ -879,7 +475,7 @@ const LUserHome = () => {
              
              {/* Desktop View - Normal Layout */}
              <div className="hidden md:block">
-               <div className="mt-8 flex justify-center flex-wrap gap-32 px-4">
+               <div className="mt-8 flex justify-center flex-wrap gap-[128px] px-4">
                  {partners.map((partner, index) => (
                    <img 
                      key={index}

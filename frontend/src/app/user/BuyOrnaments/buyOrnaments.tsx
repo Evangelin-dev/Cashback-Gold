@@ -1,12 +1,12 @@
-import { Award, Eye, Heart, ShoppingCart, Sparkles, Star, Loader, Filter, Crown, Check } from 'lucide-react';
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
-import { useNavigate } from "react-router-dom";
-import axiosInstance from '../../../utils/axiosInstance';
-import { CATEGORY_TREE } from '../../../../constants';
-import { Product } from '../../types/type';
+import { Award, Check, Crown, Eye, Filter, Heart, Loader, ShoppingCart, Sparkles } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from "react-router-dom";
+import { CATEGORY_TREE } from '../../../../constants';
 import { AppDispatch } from '../../../store';
+import axiosInstance from '../../../utils/axiosInstance';
 import { addToCart } from '../../features/thunks/cartThunks';
+import { Product } from '../../types/type';
 
 const CustomImage: React.FC<{ src: string; alt: string; style?: React.CSSProperties; className?: string; }> = ({ src, alt, style, className }) => (
   <img src={src} alt={alt} style={style} className={className} loading="lazy" />
@@ -246,7 +246,7 @@ const BuyOrnamentsPage = () => {
                       <h3 style={{ fontSize: '1.4rem', fontWeight: '700', color: '#1a1d29', textAlign: 'center', marginBottom: '20px', lineHeight: '1.3', minHeight: '3.9rem' }}>
                         {product.name}
                       </h3>
-                      <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
+                      <div style={{ display: 'flex', justifyContent: 'center', marginBottom: '24px', padding: '16px', backgroundColor: '#f8fafc', borderRadius: '12px', border: '1px solid #f1f5f9' }}>
                         <div style={{ textAlign: 'center' }}><div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>PURITY</div><div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#7a1335' }}>{product.purity}</div></div>
                         <div style={{ width: '1px', backgroundColor: '#e2e8f0' }} />
                         <div style={{ textAlign: 'center' }}><div style={{ fontSize: '0.8rem', color: '#64748b', marginBottom: '4px', fontWeight: '500' }}>WEIGHT</div><div style={{ fontSize: '0.95rem', fontWeight: '700', color: '#7a1335' }}>{getProductWeight(product)}</div></div>
