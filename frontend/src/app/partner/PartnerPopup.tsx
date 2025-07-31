@@ -1,19 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../../store"; // Make sure this path is correct
+import { clearAuthError } from "../features/slices/authSlice"; // Make sure this path is correct
 import {
-  sendRegistrationOtp,
-  verifyOtpAndRegister,
   resendOtp,
   sendLoginOtp,
-  verifyLoginOtp
+  sendRegistrationOtp,
+  verifyLoginOtp,
+  verifyOtpAndRegister
 } from "../features/thunks/authThunks"; // Make sure this path is correct
-import { clearAuthError } from "../features/slices/authSlice"; // Make sure this path is correct
 
-import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
 import parsePhoneNumber from 'libphonenumber-js';
+import { isValidPhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 interface PartnerPopupProps {
   open: boolean;
@@ -191,81 +191,134 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
   const isLoading = status === 'loading';
   const otpTargetIdentifier = mode === 'login' ? loginIdentifier : signupEmail;
 
+
   return (
-    <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.38)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: 32, maxWidth: 800, width: "98vw", padding: "32px 24px 24px 24px", boxShadow: "0 8px 32px #00000022", position: "relative", textAlign: "center", animation: "popup-fade-in 0.25s", maxHeight: "90vh", overflowY: "auto" }}>
-
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-          <img src="/logo.png" alt="Logo" style={{ height: 44, marginBottom: 8 }} />
+    <div className="fixed inset-0 bg-opacity-40 z-[9999] flex items-center justify-center">
+      <div className="bg-white rounded-2xl max-w-[400px] w-[96vw] p-4 pt-3 shadow-xl relative text-center max-h-[90vh] overflow-y-auto animate-popup-fade-in">
+        <div className="flex flex-col items-center justify-center mb-1">
+          <img src="/logo.png" alt="Logo" className="h-7 mb-1" />
         </div>
-
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 12, gap: 6 }}>
-          <button style={{ background: mode === "login" ? "#991313" : "#fff", color: mode === "login" ? "#fff" : "#991313", border: "1.5px solid #991313", borderRadius: 8, fontWeight: 700, fontSize: 16, padding: "7px 20px", cursor: "pointer", transition: "all 0.18s" }} onClick={() => switchMode("login")} disabled={isLoading}>Partner Login</button>
-          <button style={{ background: mode === "signup" ? "#991313" : "#fff", color: mode === "signup" ? "#fff" : "#991313", border: "1.5px solid #991313", borderRadius: 8, fontWeight: 700, fontSize: 16, padding: "7px 20px", cursor: "pointer", transition: "all 0.18s" }} onClick={() => switchMode("signup")} disabled={isLoading}>Partner Sign Up</button>
+        <div className="flex justify-center mb-2 gap-1">
+          <button className={`px-3 py-1 rounded-md font-bold text-xs transition-all border-2 ${mode === 'login' ? 'bg-[#991313] text-white border-[#991313]' : 'bg-white text-[#991313] border-[#991313]'}`} onClick={() => switchMode('login')} disabled={isLoading}>Partner Login</button>
+          <button className={`px-3 py-1 rounded-md font-bold text-xs transition-all border-2 ${mode === 'signup' ? 'bg-[#991313] text-white border-[#991313]' : 'bg-white text-[#991313] border-[#991313]'}`} onClick={() => switchMode('signup')} disabled={isLoading}>Partner Sign Up</button>
         </div>
-
-        <h2 style={{ fontWeight: 800, fontSize: 24, marginBottom: 8, color: "#991313" }}>
-          {mode === "login" ? "Welcome Back, Partner!" : "Create your Partner Account"}
-        </h2>
-        <div style={{ borderBottom: "2px solid #991313", width: 60, margin: "0 auto 18px auto", opacity: 0.7 }} />
-
-        {(authError || validationError) && (<div style={{ color: "#991313", fontWeight: 600, marginBottom: 10, padding: "8px", background: "#f9e9c7", borderRadius: "8px" }}>{authError || validationError}</div>)}
-
-        {mode === "login" && step === "form" && (
+        <h2 className="font-extrabold text-base mb-1 text-[#991313]">{mode === 'login' ? 'Welcome Back, Partner!' : 'Create your Partner Account'}</h2>
+        <div className="border-b-2 border-[#991313] w-9 mx-auto mb-2 opacity-70" />
+        {(authError || validationError) && (
+          <div className="text-[#991313] font-semibold mb-1.5 p-1.5 bg-[#f9e9c7] rounded text-xs">{authError || validationError}</div>
+        )}
+        {mode === 'login' && step === 'form' && (
           <form onSubmit={handleSendLoginOtp} autoComplete="off">
-            <div style={{ textAlign: "left", marginBottom: 12 }}>
-              <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Email / Phone Number <span style={{ color: "#991313" }}>*</span></label>
-              <div style={{ display: "flex", alignItems: "center" }}>
-                {!isLoginInputEmail && (<select value={loginCountryCode} onChange={e => setLoginCountryCode(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRight: 'none', borderRadius: '10px 0 0 10px', background: "#f9f7f6", padding: "10px 12px", fontSize: 15, color: "#991313", outline: "none" }}><option value="+91">+91 (India)</option></select>)}
-                <input type="text" placeholder="Enter email or phone" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: isLoginInputEmail ? '10px' : '0 10px 10px 0', background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
+            <div className="text-left mb-2">
+              <label className="font-bold text-[#222] text-xs mb-0.5 block">Email <span className="text-[#991313]">*</span></label>
+              {/*
+              <div className="flex items-center">
+                {!isLoginInputEmail && (<select value={loginCountryCode} onChange={e => setLoginCountryCode(e.target.value)} className="border border-[#f0e3d1] border-r-0 rounded-l-lg bg-[#f9f7f6] px-3 py-2 text-xs text-[#991313] outline-none"><option value="+91">+91 (India)</option></select>)}
+              */}
+              <input type="email" placeholder="Enter email" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs font-medium text-[#991313] outline-none shadow-sm" required />
+              {/*</div>*/}
+            </div>
+            <button type="submit" disabled={isLoading} className="w-full bg-[#991313] text-white rounded-lg py-2 font-bold text-xs mt-1 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{isLoading ? 'Sending OTP...' : 'Get OTP'}</button>
+          </form>
+        )}
+
+        {mode === 'signup' && step === 'form' && (
+          <form onSubmit={handleSignupSubmit} autoComplete="off" noValidate>
+            <div className="flex flex-wrap gap-2 w-full">
+              {/* Name - single row */}
+              <div className="flex-1 min-w-[120px] text-left w-full">
+                <label className="font-bold text-[#222] text-xs mb-0.5 block">Name <span className="text-[#991313]">*</span></label>
+                <input type="text" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313]" required />
+              </div>
+              {/* Gender & D.O.B - same row */}
+              <div className="flex gap-2 w-full">
+                <div className="flex-1 min-w-[80px] text-left">
+                  <label className="font-bold text-[#222] text-xs mb-0.5 block">Gender <span className="text-[#991313]">*</span></label>
+                  <select value={signupGender} onChange={e => setSignupGender(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select>
+                </div>
+                <div className="flex-1 min-w-[80px] text-left">
+                  <label className="font-bold text-[#222] text-xs mb-0.5 block">D.O.B <span className="text-[#991313]">*</span></label>
+                  <input type="date" value={signupDOB} onChange={e => setSignupDOB(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
+                </div>
+              </div>
+              {/* Email - single row */}
+              <div className="flex-1 min-w-[120px] text-left w-full">
+                <label className="font-bold text-[#222] text-xs mb-0.5 block">Email ID <span className="text-[#991313]">*</span></label>
+                <input type="email" placeholder="Email address" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313]" required />
+              </div>
+              {/*
+              <div className="flex-1 min-w-[120px] text-left w-full">
+                <label className="font-bold text-[#222] text-xs mb-0.5 block">Phone <span className="text-[#991313]">*</span></label>
+                <PhoneInput className="phone-input-container" placeholder="Enter phone" value={fullPhoneNumber} onChange={setFullPhoneNumber} defaultCountry="IN" required />
+              </div>
+              */}
+              {/* City & Town - same row */}
+              <div className="flex gap-2 w-full">
+                <div className="flex-1 min-w-[80px] text-left">
+                  <label className="font-bold text-[#222] text-xs mb-0.5 block">City <span className="text-[#991313]">*</span></label>
+                  <input type="text" placeholder="City" value={signupCity} onChange={e => setSignupCity(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
+                </div>
+                <div className="flex-1 min-w-[80px] text-left">
+                  <label className="font-bold text-[#222] text-xs mb-0.5 block">Town <span className="text-[#991313]">*</span></label>
+                  <input type="text" placeholder="Town/Area" value={signupTown} onChange={e => setSignupTown(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
+                </div>
+              </div>
+              {/* State & Country - same row */}
+              <div className="flex gap-2 w-full">
+                <div className="flex-1 min-w-[80px] text-left">
+                  <label className="font-bold text-[#222] text-xs mb-0.5 block">State <span className="text-[#991313]">*</span></label>
+                  <input type="text" placeholder="State" value={signupState} onChange={e => setSignupState(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
+                </div>
+                <div className="flex-1 min-w-[80px] text-left">
+                  <label className="font-bold text-[#222] text-xs mb-0.5 block">Country <span className="text-[#991313]">*</span></label>
+                  <input type="text" placeholder="Country" value={signupCountry} onChange={e => setSignupCountry(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
+                </div>
+              </div>
+              {/* Password & Confirm Password - same row */}
+              <div className="flex gap-2 w-full">
+                <div className="flex-1 min-w-[80px] text-left">
+                  <label className="font-bold text-[#222] text-xs mb-0.5 block">Password <span className="text-[#991313]">*</span></label>
+                  <input type="password" placeholder="Password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
+                </div>
+                <div className="flex-1 min-w-[80px] text-left">
+                  <label className="font-bold text-[#222] text-xs mb-0.5 block">Confirm Password <span className="text-[#991313]">*</span></label>
+                  <input type="password" placeholder="Confirm" value={signupConfirmPassword} onChange={e => setSignupConfirmPassword(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
+                </div>
               </div>
             </div>
-            <button type="submit" disabled={isLoading} style={{ width: "100%", background: "linear-gradient(90deg, #991313 70%, #bf7e1a 100%)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 0", fontWeight: 700, fontSize: 17, marginTop: 6, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Sending OTP..." : "Get OTP"}</button>
+            <button type="submit" disabled={isLoading} className="w-full bg-[#991313] text-white rounded-lg py-2 font-bold text-xs mt-2 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{isLoading ? 'Sending OTP...' : 'Register'}</button>
           </form>
         )}
 
-        {mode === "signup" && step === "form" && (
-          <form onSubmit={handleSignupSubmit} autoComplete="off" noValidate>
-            <div className="signup-fields-row" style={{ display: "flex", flexWrap: "wrap", gap: 16, width: "100%" }}>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Name *</label><input type="text" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Gender *</label><select value={signupGender} onChange={e => setSignupGender(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required><option value="">Select</option><option value="male">Male</option><option value="female">Female</option></select></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>D.O.B *</label><input type="date" value={signupDOB} onChange={e => setSignupDOB(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Email ID *</label><input type="email" placeholder="Email address" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Phone *</label><PhoneInput className="phone-input-container" placeholder="Enter phone" value={fullPhoneNumber} onChange={setFullPhoneNumber} defaultCountry="IN" required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>City *</label><input type="text" placeholder="City" value={signupCity} onChange={e => setSignupCity(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Town *</label><input type="text" placeholder="Town/Area" value={signupTown} onChange={e => setSignupTown(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>State *</label><input type="text" placeholder="State" value={signupState} onChange={e => setSignupState(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Country *</label><input type="text" placeholder="Country" value={signupCountry} onChange={e => setSignupCountry(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Password *</label><input type="password" placeholder="Password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}><label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Confirm Password *</label><input type="password" placeholder="Confirm" value={signupConfirmPassword} onChange={e => setSignupConfirmPassword(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, color: "#991313" }} required /></div>
-            </div>
-            <button type="submit" disabled={isLoading} style={{ width: "100%", background: "linear-gradient(90deg, #991313 70%, #bf7e1a 100%)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 0", fontWeight: 700, fontSize: 17, marginTop: 16, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Sending OTP..." : "Register"}</button>
-          </form>
-        )}
-
-        {step === "otp" && (
+        {step === 'otp' && (
           <div>
-            <div style={{ fontWeight: 700, fontSize: 20, color: "#991313", marginBottom: 10 }}>OTP sent to <span style={{ color: "#222" }}>{otpTargetIdentifier}</span></div>
-            <div style={{ color: "#444", fontSize: 15, marginBottom: 18 }}>Please enter the <b>6-digit OTP</b>.</div>
-            <div style={{ display: "flex", justifyContent: "center", gap: 12, marginBottom: 18 }}>
-              {otp.map((digit, idx) => (<input key={idx} ref={el => { otpRefs.current[idx] = el; }} type="text" inputMode="numeric" maxLength={1} value={digit} onChange={e => handleOtpChange(idx, e.target.value)} onKeyDown={e => handleOtpKeyDown(idx, e)} style={{ width: 44, height: 54, fontSize: 28, textAlign: "center", border: "2px solid #991313", borderRadius: 10, outline: "none", background: "#f9f7f6", fontWeight: 700, color: "#991313" }} autoFocus={idx === 0} disabled={isLoading} />))}
+            <div className="font-bold text-[#991313] text-base mb-2">OTP sent to <span className="text-[#222]">{otpTargetIdentifier}</span></div>
+            <div className="text-[#444] text-xs mb-3">Please enter the <b>6-digit OTP</b>.</div>
+            <div className="flex justify-center gap-2 mb-3">
+              {otp.map((digit, idx) => (
+                <input
+                  key={idx}
+                  ref={el => { otpRefs.current[idx] = el; }}
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={1}
+                  value={digit}
+                  onChange={e => handleOtpChange(idx, e.target.value)}
+                  onKeyDown={e => handleOtpKeyDown(idx, e)}
+                  className="w-8 h-8 text-base text-center border-2 border-[#991313] rounded-lg outline-none bg-[#f9f7f6] font-bold text-[#991313]"
+                  autoFocus={idx === 0}
+                  disabled={isLoading}
+                />
+              ))}
             </div>
-            <button onClick={handleVerifyOtp} disabled={isLoading} style={{ width: "100%", background: "linear-gradient(90deg, #991313 70%, #bf7e1a 100%)", color: "#fff", border: "none", borderRadius: 14, padding: "14px 0", fontWeight: 700, fontSize: 20, marginTop: 8, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Verifying..." : "Verify OTP"}</button>
-            <div style={{ marginTop: 18 }}><span onClick={isLoading ? undefined : handleResendOtp} style={{ color: "#991313", fontWeight: 500, cursor: isLoading ? "not-allowed" : "pointer", fontSize: 15, textDecoration: "underline", opacity: isLoading ? 0.7 : 1 }}>Resend OTP</span></div>
+            <button onClick={handleVerifyOtp} disabled={isLoading} className="w-full bg-[#991313] text-white rounded-lg py-2 font-bold text-xs mt-1 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{isLoading ? 'Verifying...' : 'Verify OTP'}</button>
+            <div className="mt-2"><span onClick={isLoading ? undefined : handleResendOtp} className={`text-[#991313] font-medium cursor-pointer text-xs underline ${isLoading ? 'opacity-70 cursor-not-allowed' : ''}`}>Resend OTP</span></div>
           </div>
         )}
 
-        <button onClick={handleClose} style={{ position: "absolute", top: 14, right: 18, background: "none", border: "none", fontSize: 28, color: "#991313", cursor: "pointer", fontWeight: 700 }} aria-label="Close" disabled={isLoading}>×</button>
+        <button onClick={handleClose} className="absolute top-2 right-3 bg-none border-none text-2xl text-[#991313] cursor-pointer font-bold" aria-label="Close" disabled={isLoading}>×</button>
         <style>{`
           @keyframes popup-fade-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-          .phone-input-container .PhoneInputInput, .phone-input-container .PhoneInputCountrySelect { border: 1.5px solid #f0e3d1; background: #f9f7f6; color: #991313; outline: none; transition: all 0.2s; }
-          .phone-input-container .PhoneInputInput { padding: 10px 14px; font-size: 15px; font-weight: 500; border-radius: 10px; }
-          .phone-input-container .PhoneInputCountry { margin: 0 5px; }
-          .phone-input-container:focus-within .PhoneInputInput, .phone-input-container:focus-within .PhoneInputCountrySelect { border-color: #bf7e1a !important; background: #fffbe8 !important; }
-          .signup-fields-row { flex-wrap: wrap; }
-          @media (max-width: 900px) { .signup-fields-row { flex-direction: column !important; gap: 8px !important; } }
-          @media (max-width: 600px) { .signup-fields-row > div { min-width: 100% !important; } }
-          input:focus { border-color: #bf7e1a !important; background: #fffbe8 !important; }
         `}</style>
       </div>
     </div>

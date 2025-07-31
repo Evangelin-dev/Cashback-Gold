@@ -8,7 +8,7 @@ import { RootState } from "../../../store";
 export const MENU = [
 	{ name: "Home", link: "/LUserHome" },
 	{ name: "About Us", link: "/laboutus" },
-	{ name: "Buy Ornaments", link: "/buyornaments" },
+	{ name: "Buy Ornaments", link: "/lbuyornaments" },
 	{ name: "Contact Us", link: "/lcontactus" },
 ];
 
@@ -207,56 +207,66 @@ const LNavBar = () => {
 				<span className="text-[13px]">🤝</span>
 				{isDesktop ? "Partner" : "Partner"}
 			  </a>
-			  {/* User Profile */}
+			  {/* User Profile and Cart Icon */}
 			  {!isMyAccount && (
-			  <div className="relative">
-				<button
-				  onClick={() => setHovered(hovered === "profile" ? null : "profile")}
-				  className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 relative z-[1001] ${hovered === 'profile' ? 'bg-[#6a0822] scale-110 shadow border-0 text-white' : 'bg-white border-2 border-slate-200 shadow text-[#6a0822]'}`}
-				>
-				  <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[#6a0822] font-bold text-[13px]">
-					👤
-				  </div>
-				  {hovered === "profile" && (
-					<div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
-					  <Crown size={8} color="#fff" />
-					</div>
-				  )}
-				</button>
-				{/* Profile Dropdown */}
-				{hovered === "profile" && (
-				  <div
-					className="absolute top-[40px] right-0 bg-white rounded-lg shadow-lg min-w-[180px] z-[2000] border border-white/20 animate-slideIn"
-					onMouseLeave={() => setHovered(null)}
-				  >
-					{/* Profile Header */}
-					<div className="bg-[#6a0822] p-3 text-center relative rounded-t-lg">
-					  <div className="w-10 h-10 rounded-full bg-slate-200 mx-auto mb-2 flex items-center justify-center text-[18px] border-2 border-white/20">
+				<div className="flex items-center gap-2">
+				  <div className="relative">
+					<button
+					  onClick={() => setHovered(hovered === "profile" ? null : "profile")}
+					  className={`flex items-center justify-center w-8 h-8 rounded-full transition-all duration-200 relative z-[1001] ${hovered === 'profile' ? 'bg-[#6a0822] scale-110 shadow border-0 text-white' : 'bg-white border-2 border-slate-200 shadow text-[#6a0822]'}`}
+					>
+					  <div className="w-6 h-6 rounded-full bg-slate-200 flex items-center justify-center text-[#6a0822] font-bold text-[13px]">
 						👤
 					  </div>
-					  <h3 className="text-white text-[13px] font-semibold mb-1">{currentUser?.email || ""}</h3>
-					  <p className="text-white/80 text-[11px] m-0">{currentUser?.role || ""} Member</p>
-					</div>
-					{/* Menu Items */}
-					<div className="p-2">
-					  {[
-						{ icon: User, label: "Dashboard", href: "/user" },
-						{ icon: LogOut, label: "Logout", href: "/", danger: true }
-					  ].map((item, index) => (
-						<a
-						  key={index}
-						  href={item.href}
-						  className={`flex items-center gap-2 px-2 py-2 rounded-md text-[12px] font-medium transition-all duration-200 mb-1 ${item.danger ? 'text-red-500 hover:bg-red-100' : 'text-slate-700 hover:bg-[#6a0822]/10 hover:text-[#6a0822]'} hover:translate-x-1`}
-						  onClick={() => setHovered(null)}
-						>
-						  <item.icon size={14} />
-						  {item.label}
-						</a>
-					  ))}
-					</div>
+					  {hovered === "profile" && (
+						<div className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-yellow-400 rounded-full flex items-center justify-center animate-pulse">
+						  <Crown size={8} color="#fff" />
+						</div>
+					  )}
+					</button>
+					{/* Profile Dropdown */}
+					{hovered === "profile" && (
+					  <div
+						className="absolute top-[40px] right-0 bg-white rounded-lg shadow-lg min-w-[180px] z-[2000] border border-white/20 animate-slideIn"
+						onMouseLeave={() => setHovered(null)}
+					  >
+						{/* Profile Header */}
+						<div className="bg-[#6a0822] p-3 text-center relative rounded-t-lg">
+						  <div className="w-10 h-10 rounded-full bg-slate-200 mx-auto mb-2 flex items-center justify-center text-[18px] border-2 border-white/20">
+							👤
+						  </div>
+						  <h3 className="text-white text-[13px] font-semibold mb-1">{currentUser?.email || ""}</h3>
+						  <p className="text-white/80 text-[11px] m-0">{currentUser?.role || ""} Member</p>
+						</div>
+						{/* Menu Items */}
+						<div className="p-2">
+						  {[
+							{ icon: User, label: "Dashboard", href: "/user" },
+							{ icon: LogOut, label: "Logout", href: "/", danger: true }
+						  ].map((item, index) => (
+							<a
+							  key={index}
+							  href={item.href}
+							  className={`flex items-center gap-2 px-2 py-2 rounded-md text-[12px] font-medium transition-all duration-200 mb-1 ${item.danger ? 'text-red-500 hover:bg-red-100' : 'text-slate-700 hover:bg-[#6a0822]/10 hover:text-[#6a0822]'} hover:translate-x-1`}
+							  onClick={() => setHovered(null)}
+							>
+							  <item.icon size={14} />
+							  {item.label}
+							</a>
+						  ))}
+						</div>
+					  </div>
+					)}
 				  </div>
-				)}
-			  </div>
+				  {/* Cart Icon */}
+				  <button
+					className="flex items-center justify-center w-8 h-8 rounded-md bg-slate-50/80 text-[#6a0822] hover:bg-[#6a0822] hover:text-white transition-all duration-200 shadow"
+					onClick={() => navigate("/cart")}
+					aria-label="Cart"
+				  >
+					<ShoppingCart size={18} />
+				  </button>
+				</div>
 			  )}
 			</div>
 		  )}

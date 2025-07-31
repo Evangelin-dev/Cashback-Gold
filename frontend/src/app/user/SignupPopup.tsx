@@ -1,20 +1,20 @@
 import React, { useEffect, useRef, useState } from "react";
 // Import useSearchParams to read URL query parameters
-import { useNavigate, useSearchParams } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppDispatch, RootState } from "../../store";
+import { clearAuthError } from "../features/slices/authSlice";
 import {
-  sendRegistrationOtp,
-  verifyOtpAndRegister,
   resendOtp,
   sendLoginOtp,
-  verifyLoginOtp
+  sendRegistrationOtp,
+  verifyLoginOtp,
+  verifyOtpAndRegister
 } from "../features/thunks/authThunks";
-import { clearAuthError } from "../features/slices/authSlice";
 
-import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
-import 'react-phone-number-input/style.css';
 import parsePhoneNumber from 'libphonenumber-js';
+import { isValidPhoneNumber } from 'react-phone-number-input';
+import 'react-phone-number-input/style.css';
 
 interface SignupPopupProps {
   open: boolean;
@@ -268,146 +268,139 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   return (
     // ... JSX remains the same, no changes needed here ...
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.38)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
-      <div style={{ background: "#fff", borderRadius: 32, maxWidth: 800, width: "98vw", padding: "32px 24px 24px 24px", boxShadow: "0 8px 32px #00000022", position: "relative", textAlign: "center", animation: "popup-fade-in 0.25s cubic-bezier(.4,0,.2,1)", maxHeight: "90vh", overflowY: "auto" }}>
-        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: 8 }}>
-          <img src="/logo.png" alt="Logo" style={{ height: 44, marginBottom: 8 }} />
+      <div style={{ background: "#fff", borderRadius: 24, maxWidth: 400, width: "96vw", padding: "18px 10px 10px 10px", boxShadow: "0 4px 16px #00000022", position: "relative", textAlign: "center", animation: "popup-fade-in 0.25s cubic-bezier(.4,0,.2,1)", maxHeight: "90vh", overflowY: "auto" }}>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: 4 }}>
+          <img src="/logo.png" alt="Logo" style={{ height: 28, marginBottom: 4 }} />
         </div>
-        <div style={{ display: "flex", justifyContent: "center", marginBottom: 12, gap: 6 }}>
-          <button style={{ background: mode === "login" ? "#991313" : "#fff", color: mode === "login" ? "#fff" : "#991313", border: "1.5px solid #991313", borderRadius: 8, fontWeight: 700, fontSize: 16, padding: "7px 20px", cursor: "pointer", transition: "all 0.18s" }} onClick={() => switchMode("login")} disabled={isLoading}>Login</button>
-          <button style={{ background: mode === "signup" ? "#991313" : "#fff", color: mode === "signup" ? "#fff" : "#991313", border: "1.5px solid #991313", borderRadius: 8, fontWeight: 700, fontSize: 16, padding: "7px 20px", cursor: "pointer", transition: "all 0.18s" }} onClick={() => switchMode("signup")} disabled={isLoading}>Sign Up</button>
+        <div style={{ display: "flex", justifyContent: "center", marginBottom: 8, gap: 4 }}>
+          <button style={{ background: mode === "login" ? "#991313" : "#fff", color: mode === "login" ? "#fff" : "#991313", border: "1.5px solid #991313", borderRadius: 6, fontWeight: 700, fontSize: 13, padding: "4px 12px", cursor: "pointer", transition: "all 0.18s" }} onClick={() => switchMode("login")} disabled={isLoading}>Login</button>
+          <button style={{ background: mode === "signup" ? "#991313" : "#fff", color: mode === "signup" ? "#fff" : "#991313", border: "1.5px solid #991313", borderRadius: 6, fontWeight: 700, fontSize: 13, padding: "4px 12px", cursor: "pointer", transition: "all 0.18s" }} onClick={() => switchMode("signup")} disabled={isLoading}>Sign Up</button>
         </div>
-        <h2 style={{ fontWeight: 800, fontSize: 24, marginBottom: 8, color: "#991313", textAlign: "center" }}>
+        <h2 style={{ fontWeight: 800, fontSize: 16, marginBottom: 6, color: "#991313", textAlign: "center" }}>
           {mode === "login" ? (step === "form" ? "Login with OTP" : "Verify your OTP") : (step === "form" ? "Create your account" : "Verify your Email")}
         </h2>
-        <div style={{ borderBottom: "2px solid #991313", width: 60, margin: "0 auto 18px auto", opacity: 0.7 }} />
+        <div style={{ borderBottom: "2px solid #991313", width: 36, margin: "0 auto 10px auto", opacity: 0.7 }} />
 
-        {(authError || validationError) && (<div style={{ color: "#991313", fontWeight: 600, marginBottom: 10, padding: "8px", background: "#f9e9c7", borderRadius: "8px" }}>{authError || validationError}</div>)}
+        {(authError || validationError) && (<div style={{ color: "#991313", fontWeight: 600, marginBottom: 6, padding: "6px", background: "#f9e9c7", borderRadius: "6px", fontSize: 13 }}>{authError || validationError}</div>)}
 
         {mode === "login" && step === "form" && (
           <form style={{ marginTop: 0 }} onSubmit={handleSendLoginOtp} autoComplete="off">
-            <div style={{ textAlign: "left", marginBottom: 12 }}>
-              <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>
-                Email / Phone Number <span style={{ color: "#991313" }}>*</span>
+            <div style={{ textAlign: "left", marginBottom: 8 }}>
+              <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>
+                Email <span style={{ color: "#991313" }}>*</span>
               </label>
+              {/*
               <div style={{ display: "flex", alignItems: "center" }}>
                 {!isLoginInputEmail && (
                   <select value={loginCountryCode} onChange={e => setLoginCountryCode(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRight: 'none', borderRadius: '10px 0 0 10px', background: "#f9f7f6", padding: "10px 12px", fontSize: 15, color: "#991313", outline: "none", boxShadow: "0 1px 4px #f9e9c7" }}>
-                    <option value="+91">+91 (India)</option>
-                    <option value="+1">+1 (USA/Canada)</option>
-                    <option value="+44">+44 (UK)</option>
-                    <option value="+61">+61 (Australia)</option>
-                    <option value="+81">+81 (Japan)</option>
-                    <option value="+49">+49 (Germany)</option>
-                    <option value="+33">+33 (France)</option>
-                    <option value="+39">+39 (Italy)</option>
-                    <option value="+86">+86 (China)</option>
-                    <option value="+971">+971 (UAE)</option>
-                    <option value="+880">+880 (Bangladesh)</option>
-                    <option value="+92">+92 (Pakistan)</option>
-                    <option value="+7">+7 (Russia)</option>
-                    <option value="+82">+82 (South Korea)</option>
-                    <option value="+966">+966 (Saudi Arabia)</option>
-                    <option value="+94">+94 (Sri Lanka)</option>
-                    <option value="+27">+27 (South Africa)</option>
-                    <option value="+34">+34 (Spain)</option>
-                    <option value="+62">+62 (Indonesia)</option>
-                    <option value="+63">+63 (Philippines)</option>
+                    ...country options...
                   </select>
                 )}
-                <input
-                  type="text"
-                  placeholder="Enter email or phone"
-                  value={loginIdentifier}
-                  onChange={e => setLoginIdentifier(e.target.value)}
-                  style={{
-                    border: "1.5px solid #f0e3d1",
-                    borderRadius: isLoginInputEmail ? '10px' : '0 10px 10px 0',
-                    background: "#f9f7f6",
-                    padding: "10px 14px",
-                    width: "100%",
-                    fontSize: 15,
-                    fontWeight: 500,
-                    color: "#991313",
-                    outline: "none",
-                    boxShadow: "0 1px 4px #f9e9c7"
-                  }}
-                  required
-                />
-              </div>
+              */}
+              <input
+                type="email"
+                placeholder="Enter email"
+                value={loginIdentifier}
+                onChange={e => setLoginIdentifier(e.target.value)}
+                style={{
+                  border: "1.5px solid #f0e3d1",
+                  borderRadius: '10px',
+                  background: "#f9f7f6",
+                  padding: "7px 10px",
+                  width: "100%",
+                  fontSize: 13,
+                  fontWeight: 500,
+                  color: "#991313",
+                  outline: "none",
+                  boxShadow: "0 1px 4px #f9e9c7"
+                }}
+                required
+              />
+              {/*</div>*/}
             </div>
-            <button type="submit" disabled={isLoading} style={{ width: "100%", background: "linear-gradient(90deg, #991313 70%, #bf7e1a 100%)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 0", fontWeight: 700, fontSize: 17, marginTop: 6, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Sending OTP..." : "Get OTP"}</button>
+            <button type="submit" disabled={isLoading} style={{ width: "100%", background: "#991313", color: "#fff", border: "none", borderRadius: 8, padding: "8px 0", fontWeight: 700, fontSize: 14, marginTop: 4, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Sending OTP..." : "Get OTP"}</button>
           </form>
         )}
 
         {mode === "signup" && step === "form" && (
           <form style={{ marginTop: 0, width: "100%" }} onSubmit={handleSignupSubmit} autoComplete="off" noValidate>
-            <div className="signup-fields-row" style={{ display: "flex", flexWrap: "wrap", gap: 16, width: "100%" }}>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Name <span style={{ color: "#991313" }}>*</span></label>
-                <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
+            <div className="signup-fields-row" style={{ display: "flex", flexWrap: "wrap", gap: 8, width: "100%" }}>
+              {/* Name - single row */}
+              <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
+                <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Name <span style={{ color: "#991313" }}>*</span></label>
+                <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 8, background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} required />
               </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Gender <span style={{ color: "#991313" }}>*</span></label>
-                <select value={signupGender} onChange={e => setSignupGender(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required><option value="">Select Gender</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select>
+              {/* Gender & D.O.B - same row */}
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
+                  <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>Gender <span style={{ color: '#991313' }}>*</span></label>
+                  <select value={signupGender} onChange={e => setSignupGender(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required><option value="">Select Gender</option><option value="male">Male</option><option value="female">Female</option><option value="other">Other</option></select>
+                </div>
+                <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
+                  <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>D.O.B <span style={{ color: '#991313' }}>*</span></label>
+                  <input type="date" value={signupDOB} onChange={e => setSignupDOB(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
+                </div>
               </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>D.O.B <span style={{ color: "#991313" }}>*</span></label>
-                <input type="date" value={signupDOB} onChange={e => setSignupDOB(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
+              {/* Email - single row */}
+              <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
+                <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Email ID <span style={{ color: "#991313" }}>*</span></label>
+                <input type="email" placeholder="Enter your email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 8, background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} required />
               </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Email ID <span style={{ color: "#991313" }}>*</span></label>
-                <input type="email" placeholder="Enter your email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
+              {/* City & Town - same row */}
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
+                  <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>City <span style={{ color: '#991313' }}>*</span></label>
+                  <input type="text" placeholder="Enter your city" value={signupCity} onChange={e => setSignupCity(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
+                </div>
+                <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
+                  <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>Town <span style={{ color: '#991313' }}>*</span></label>
+                  <input type="text" placeholder="Enter your town" value={signupTown} onChange={e => setSignupTown(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
+                </div>
               </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Phone Number <span style={{ color: "#991313" }}>*</span></label>
-                <PhoneInput className="phone-input-container" placeholder="Enter phone number" value={fullPhoneNumber} onChange={setFullPhoneNumber} defaultCountry="IN" required />
+              {/* State & Country - same row */}
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
+                  <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>State <span style={{ color: '#991313' }}>*</span></label>
+                  <input type="text" placeholder="Enter your state" value={signupState} onChange={e => setSignupState(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
+                </div>
+                <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
+                  <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>Country <span style={{ color: '#991313' }}>*</span></label>
+                  <input type="text" placeholder="Enter your country" value={signupCountry} onChange={e => setSignupCountry(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
+                </div>
               </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>City <span style={{ color: "#991313" }}>*</span></label>
-                <input type="text" placeholder="Enter your city" value={signupCity} onChange={e => setSignupCity(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
-              </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Town <span style={{ color: "#991313" }}>*</span></label>
-                <input type="text" placeholder="Enter your town" value={signupTown} onChange={e => setSignupTown(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
-              </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>State <span style={{ color: "#991313" }}>*</span></label>
-                <input type="text" placeholder="Enter your state" value={signupState} onChange={e => setSignupState(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
-              </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Country <span style={{ color: "#991313" }}>*</span></label>
-                <input type="text" placeholder="Enter your country" value={signupCountry} onChange={e => setSignupCountry(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
-              </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Password <span style={{ color: "#991313" }}>*</span></label>
-                <input type="password" placeholder="Enter password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
-              </div>
-              <div style={{ flex: "1 1 45%", minWidth: 180, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 15, marginBottom: 4, display: "block" }}>Confirm Password <span style={{ color: "#991313" }}>*</span></label>
-                <input type="password" placeholder="Confirm password" value={signupConfirmPassword} onChange={e => setSignupConfirmPassword(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 10, background: "#f9f7f6", padding: "10px 14px", width: "100%", fontSize: 15, fontWeight: 500, color: "#991313", outline: "none" }} required />
+              {/* Password & Confirm Password - same row */}
+              <div style={{ display: 'flex', gap: 8, width: '100%' }}>
+                <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
+                  <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>Password <span style={{ color: '#991313' }}>*</span></label>
+                  <input type="password" placeholder="Enter password" value={signupPassword} onChange={e => setSignupPassword(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
+                </div>
+                <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
+                  <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>Confirm Password <span style={{ color: '#991313' }}>*</span></label>
+                  <input type="password" placeholder="Confirm password" value={signupConfirmPassword} onChange={e => setSignupConfirmPassword(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
+                </div>
               </div>
             </div>
-            <div style={{ display: "flex", alignItems: "center", margin: "12px 0 12px 0" }}>
-              <input type="checkbox" id="agree_signup" style={{ marginRight: 8, width: 16, height: 16, accentColor: "#991313" }} required />
-              <label htmlFor="agree_signup" style={{ fontSize: 14, color: "#222", fontWeight: 500 }}>I agree to <span style={{ color: "#991313", textDecoration: "underline", cursor: "pointer" }}>Terms and Condition</span> and <span style={{ color: "#991313", textDecoration: "underline", cursor: "pointer" }}>Privacy Policy</span></label>
+            <div style={{ display: "flex", alignItems: "center", margin: "8px 0 8px 0" }}>
+              <input type="checkbox" id="agree_signup" style={{ marginRight: 6, width: 13, height: 13, accentColor: "#991313" }} required />
+              <label htmlFor="agree_signup" style={{ fontSize: 11, color: "#222", fontWeight: 500 }}>I agree to <span style={{ color: "#991313", textDecoration: "underline", cursor: "pointer" }}>Terms and Condition</span> and <span style={{ color: "#991313", textDecoration: "underline", cursor: "pointer" }}>Privacy Policy</span></label>
             </div>
-            <button type="submit" disabled={isLoading} style={{ width: "100%", background: "linear-gradient(90deg, #991313 70%, #bf7e1a 100%)", color: "#fff", border: "none", borderRadius: 10, padding: "12px 0", fontWeight: 700, fontSize: 17, marginTop: 6, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Sending OTP..." : "Get OTP"}</button>
+            <button type="submit" disabled={isLoading} style={{ width: "100%", background: "#991313", color: "#fff", border: "none", borderRadius: 8, padding: "8px 0", fontWeight: 700, fontSize: 14, marginTop: 4, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Sending OTP..." : "Get OTP"}</button>
           </form>
         )}
 
         {step === "otp" && (
           <div>
-            <div style={{ fontWeight: 700, fontSize: 20, color: "#991313", marginBottom: 10 }}>OTP sent to <span style={{ color: "#222" }}>{otpTargetIdentifier}</span></div>
-            <div style={{ color: "#444", fontSize: 15, marginBottom: 18 }}>Please enter the <b>6-digit OTP</b> sent to your email or phone.</div>
-            <div style={{ display: "flex", justifyContent: "center", gap: 18, marginBottom: 18 }}>
-              {[0, 1, 2, 3, 4, 5].map(idx => (<input key={idx} ref={el => { otpRefs.current[idx] = el as HTMLInputElement | null; }} type="text" inputMode="numeric" maxLength={1} value={otp[idx]} onChange={e => handleOtpChange(idx, e.target.value)} onKeyDown={e => handleOtpKeyDown(idx, e)} style={{ width: 48, height: 48, fontSize: 28, textAlign: "center", border: "2px solid #991313", borderRadius: 10, outline: "none", background: "#f9f7f6", fontWeight: 700, color: "#991313" }} autoFocus={idx === 0} disabled={isLoading} />))}
+            <div style={{ fontWeight: 700, fontSize: 14, color: "#991313", marginBottom: 6 }}>OTP sent to <span style={{ color: "#222" }}>{otpTargetIdentifier}</span></div>
+            <div style={{ color: "#444", fontSize: 11, marginBottom: 10 }}>Please enter the <b>6-digit OTP</b> sent to your email.</div>
+            <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 10 }}>
+              {[0, 1, 2, 3, 4, 5].map(idx => (<input key={idx} ref={el => { otpRefs.current[idx] = el as HTMLInputElement | null; }} type="text" inputMode="numeric" maxLength={1} value={otp[idx]} onChange={e => handleOtpChange(idx, e.target.value)} onKeyDown={e => handleOtpKeyDown(idx, e)} style={{ width: 28, height: 28, fontSize: 16, textAlign: "center", border: "2px solid #991313", borderRadius: 7, outline: "none", background: "#f9f7f6", fontWeight: 700, color: "#991313" }} autoFocus={idx === 0} disabled={isLoading} />))}
             </div>
-            <button onClick={handleVerifyOtp} disabled={isLoading} style={{ width: "100%", background: "linear-gradient(90deg, #991313 70%, #bf7e1a 100%)", color: "#fff", border: "none", borderRadius: 14, padding: "14px 0", fontWeight: 700, fontSize: 20, marginTop: 8, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Verifying..." : "Verify OTP"}</button>
-            <div style={{ marginTop: 18 }}><span onClick={isLoading ? undefined : handleResendOtp} style={{ color: "#991313", fontWeight: 500, cursor: isLoading ? "not-allowed" : "pointer", fontSize: 15, textDecoration: "underline", opacity: isLoading ? 0.7 : 1 }}>Resend OTP</span></div>
+            <button onClick={handleVerifyOtp} disabled={isLoading} style={{ width: "100%", background: "#991313", color: "#fff", border: "none", borderRadius: 8, padding: "8px 0", fontWeight: 700, fontSize: 14, marginTop: 4, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Verifying..." : "Verify OTP"}</button>
+            <div style={{ marginTop: 10 }}><span onClick={isLoading ? undefined : handleResendOtp} style={{ color: "#991313", fontWeight: 500, cursor: isLoading ? "not-allowed" : "pointer", fontSize: 11, textDecoration: "underline", opacity: isLoading ? 0.7 : 1 }}>Resend OTP</span></div>
           </div>
         )}
 
-        <button onClick={handleClose} style={{ position: "absolute", top: 14, right: 18, background: "none", border: "none", fontSize: 28, color: "#991313", cursor: "pointer", fontWeight: 700 }} aria-label="Close" disabled={isLoading}>×</button>
+        <button onClick={handleClose} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", fontSize: 18, color: "#991313", cursor: "pointer", fontWeight: 700 }} aria-label="Close" disabled={isLoading}>×</button>
         <style>{`
             @keyframes popup-fade-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
             .phone-input-container .PhoneInputInput, .phone-input-container .PhoneInputCountrySelect {

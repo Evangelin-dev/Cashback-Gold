@@ -163,7 +163,7 @@ const AppRoutes: React.FC = () => {
 
       {/*User routes */}
       <Route element={<UserLayout />}>
-        <Route path="/" element={<UserHome />} />
+        <Route path="/" element={<LUserHome />} />
         <Route path="/navbar" element={<NavBar />} />
         <Route path="/footer" element={<Footer />} />
         <Route path="/terms" element={<Terms />} />
@@ -174,7 +174,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/privacy" element={<PrivacyPlicyPage />} />
         <Route path="/partnerpopup" element={<PartnerPopup open={true} onClose={() => { }} />} />
         <Route path="/signuppopup" element={<SignupPopup open={true} onClose={() => { }} />} />
-          <Route path="/cart" element={<Cart />} />
+          
 
 
         <Route path="/refund" element={<Refund />} />
@@ -196,6 +196,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/lcontactus" element={<LContactUsPage />} />
           <Route path="/laboutus" element={<LAboutUsPage />} />
           <Route path="/lprivacy" element={<LPrivacyPlicyPage />} />
+          <Route path="/lbuyornaments" element={<BuyOrnamentsPage />} />
           <Route path="/buynow" element={<BuyNow />} />
           <Route path="/Wishlist" element={<Wishlist />} />
           <Route path="/lUserHome" element={<LUserHome />} />
@@ -203,6 +204,7 @@ const AppRoutes: React.FC = () => {
           <Route path="/lrefund" element={<LRefund />} />
           <Route path="/lgoldsip" element={<LGoldSIPPlans />} />
           <Route path="/lschemes" element={<LGoldPlantSchemes />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="/lSIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
           <Route path="/lshippingpolicy" element={<LShippingPolicy />} />
 

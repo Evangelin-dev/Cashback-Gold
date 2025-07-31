@@ -120,7 +120,7 @@ const Cart = () => {
               <ShoppingBag className="mx-auto h-16 w-16 text-gray-300" />
               <h2 className="mt-6 text-xl font-semibold text-gray-800 sm:text-2xl">Your cart is empty</h2>
               <p className="mt-2 text-gray-500">Looks like you haven't added any ornaments yet.</p>
-              <button onClick={() => navigate('/buyornaments')} className="mt-6 rounded-lg bg-[#7a1436] px-6 py-3 font-semibold text-white transition-transform hover:scale-105">Start Shopping</button>
+              <button onClick={() => navigate('/lbuyornaments')} className="mt-6 rounded-lg bg-[#7a1436] px-6 py-3 font-semibold text-white transition-transform hover:scale-105">Start Shopping</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-start">
