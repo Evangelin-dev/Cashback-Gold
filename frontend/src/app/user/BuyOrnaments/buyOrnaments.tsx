@@ -134,22 +134,142 @@ const BuyOrnamentsPage = () => {
   return (
 
     <div className="bg-[#fafbfc] min-h-screen font-inter">
-      {/* Hero Section */}
-      <div className="bg-[#7a1335] min-h-[50vh] flex items-center justify-center relative overflow-hidden pt-6 px-2">
-        <div className="text-center z-20 max-w-[700px] px-2.5">
-          <div className="inline-flex items-center bg-white/10 backdrop-blur px-3 py-1.5 rounded-full mb-4 border border-white/20">
-            <Sparkles size={14} color="#ffffff" className="mr-1" />
-            <span className="text-white text-[0.7rem] font-medium">Curated Premium Collection</span>
+      {/* Hero Section Carousel */}
+      {(() => {
+        // Carousel data for hero section
+        const heroSlides = [
+          {
+            badge: 'Curated Premium Collection',
+            badgeIcon: <Sparkles size={14} color="#ffffff" className="mr-1" />,
+            heading: 'Exquisite Gold',
+            subheading: 'Ornaments',
+            description: 'Discover timeless elegance with our handcrafted gold jewelry collection, where tradition meets contemporary design.'
+          },
+          {
+            badge: 'Limited Edition',
+            badgeIcon: <Crown size={14} color="#ffffff" className="mr-1" />,
+            heading: 'Royal Collection',
+            subheading: 'Exclusive Designs',
+            description: 'Step into royalty with our limited edition gold pieces, crafted for those who desire exclusivity and grandeur.'
+          },
+          {
+            badge: 'Best Sellers',
+            badgeIcon: <Award size={14} color="#ffffff" className="mr-1" />,
+            heading: 'Timeless Classics',
+            subheading: 'All-Time Favourites',
+            description: 'Our most loved designs, trusted by thousands, perfect for every occasion and every generation.'
+          }
+        ];
+        const [heroIndex, setHeroIndex] = React.useState(0);
+        const heroRef = React.useRef<HTMLDivElement>(null);
+        // Drag/swipe logic
+        React.useEffect(() => {
+          const el = heroRef.current;
+          if (!el) return;
+          let startX = 0;
+          let isDragging = false;
+          let deltaX = 0;
+          let threshold = 60;
+          const onMouseDown = (e: MouseEvent) => {
+            isDragging = true;
+            startX = e.pageX;
+            el.style.cursor = 'grabbing';
+          };
+          const onMouseMove = (e: MouseEvent) => {
+            if (!isDragging) return;
+            deltaX = e.pageX - startX;
+          };
+          const onMouseUp = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            el.style.cursor = 'grab';
+            if (deltaX > threshold && heroIndex > 0) setHeroIndex(heroIndex - 1);
+            else if (deltaX < -threshold && heroIndex < heroSlides.length - 1) setHeroIndex(heroIndex + 1);
+            deltaX = 0;
+          };
+          el.addEventListener('mousedown', onMouseDown);
+          window.addEventListener('mousemove', onMouseMove);
+          window.addEventListener('mouseup', onMouseUp);
+          // Touch events
+          const onTouchStart = (e: TouchEvent) => {
+            isDragging = true;
+            startX = e.touches[0].pageX;
+          };
+          const onTouchMove = (e: TouchEvent) => {
+            if (!isDragging) return;
+            deltaX = e.touches[0].pageX - startX;
+          };
+          const onTouchEnd = () => {
+            if (!isDragging) return;
+            isDragging = false;
+            if (deltaX > threshold && heroIndex > 0) setHeroIndex(heroIndex - 1);
+            else if (deltaX < -threshold && heroIndex < heroSlides.length - 1) setHeroIndex(heroIndex + 1);
+            deltaX = 0;
+          };
+          el.addEventListener('touchstart', onTouchStart);
+          el.addEventListener('touchmove', onTouchMove);
+          el.addEventListener('touchend', onTouchEnd);
+          return () => {
+            el.removeEventListener('mousedown', onMouseDown);
+            window.removeEventListener('mousemove', onMouseMove);
+            window.removeEventListener('mouseup', onMouseUp);
+            el.removeEventListener('touchstart', onTouchStart);
+            el.removeEventListener('touchmove', onTouchMove);
+            el.removeEventListener('touchend', onTouchEnd);
+          };
+        }, [heroIndex, heroSlides.length]);
+        return (
+          <div className="bg-[#7a1335] min-h-[50vh] flex items-center justify-center relative overflow-hidden pt-6 px-2 select-none" ref={heroRef} style={{cursor:'grab'}}>
+            {/* Left Arrow */}
+            <button
+              type="button"
+              className="absolute left-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white rounded-full w-9 h-9 flex items-center justify-center border border-white/30 disabled:opacity-40"
+              onClick={() => setHeroIndex(i => Math.max(0, i - 1))}
+              disabled={heroIndex === 0}
+              aria-label="Previous slide"
+            >
+              <svg width="22" height="22" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+            </button>
+            {/* Slide Content */}
+            <div className="text-center z-20 max-w-[700px] px-2.5 transition-all duration-500" key={heroIndex}>
+              <div className="inline-flex items-center bg-white/10 backdrop-blur px-3 py-1.5 rounded-full mb-4 border border-white/20">
+                {heroSlides[heroIndex].badgeIcon}
+                <span className="text-white text-[0.7rem] font-medium">{heroSlides[heroIndex].badge}</span>
+              </div>
+              <h1 className="text-white font-extrabold leading-tight mb-3 text-[clamp(1.5rem,4vw,2.2rem)] tracking-tight">
+                {heroSlides[heroIndex].heading}<br />
+                <span className="text-white/70 font-light">{heroSlides[heroIndex].subheading}</span>
+              </h1>
+              <p className="text-white/80 text-sm max-w-[400px] mx-auto mb-6 leading-snug">
+                {heroSlides[heroIndex].description}
+              </p>
+            </div>
+            {/* Right Arrow */}
+            <button
+              type="button"
+              className="absolute right-4 top-1/2 -translate-y-1/2 z-20 bg-white/20 hover:bg-white/40 text-white rounded-full w-9 h-9 flex items-center justify-center border border-white/30 disabled:opacity-40"
+              onClick={() => setHeroIndex(i => Math.min(heroSlides.length - 1, i + 1))}
+              disabled={heroIndex === heroSlides.length - 1}
+              aria-label="Next slide"
+            >
+              <svg width="22" height="22" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+            </button>
+            {/* Dots */}
+            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
+              {heroSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={`w-2.5 h-2.5 rounded-full border border-white/40 ${heroIndex === idx ? 'bg-white' : 'bg-white/30'}`}
+                  onClick={() => setHeroIndex(idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                  style={{transition:'background 0.2s'}}
+                />
+              ))}
+            </div>
           </div>
-          <h1 className="text-white font-extrabold leading-tight mb-3 text-[clamp(1.5rem,4vw,2.2rem)] tracking-tight">
-            Exquisite Gold<br />
-            <span className="text-white/70 font-light">Ornaments</span>
-          </h1>
-          <p className="text-white/80 text-sm max-w-[400px] mx-auto mb-6 leading-snug">
-            Discover timeless elegance with our handcrafted gold jewelry collection, where tradition meets contemporary design.
-          </p>
-        </div>
-      </div>
+        );
+      })()}
+
 
       {/* Sticky Filter/Search Bar - below navbar (assume navbar is h-12, so top-12) */}
       <div className="bg-white py-4 px-2 border-b border-[#f0f0f3] sticky top-12 z-30">
@@ -224,6 +344,100 @@ const BuyOrnamentsPage = () => {
             </button>
           </div>
         </div>
+      </div>
+
+      {/* Category Carousel/Slider below Search Bar with drag-to-scroll */}
+      <div className="w-full bg-white py-3 px-2 border-b border-[#f0f0f3]">
+        <div className="max-w-[900px] mx-auto relative flex items-center">
+          {/* Left Arrow */}
+          <button
+            type="button"
+            className="absolute left-0 z-10 bg-white shadow rounded-full w-7 h-7 flex items-center justify-center top-1/2 -translate-y-1/2 border border-[#eee] disabled:opacity-40"
+            onClick={() => {
+              const el = document.getElementById('category-carousel');
+              if (el) el.scrollBy({ left: -200, behavior: 'smooth' });
+            }}
+            aria-label="Scroll left"
+          >
+            <svg width="18" height="18" fill="none" stroke="#7a1335" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+          </button>
+          {/* Carousel with drag events */}
+          <div
+            id="category-carousel"
+            className="flex gap-3 overflow-x-auto px-8 w-full scroll-smooth hide-scrollbar select-none"
+            style={{ WebkitOverflowScrolling: 'touch', cursor: 'grab' }}
+            onMouseDown={e => {
+              const el = e.currentTarget;
+              el.style.cursor = 'grabbing';
+              let startX = e.pageX - el.offsetLeft;
+              let scrollLeft = el.scrollLeft;
+              const onMouseMove = (ev: MouseEvent) => {
+                const x = ev.pageX - el.offsetLeft;
+                el.scrollLeft = scrollLeft - (x - startX);
+              };
+              const onMouseUp = () => {
+                el.style.cursor = 'grab';
+                window.removeEventListener('mousemove', onMouseMove);
+                window.removeEventListener('mouseup', onMouseUp);
+              };
+              window.addEventListener('mousemove', onMouseMove);
+              window.addEventListener('mouseup', onMouseUp);
+            }}
+            onTouchStart={e => {
+              const el = e.currentTarget;
+              const touch = e.touches[0];
+              let startX = touch.pageX - el.offsetLeft;
+              let scrollLeft = el.scrollLeft;
+              const onTouchMove = (ev: TouchEvent) => {
+                const moveTouch = ev.touches[0];
+                const x = moveTouch.pageX - el.offsetLeft;
+                el.scrollLeft = scrollLeft - (x - startX);
+              };
+              const onTouchEnd = () => {
+                window.removeEventListener('touchmove', onTouchMove);
+                window.removeEventListener('touchend', onTouchEnd);
+              };
+              window.addEventListener('touchmove', onTouchMove);
+              window.addEventListener('touchend', onTouchEnd);
+            }}
+          >
+            {/* Online jewelry images for categories (fixed URLs) */}
+            {[
+              { img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80', label: 'Rakhi Special'},
+              { img: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=200&q=80', label: 'Pendants' },
+              { img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=200&q=80', label: 'Personalised' },
+              { img: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=200&q=80', label: 'Silver Rakhi', },
+              { img: 'https://images.unsplash.com/photo-1512436991641-6745cdb1723f?auto=format&fit=crop&w=200&q=80', label: 'Earrings' },
+              { img: 'https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=200&q=80', label: 'Rings' },
+              { img: 'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=200&q=80', label: 'Bracelets' },
+              { img: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=200&q=80', label: 'Anklets' },
+            ].map((cat, idx) => (
+              <div key={cat.label} className="flex flex-col items-center min-w-[90px] max-w-[100px] mx-1">
+                <div className="relative w-[70px] h-[70px] rounded-2xl overflow-hidden bg-[#f9f7f6] flex items-center justify-center mb-1 shadow border border-[#f0e9e0]">
+                  <img src={cat.img} alt={cat.label} className="w-full h-full object-cover" />
+        
+                </div>
+                <div className="text-xs font-medium text-[#7a1335] text-center mt-0.5 whitespace-nowrap">{cat.label}</div>
+              </div>
+            ))}
+          </div>
+          {/* Right Arrow */}
+          <button
+            type="button"
+            className="absolute right-0 z-10 bg-white shadow rounded-full w-7 h-7 flex items-center justify-center top-1/2 -translate-y-1/2 border border-[#eee] disabled:opacity-40"
+            onClick={() => {
+              const el = document.getElementById('category-carousel');
+              if (el) el.scrollBy({ left: 200, behavior: 'smooth' });
+            }}
+            aria-label="Scroll right"
+          >
+            <svg width="18" height="18" fill="none" stroke="#7a1335" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+          </button>
+        </div>
+        <style>{`
+          .hide-scrollbar::-webkit-scrollbar { display: none; }
+          .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+        `}</style>
       </div>
 
       <div style={{ padding: '20px 8px', maxWidth: '900px', margin: '0 auto' }}>

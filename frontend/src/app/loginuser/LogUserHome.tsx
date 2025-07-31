@@ -1,9 +1,10 @@
 import { ArrowRight, Clock, Coins, Gift, Quote, RotateCcw, ShieldCheck, Truck } from "lucide-react";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { schemes } from "../../../constants";
 import Carousel from "../components/custom/Carousel";
 import style from "./style.module.css";
+import axiosInstance from "../../utils/axiosInstance";
 
 // Helper hook for scroll animation
 function useScrollFadeIn(direction: "left" | "right" | "up" | "down" = "up", duration = 700, delay = 0) {
@@ -63,18 +64,43 @@ function useScrollFadeIn(direction: "left" | "right" | "up" | "down" = "up", dur
   return dom;
 }
 
-const LUserHome = () => {
 
+
+const LUserHome = () => {
   const [isMobile, setIsMobile] = useState(false);
+
+  // Live metal rates state (same as AdminDashboard)
+  const [apiGoldPrice, setApiGoldPrice] = useState<string | null>(null);
+  const [apiSilverPrice, setApiSilverPrice] = useState<string | null>(null);
+  const [rateLoading, setRateLoading] = useState(true);
+  const [rateError, setRateError] = useState<string | null>(null);
+
+  // Fetch rates logic (copied from AdminDashboard)
+  const fetchRates = useCallback(async () => {
+    setRateLoading(true);
+    setRateError(null);
+    try {
+      const response = await axiosInstance.get('/api/metal-rates');
+      const { goldRateInrPerGram, silverRateInrPerGram } = response.data;
+      setApiGoldPrice(goldRateInrPerGram.toFixed(2));
+      setApiSilverPrice(silverRateInrPerGram.toFixed(2));
+    } catch (err) {
+      setRateError("Failed to fetch rates.");
+    } finally {
+      setRateLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRates();
+  }, [fetchRates]);
 
   useEffect(() => {
     const checkScreenSize = () => {
       setIsMobile(window.innerWidth < 768);
     };
-
     checkScreenSize();
     window.addEventListener('resize', checkScreenSize);
-
     return () => window.removeEventListener('resize', checkScreenSize);
   }, []);
 
@@ -86,7 +112,6 @@ const LUserHome = () => {
     { src: "/assets/phonepe.png", alt: "PhonePe" }
   ];
 
-
   const navigate = useNavigate();
   // refs for scroll animation
   const schemeRef = useScrollFadeIn("up", 700, 0);
@@ -96,7 +121,6 @@ const LUserHome = () => {
   const whyRef = useScrollFadeIn("left", 700, 0);
   const convertRef = useScrollFadeIn("right", 700, 0);
   const faqRef = useScrollFadeIn("up", 700, 0);
-
 
   return (
     <div >
@@ -130,7 +154,9 @@ const LUserHome = () => {
                     </span>
                   </div>
                   <div className="flex items-end mb-1">
-                    <span className="font-bold text-[14px] text-[#7a1335]">8000/gm</span>
+                    <span className="font-bold text-[14px] text-[#7a1335]">
+                      {rateLoading ? '...' : rateError ? '--' : apiGoldPrice ? `${(Number(apiGoldPrice) * 0.9167).toFixed(0)}/gm` : '--'}
+                    </span>
                     <span className="text-[#888] text-[10px] ml-[6px] mb-[1px]">
                       +3% GST applicable
                     </span>
@@ -152,7 +178,9 @@ const LUserHome = () => {
                     </span>
                   </div>
                   <div className="flex items-end mb-1">
-                    <span className="font-bold text-[14px] text-[#7a1335]">8705/gm</span>
+                    <span className="font-bold text-[14px] text-[#7a1335]">
+                      {rateLoading ? '...' : rateError ? '--' : apiGoldPrice ? `${apiGoldPrice}/gm` : '--'}
+                    </span>
                     <span className="text-[#888] text-[10px] ml-[6px] mb-[1px]">
                       +3% GST applicable
                     </span>
@@ -174,7 +202,9 @@ const LUserHome = () => {
                     </span>
                   </div>
                   <div className="flex items-end mb-1">
-                    <span className="font-bold text-[14px] text-[#7a1335]">107/gm</span>
+                    <span className="font-bold text-[14px] text-[#7a1335]">
+                      {rateLoading ? '...' : rateError ? '--' : apiSilverPrice ? `${apiSilverPrice}/gm` : '--'}
+                    </span>
                     <span className="text-[#888] text-[10px] ml-[6px] mb-[1px]">
                       +3% GST applicable
                     </span>
@@ -200,9 +230,9 @@ const LUserHome = () => {
           {schemes.map((scheme) => {
             let buttonLabel = "Buy scheme";
             const titleLower = scheme.title.toLowerCase();
-            if (titleLower.includes("chit")) buttonLabel = "Buy Chit";
-            else if (titleLower.includes("sip")) buttonLabel = "Start SIP";
-            else if (titleLower.includes("gold")) buttonLabel = "Buy Gold";
+            if (titleLower.includes("chit")) buttonLabel = "Saving Scheme";
+            else if (titleLower.includes("sip")) buttonLabel = "CashBack Gold";
+            else if (titleLower.includes("gold")) buttonLabel = "Gold Plant";
             return (
               <div
                 key={scheme.id}
@@ -366,8 +396,9 @@ const LUserHome = () => {
         >
           {/* Left content */}
           <div className="flex-2 min-w-[160px] w-full md:w-auto">
-            <div className="font-bold text-[16px] text-[#7a1335] mb-1 font-inherit tracking-[0.5px]">
+            <div className="font-bold text-[16px] text-[#7a1335] mb-1 font-inherit tracking-[0.5px] flex items-center gap-2">
               Convert Digital to Physical Gold & Silver
+              {/* <span className="bg-[#fff3cd] text-[#bfa21a] font-semibold text-[11px] rounded px-[7px] py-[2px] ml-2 border border-[#ffe066]">99.9%</span> */}
             </div>
             <div className="text-[#7a1335] text-[12px] mb-1 font-medium">
               24K Gold / Silver Coins & Bars delivered to your doorstep
@@ -381,7 +412,7 @@ const LUserHome = () => {
               onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.04)"; }}
               onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
             >
-              Buy Gold
+              Buy   99.9% Gold 
               <ArrowRight size={16} />
             </button>
             <div className="mt-2 text-[#bfa21a] font-medium text-[11px] flex items-center gap-1">
