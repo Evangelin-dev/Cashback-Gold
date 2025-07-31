@@ -990,5 +990,42 @@
                 constraintName="fk_gold_plant_scheme"/>
     </changeSet>
 
+    <changeSet id="33" author="azeem">
+        <createTable tableName="cashback_gold_schemes">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="duration" type="VARCHAR(100)"/>
+            <column name="min_invest" type="VARCHAR(100)"/>
+            <column name="status" type="VARCHAR(50)"/>
+            <column name="description" type="TEXT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="33-1" author="azeem">
+        <sql>
+            ALTER TABLE cashback_gold_schemes ADD CONSTRAINT chk_cashback_gold_schemes_status
+                CHECK (status IN ('ACTIVE','CLOSED'));
+        </sql>
+    </changeSet>
+
+    <changeSet id="33-2" author="azeem">
+        <addColumn tableName="cashback_gold_schemes">
+            <column name="created_at" type="TIMESTAMP"/>
+            <column name="updated_at" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet id="33-3" author="azeem">
+        <addColumn tableName="cashback_gold_schemes">
+            <column name="key_point1" type="VARCHAR(255)"/>
+            <column name="key_point2" type="VARCHAR(255)"/>
+            <column name="key_point3" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
 
 </databaseChangeLog>

@@ -99,6 +99,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/inventory").hasAnyAuthority("ADMIN", "B2B")
                                 .requestMatchers("/api/user-savings/**").hasAnyAuthority("USER")
                                 .requestMatchers("/user/gold-plant/**").hasAnyAuthority("USER")
+                                .requestMatchers("/api/cashback-gold-schemes/**").hasAnyAuthority("ADMIN")
                                 // All other requests require authentication
                                 .anyRequest().authenticated()
                 )
