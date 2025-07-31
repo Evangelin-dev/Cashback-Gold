@@ -4,15 +4,9 @@ import com.cashback.gold.config.MetalApiProperties;
 import com.cashback.gold.dto.GoldPurchaseRequest;
 import com.cashback.gold.dto.MetalRatesResponse;
 import com.cashback.gold.dto.OrderResponse;
-import com.cashback.gold.entity.GoldPurchaseOrder;
-import com.cashback.gold.entity.User;
-import com.cashback.gold.entity.Wallet;
-import com.cashback.gold.entity.WalletTransaction;
+import com.cashback.gold.entity.*;
 import com.cashback.gold.exception.InvalidArgumentException;
-import com.cashback.gold.repository.GoldPurchaseOrderRepository;
-import com.cashback.gold.repository.UserRepository;
-import com.cashback.gold.repository.WalletRepository;
-import com.cashback.gold.repository.WalletTransactionRepository;
+import com.cashback.gold.repository.*;
 import com.cashback.gold.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -23,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -35,6 +30,8 @@ public class GoldPurchaseOrderService {
     private final UserRepository userRepository;
     private final WalletRepository walletRepository;
     private final WalletTransactionRepository walletTransactionRepository;
+    private final MetalRateRepository metalRateRepository;
+    private final MetalRateHistoryRepository metalRateHistoryRepository;
 
     public double getCurrentGoldRate() {
         String url = metalApiProperties.getUrl() +
@@ -165,9 +162,9 @@ public class GoldPurchaseOrderService {
             double goldInrPerGram = Math.round((inrPerOunceGold / 31.1035) * 100.0) / 100.0;
             double silverInrPerGram = Math.round((inrPerOunceSilver / 31.1035) * 100.0) / 100.0;
 
-//            // Save both in DB
-//            updateRate("GOLD", goldInrPerGram);
-//            updateRate("SILVER", silverInrPerGram);
+            // Save both in DB
+            updateRate("GOLD", goldInrPerGram);
+            updateRate("SILVER", silverInrPerGram);
 
             return MetalRatesResponse.builder()
                     .goldRateInrPerGram(goldInrPerGram)
@@ -178,6 +175,27 @@ public class GoldPurchaseOrderService {
 
         throw new InvalidArgumentException("Failed to fetch gold and silver rates");
     }
+
+    public void updateRate(String metalType, double rateInrPerGram) {
+        Optional<MetalRate> existing = metalRateRepository.findByMetalType(metalType.toUpperCase());
+
+        MetalRate rate = existing.orElse(MetalRate.builder()
+                .metalType(metalType.toUpperCase())
+                .build());
+
+        rate.setRateInrPerGram(rateInrPerGram);
+        rate.setFetchedAt(LocalDateTime.now());
+
+        metalRateRepository.save(rate);
+
+        // Also store in history
+        metalRateHistoryRepository.save(MetalRateHistory.builder()
+                .metalType(metalType.toUpperCase())
+                .rateInrPerGram(rateInrPerGram)
+                .fetchedAt(LocalDateTime.now())
+                .build());
+    }
+
 
 }
 

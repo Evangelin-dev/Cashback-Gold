@@ -862,6 +862,13 @@
                 onDelete="CASCADE"/>
     </changeSet>
 
+    <changeSet id="28-1" author="azeem">
+        <addColumn tableName="commissions">
+            <column name="level" type="INT"/>
+        </addColumn>
+    </changeSet>
+
+
     <changeSet id="29" author="azeem">
         <createTable tableName="payout_requests">
             <column name="id" type="BIGSERIAL">
@@ -1117,6 +1124,40 @@
                 referencedTableName="user_cashback_gold_enrollments"
                 referencedColumnNames="id"
                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="36" author="azeem">
+        <createTable tableName="metal_rates">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="metal_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rate_inr_per_gram" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fetched_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="37" author="azeem">
+        <createTable tableName="metal_rate_history">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="metal_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="rate_inr_per_gram" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fetched_at" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
     </changeSet>
 
 
