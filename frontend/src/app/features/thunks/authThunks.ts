@@ -10,9 +10,9 @@ import type {
   ApiResponse
 } from '../../types/type';
 
-
-const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/auth`;
 console.log("Data",import.meta.env.VITE_BACKEND_URL);
+const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/auth`;
+
 
 
 const getErrorMessage = (error: unknown): string => {
