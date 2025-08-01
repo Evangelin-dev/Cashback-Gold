@@ -1,7 +1,7 @@
 import { Award, ChevronDown, ChevronUp, Shield, Star, TrendingUp } from 'lucide-react';
-import React, { useEffect, useState } from 'react';
-import Portal from '../Portal'; // Make sure this path is correct
+import { useEffect, useState } from 'react';
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
+import Portal from '../Portal'; // Make sure this path is correct
 
 // --- Interfaces for API Data ---
 interface SIPPlanFromApi {
@@ -111,95 +111,224 @@ const GoldSIPPlansPage = () => {
     };
   }, [showModal]);
 
+
+  // Carousel slides data
+  const carouselSlides = [
+    {
+      icon: <Award className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mx-auto" />,
+      title: 'Gold SIP Plans',
+      desc: 'Invest in gold systematically with our flexible SIP plans. Build wealth steadily with the timeless value of gold.'
+    },
+    {
+      icon: <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mx-auto" />,
+      title: 'Steady Growth',
+      desc: 'Benefit from rupee cost averaging and long-term appreciation of gold prices.'
+    },
+    {
+      icon: <Shield className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mx-auto" />,
+      title: '100% Secure & Insured',
+      desc: 'Your gold is stored in insured vaults with 24/7 security.'
+    },
+    {
+      icon: <Star className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mx-auto" />,
+      title: '24/7 Support',
+      desc: 'Our support team is always available to help you with your gold SIP journey.'
+    }
+  ];
+
+  // Carousel state
+  const [carouselIdx, setCarouselIdx] = useState(0);
+  const [dragStartX, setDragStartX] = useState<number | null>(null);
+  const [dragging, setDragging] = useState(false);
+
+  // Auto-slide
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setCarouselIdx((prev) => (prev + 1) % carouselSlides.length);
+    }, 3500);
+    return () => clearTimeout(timer);
+  }, [carouselIdx]);
+
+  // Drag/Swipe handlers
+  const handleDragStart = (e: React.TouchEvent | React.MouseEvent) => {
+    setDragging(true);
+    if ('touches' in e) {
+      setDragStartX(e.touches[0].clientX);
+    } else {
+      setDragStartX(e.clientX);
+    }
+  };
+  const handleDragMove = (e: React.TouchEvent | React.MouseEvent) => {
+    if (!dragging || dragStartX === null) return;
+    let clientX = 0;
+    if ('touches' in e) {
+      clientX = e.touches[0].clientX;
+    } else {
+      clientX = e.clientX;
+    }
+    const diff = clientX - dragStartX;
+    if (Math.abs(diff) > 50) {
+      if (diff > 0) {
+        setCarouselIdx((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length);
+      } else {
+        setCarouselIdx((prev) => (prev + 1) % carouselSlides.length);
+      }
+      setDragging(false);
+      setDragStartX(null);
+    }
+  };
+  const handleDragEnd = () => {
+    setDragging(false);
+    setDragStartX(null);
+  };
+
   return (
-    <div className="min-h-screen mt-18 bg-gradient-to-br from-yellow-50 to-orange-50">
-      {/* Hero Banner (Unchanged) */}
-      <div className="bg-gradient-to-r from-yellow-600 to-orange-600 text-white py-20 px-4">
-        <div className="max-w-6xl mx-auto text-center">
-          <div className="flex justify-center mb-6"><div className="bg-white bg-opacity-20 rounded-full p-4"><Award className="w-12 h-12 text-yellow-200" /></div></div>
-          <h1 className="text-5xl font-bold mb-6 text-black">Gold SIP Plans</h1>
-          <p className="text-xl mb-8 max-w-3xl mx-auto text-yellow-300">Invest in gold systematically with our flexible SIP plans. Build wealth steadily with the timeless value of gold.</p>
-          <div className="flex flex-wrap justify-center gap-8 text-sm">
-            <div className="flex text-black items-center gap-2"><Shield className="w-5 h-5" /><span>100% Secure & Insured</span></div>
-            <div className="flex text-black items-center gap-2"><TrendingUp className="w-5 h-5" /><span>Guaranteed Returns</span></div>
-            <div className="flex text-black items-center gap-2"><Star className="w-5 h-5" /><span>24/7 Support</span></div>
-          </div>
-        </div>
-      </div>
-
-      {/* Information Section (Unchanged) */}
-      <div className="py-16 px-4 bg-white">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12"><h2 className="text-3xl font-bold text-gray-800 mb-4">Why Choose Gold SIP?</h2><p className="text-gray-600 max-w-3xl mx-auto">Gold SIP (Systematic Investment Plan) allows you to invest in gold regularly with small amounts. It's a disciplined approach to wealth creation that helps you benefit from rupee cost averaging and the long-term appreciation of gold prices.</p></div>
-          <div className="grid md:grid-cols-3 gap-8">
-            <div className="text-center p-6 rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50"><div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><TrendingUp className="w-8 h-8 text-yellow-600" /></div><h3 className="text-xl font-semibold mb-2">Rupee Cost Averaging</h3><p className="text-gray-600">Reduce market volatility impact through systematic investments</p></div>
-            <div className="text-center p-6 rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50"><div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><Shield className="w-8 h-8 text-yellow-600" /></div><h3 className="text-xl font-semibold mb-2">Secure Storage</h3><p className="text-gray-600">Your gold is stored in insured vaults with 24/7 security</p></div>
-            <div className="text-center p-6 rounded-lg bg-gradient-to-br from-yellow-50 to-orange-50"><div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><Award className="w-8 h-8 text-yellow-600" /></div><h3 className="text-xl font-semibold mb-2">Flexible Options</h3><p className="text-gray-600">Choose from various tenure and investment amount options</p></div>
-          </div>
-        </div>
-      </div>
-
-      {/* SIP Plans Section (Unchanged) */}
-      <div className="py-16 px-4 bg-gray-50">
-        <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-12"><h2 className="text-3xl font-bold text-gray-800 mb-4">Choose Your SIP Plan</h2><p className="text-gray-600">Select the plan that best fits your investment goals and budget</p></div>
-          {loading && <div className="text-center text-gray-500">Loading plans...</div>}
-          {error && <div className="text-center text-red-500">{error}</div>}
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {plans.map((plan) => (
-              <div key={plan.id} className={`relative bg-white rounded-xl shadow-lg hover:shadow-xl transition-shadow duration-300 flex flex-col h-full p-6 ${plan.popular ? 'ring-2 ring-yellow-500' : ''}`}>
-                {plan.popular && (<div className="absolute -top-3 left-1/2 transform -translate-x-1/2"><span className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white px-4 py-1 rounded-full text-sm font-semibold">POPULAR</span></div>)}
-                <div className="flex-1 flex flex-col">
-                  <div className="text-center mb-6"><h3 className="text-xl font-bold text-gray-800 mb-2">{plan.name}</h3><div className="text-3xl font-bold text-yellow-600 mb-2">{plan.monthlyAmount}</div><p className="text-gray-600 text-sm mb-2">Duration: {plan.tenure}</p><p className="text-green-600 font-semibold">Returns: {plan.returns}</p></div>
-                  <p className="text-gray-600 text-sm mb-4 h-24">{plan.description}</p>
-                  <div className="mb-6"><h4 className="font-semibold text-gray-800 mb-2">Features:</h4><ul className="text-sm text-gray-600 space-y-1">{plan.features.map((feature, index) => (<li key={index} className="flex items-center gap-2"><div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>{feature}</li>))}</ul></div>
-                  <div className="mt-auto"><button onClick={() => handleChoosePlan(plan)} className="w-full py-3 rounded-lg font-semibold transition-colors duration-300 bg-gray-800 text-white hover:bg-gray-700">Choose Plan</button></div>
+    <div className="min-h-screen mt-16 bg-white text-xs sm:text-sm">
+      {/* Hero Banner Carousel */}
+      <div className="bg-yellow-100 text-yellow-900 py-8 px-2 sm:px-4 select-none">
+        <div className="max-w-4xl mx-auto">
+          <div
+            className="relative overflow-hidden"
+            onTouchStart={handleDragStart}
+            onTouchMove={handleDragMove}
+            onTouchEnd={handleDragEnd}
+            onMouseDown={handleDragStart}
+            onMouseMove={dragging ? handleDragMove : undefined}
+            onMouseUp={handleDragEnd}
+            onMouseLeave={handleDragEnd}
+            role="region"
+            aria-label="Gold SIP Carousel"
+          >
+            <div className="flex transition-all duration-500" style={{ transform: `translateX(-${carouselIdx * 100}%)` }}>
+              {carouselSlides.map((slide, idx) => (
+                <div key={idx} className="min-w-full flex flex-col items-center justify-center text-center px-2">
+                  <div className="flex justify-center mb-3">{slide.icon}</div>
+                  <h1 className="text-xl sm:text-2xl font-bold mb-2">{slide.title}</h1>
+                  <p className="text-xs sm:text-sm mb-2 max-w-xl mx-auto">{slide.desc}</p>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
+            {/* Carousel dots */}
+            <div className="flex justify-center gap-1 mt-4">
+              {carouselSlides.map((_, idx) => (
+                <button
+                  key={idx}
+                  className={`w-2 h-2 rounded-full border border-yellow-400 ${carouselIdx === idx ? 'bg-yellow-400' : 'bg-transparent'}`}
+                  onClick={() => setCarouselIdx(idx)}
+                  aria-label={`Go to slide ${idx + 1}`}
+                />
+              ))}
+            </div>
+          </div>
+          <div className="flex flex-wrap justify-center gap-4 text-xs sm:text-sm mt-6">
+            <div className="flex items-center gap-1"><Shield className="w-4 h-4" /><span>100% Secure & Insured</span></div>
+            <div className="flex items-center gap-1"><TrendingUp className="w-4 h-4" /><span>Guaranteed Returns</span></div>
+            <div className="flex items-center gap-1"><Star className="w-4 h-4" /><span>24/7 Support</span></div>
           </div>
         </div>
       </div>
 
-      <FAQSection />
+    {/* Information Section */}
+    <div className="py-8 px-2 sm:px-4 bg-white">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-yellow-900 mb-2">Why Choose Gold SIP?</h2>
+          <p className="text-gray-600 max-w-2xl mx-auto text-xs sm:text-sm">Gold SIP (Systematic Investment Plan) allows you to invest in gold regularly with small amounts. It's a disciplined approach to wealth creation that helps you benefit from rupee cost averaging and the long-term appreciation of gold prices.</p>
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div className="text-center p-4 rounded-lg bg-yellow-50">
+            <div className="bg-yellow-200 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2"><TrendingUp className="w-5 h-5 text-yellow-700" /></div>
+            <h3 className="text-base font-semibold mb-1">Rupee Cost Averaging</h3>
+            <p className="text-gray-600 text-xs">Reduce market volatility impact through systematic investments</p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-yellow-50">
+            <div className="bg-yellow-200 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2"><Shield className="w-5 h-5 text-yellow-700" /></div>
+            <h3 className="text-base font-semibold mb-1">Secure Storage</h3>
+            <p className="text-gray-600 text-xs">Your gold is stored in insured vaults with 24/7 security</p>
+          </div>
+          <div className="text-center p-4 rounded-lg bg-yellow-50">
+            <div className="bg-yellow-200 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2"><Award className="w-5 h-5 text-yellow-700" /></div>
+            <h3 className="text-base font-semibold mb-1">Flexible Options</h3>
+            <p className="text-gray-600 text-xs">Choose from various tenure and investment amount options</p>
+          </div>
+        </div>
+      </div>
+    </div>
 
-      {/* --- MODAL UPDATED WITH SUBMISSION LOGIC --- */}
-      {showModal && selectedPlan && (
-        <Portal>
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-[2000] p-4 animate-fade-in-fast">
-            <div className="bg-white rounded-2xl p-8 max-w-md w-full mx-4 relative">
-              <button onClick={() => setShowModal(false)} className="absolute top-4 right-4 text-gray-500 hover:text-gray-700" disabled={isSubmitting}>
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
-              </button>
-              <div className="text-center">
-                <div className="bg-yellow-100 rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4"><Award className="w-8 h-8 text-yellow-600" /></div>
-                <h3 className="text-2xl font-bold text-gray-800 mb-2">Confirm Your Plan</h3>
-                <p className="text-gray-600 mb-6">You've chosen the {selectedPlan.name}</p>
-                <div className="bg-gray-50 rounded-lg p-4 mb-6 text-left">
-                  <div className="flex justify-between items-center mb-2"><span className="text-gray-600">Monthly Amount:</span><span className="font-semibold text-yellow-600">{selectedPlan.monthlyAmount}</span></div>
-                  <div className="flex justify-between items-center mb-2"><span className="text-gray-600">Tenure:</span><span className="font-semibold">{selectedPlan.tenure}</span></div>
-                  <div className="flex justify-between items-center"><span className="text-gray-600">Expected Returns:</span><span className="font-semibold text-green-600">{selectedPlan.returns}</span></div>
+    {/* SIP Plans Section */}
+    <div className="py-8 px-2 sm:px-4 bg-yellow-50">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-yellow-900 mb-2">Choose Your SIP Plan</h2>
+          <p className="text-gray-600 text-xs sm:text-sm">Select the plan that best fits your investment goals and budget</p>
+        </div>
+        {loading && <div className="text-center text-gray-500">Loading plans...</div>}
+        {error && <div className="text-center text-red-500">{error}</div>}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {plans.map((plan) => (
+            <div key={plan.id} className={`relative bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col h-full p-4 ${plan.popular ? 'ring-2 ring-yellow-500' : ''}`}>
+              {plan.popular && (<div className="absolute -top-3 left-1/2 -translate-x-1/2"><span className="bg-yellow-500 text-white px-3 py-0.5 rounded-full text-xs font-semibold">POPULAR</span></div>)}
+              <div className="flex-1 flex flex-col">
+                <div className="text-center mb-3">
+                  <h3 className="text-base font-bold text-yellow-900 mb-1">{plan.name}</h3>
+                  <div className="text-lg font-bold text-yellow-700 mb-1">{plan.monthlyAmount}</div>
+                  <p className="text-gray-600 text-xs mb-1">Duration: {plan.tenure}</p>
+                  <p className="text-green-600 font-semibold text-xs">Returns: {plan.returns}</p>
                 </div>
-
-                {/* NEW: Display submission error here */}
-                {submitError && <div className="text-center text-red-600 mb-4 bg-red-50 p-3 rounded-lg">{submitError}</div>}
-
-                <div className="space-y-3">
-                  <button onClick={handlePlaceOrder} className="w-full bg-gradient-to-r from-yellow-500 to-orange-500 text-white py-3 rounded-lg font-semibold hover:from-yellow-600 hover:to-orange-600 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed" disabled={isSubmitting}>
-                    {isSubmitting ? 'Processing...' : 'Start SIP Now'}
-                  </button>
-                  <button onClick={handlePlaceOrder} className="w-full bg-gray-200 text-gray-800 py-3 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-300 disabled:opacity-60 disabled:cursor-not-allowed" disabled={isSubmitting}>
-                    {isSubmitting ? 'Processing...' : 'Buy This Plan'}
-                  </button>
+                <p className="text-gray-600 text-xs mb-2 min-h-[48px]">{plan.description}</p>
+                <div className="mb-3">
+                  <h4 className="font-semibold text-yellow-900 mb-1 text-xs">Features:</h4>
+                  <ul className="text-xs text-gray-600 space-y-1">
+                    {plan.features.map((feature, index) => (
+                      <li key={index} className="flex items-center gap-1"><div className="w-1.5 h-1.5 bg-yellow-500 rounded-full"></div>{feature}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-auto">
+                  <button onClick={() => handleChoosePlan(plan)} className="w-full py-2 rounded-lg font-semibold transition-colors duration-200 bg-yellow-700 text-white hover:bg-yellow-800 text-xs">Choose Plan</button>
                 </div>
               </div>
             </div>
-          </div>
-          <style>{`.animate-fade-in-fast { animation: fadeIn 0.2s ease-out; } @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
-        </Portal>
-      )}
+          ))}
+        </div>
+      </div>
     </div>
-  );
+
+    <FAQSection />
+
+    {/* Modal */}
+    {showModal && selectedPlan && (
+      <Portal>
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-[2000] p-2 sm:p-4">
+          <div className="bg-white rounded-xl p-4 sm:p-6 max-w-xs sm:max-w-md w-full mx-2 relative">
+            <button onClick={() => setShowModal(false)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600" disabled={isSubmitting}>
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+            </button>
+            <div className="text-center">
+              <div className="bg-yellow-100 rounded-full w-10 h-10 flex items-center justify-center mx-auto mb-2"><Award className="w-5 h-5 text-yellow-700" /></div>
+              <h3 className="text-lg font-bold text-yellow-900 mb-1">Confirm Your Plan</h3>
+              <p className="text-gray-600 mb-2 text-xs">You've chosen the {selectedPlan.name}</p>
+              <div className="bg-yellow-50 rounded-lg p-3 mb-3 text-left">
+                <div className="flex justify-between items-center mb-1"><span className="text-gray-600">Monthly Amount:</span><span className="font-semibold text-yellow-700">{selectedPlan.monthlyAmount}</span></div>
+                <div className="flex justify-between items-center mb-1"><span className="text-gray-600">Tenure:</span><span className="font-semibold">{selectedPlan.tenure}</span></div>
+                <div className="flex justify-between items-center"><span className="text-gray-600">Expected Returns:</span><span className="font-semibold text-green-600">{selectedPlan.returns}</span></div>
+              </div>
+              {submitError && <div className="text-center text-red-600 mb-2 bg-red-50 p-2 rounded-lg text-xs">{submitError}</div>}
+              <div className="space-y-2">
+                <button onClick={handlePlaceOrder} className="w-full bg-yellow-700 text-white py-2 rounded-lg font-semibold hover:bg-yellow-800 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-xs" disabled={isSubmitting}>
+                  {isSubmitting ? 'Processing...' : 'Start SIP Now'}
+                </button>
+                <button onClick={handlePlaceOrder} className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-xs" disabled={isSubmitting}>
+                  {isSubmitting ? 'Processing...' : 'Buy This Plan'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </Portal>
+    )}
+  </div>
+);
 };
 
 // --- FAQ SECTION (Unchanged) ---

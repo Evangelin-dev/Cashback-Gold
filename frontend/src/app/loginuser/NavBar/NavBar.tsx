@@ -1,7 +1,7 @@
 import { ChevronDown, Crown, LogOut, Menu, ShoppingCart, User, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { CiShoppingCart } from "react-icons/ci";
-import { useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { RootState } from "../../../store";
 
@@ -18,10 +18,19 @@ const LNavBar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [screenWidth, setScreenWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 1200);
   const [isScrolled, setIsScrolled] = useState(false);
+  const dispatch = useDispatch();
   const { currentUser } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
   const cartItems = useSelector((state: RootState) => state.cart.items);
   const cartLength = cartItems.length;
+  // Logout handler
+  const handleLogout = (e?: React.MouseEvent) => {
+	if (e) e.preventDefault();
+	// Clear user from redux (replace with your actual logout action)
+	dispatch({ type: 'auth/logout' });
+	navigate("/");
+	setHovered(null);
+  };
   // Only show Home if on My Account page
   const currentPath = window.location.pathname;
   const isMyAccount = currentPath === "/user" || currentPath === "/myaccount";
@@ -154,24 +163,29 @@ const LNavBar = () => {
 					{/* Desktop Navigation Menu */}
 					{!isMobile && !isMyAccount && (
 						<div className="flex items-center justify-center flex-1">
-		  <ul className="flex items-center gap-2 md:gap-3 m-0 list-none bg-slate-50/80 rounded-2xl py-1 px-2 backdrop-blur border border-slate-200/80">
-								{MENU.map((menuItem, index) => (
-									<li key={menuItem.name}>
-										<a
-											href={menuItem.link}
-											onClick={() => setSelected(menuItem.name)}
-											onMouseEnter={() => setHovered(menuItem.name)}
-											onMouseLeave={() => setHovered(null)}
-					className={`flex items-center gap-1 md:gap-1.5 font-medium md:text-[14px] text-[13px] px-2 md:px-3 py-1.5 rounded-xl whitespace-nowrap cursor-pointer transition-all duration-300 ${selected === menuItem.name || hovered === menuItem.name ? 'bg-gradient-to-tr from-[#6a0822] to-[#8a2342] text-white shadow-lg -translate-y-0.5' : 'bg-transparent text-gray-700'}`}
-										>
-											{menuItem.name}
-											{hovered === menuItem.name && (
-												<ChevronDown size={14} className="-rotate-90 transition-transform duration-300" />
-											)}
-										</a>
-									</li>
-								))}
-							</ul>
+  <ul className="flex items-center gap-2 md:gap-3 m-0 list-none bg-slate-50/80 rounded-2xl py-1 px-2 backdrop-blur border border-slate-200/80">
+	{MENU.map((menuItem, index) => (
+	  <li key={menuItem.name}>
+		<a
+		  href={menuItem.link}
+		  onClick={() => setSelected(menuItem.name)}
+		  onMouseEnter={() => setHovered(menuItem.name)}
+		  onMouseLeave={() => setHovered(null)}
+		  className={`flex items-center gap-1 md:gap-1.5 font-medium md:text-[14px] text-[13px] px-2 md:px-3 py-1.5 rounded-xl whitespace-nowrap cursor-pointer transition-all duration-300 ${selected === menuItem.name || hovered === menuItem.name ? 'bg-[#6a0822] text-white shadow-lg -translate-y-0.5' : 'bg-transparent text-gray-700'}`}
+		  style={
+			selected === menuItem.name || hovered === menuItem.name
+			  ? { background: '#6a0822', color: '#fff' }
+			  : {}
+		  }
+		>
+		  {menuItem.name}
+		  {hovered === menuItem.name && (
+			<ChevronDown size={14} className="-rotate-90 transition-transform duration-300" />
+		  )}
+		</a>
+	  </li>
+	))}
+  </ul>
 						</div>
 					)}
 
@@ -240,20 +254,22 @@ const LNavBar = () => {
 						</div>
 						{/* Menu Items */}
 						<div className="p-2">
-						  {[
-							{ icon: User, label: "Dashboard", href: "/user" },
-							{ icon: LogOut, label: "Logout", href: "/", danger: true }
-						  ].map((item, index) => (
-							<a
-							  key={index}
-							  href={item.href}
-							  className={`flex items-center gap-2 px-2 py-2 rounded-md text-[12px] font-medium transition-all duration-200 mb-1 ${item.danger ? 'text-red-500 hover:bg-red-100' : 'text-slate-700 hover:bg-[#6a0822]/10 hover:text-[#6a0822]'} hover:translate-x-1`}
-							  onClick={() => setHovered(null)}
-							>
-							  <item.icon size={14} />
-							  {item.label}
-							</a>
-						  ))}
+						  <a
+							href="/user"
+							className="flex items-center gap-2 px-2 py-2 rounded-md text-[12px] font-medium transition-all duration-200 mb-1 text-slate-700 hover:bg-[#6a0822]/10 hover:text-[#6a0822] hover:translate-x-1"
+							onClick={() => setHovered(null)}
+						  >
+							<User size={14} />
+							Dashboard
+						  </a>
+						  <a
+							href="/"
+							className="flex items-center gap-2 px-2 py-2 rounded-md text-[12px] font-medium transition-all duration-200 mb-1 text-red-500 hover:bg-red-100 hover:translate-x-1"
+							onClick={handleLogout}
+						  >
+							<LogOut size={14} />
+							Logout
+						  </a>
 						</div>
 					  </div>
 					)}
@@ -338,47 +354,60 @@ const LNavBar = () => {
 				}}
 			>
 				<div style={{ padding: "24px 16px" }}>
-					{/* User Profile Section */}
-					<div style={{
-						display: "flex",
-						alignItems: "center",
-						gap: "16px",
-						padding: "20px",
-						background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
-						borderRadius: "16px",
-						marginBottom: "24px",
-						color: "#fff"
-					}}>
-						<div style={{
-							width: "60px",
-							height: "60px",
-							borderRadius: "50%",
-							background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-							display: "flex",
-							alignItems: "center",
-							justifyContent: "center",
-							fontSize: "24px",
-							border: "3px solid rgba(255, 255, 255, 0.2)"
-						}}>
-							👤
-						</div>
-						<div>
-							<h3 style={{
-								fontSize: "18px",
-								fontWeight: "600",
-								margin: "0 0 4px 0"
-							}}>
-								John Doe
-							</h3>
-							<p style={{
-								fontSize: "14px",
-								margin: 0,
-								opacity: 0.8
-							}}>
-								Premium Member
-							</p>
-						</div>
-					</div>
+					{/* User Profile Section (only if logged in) */}
+					{currentUser ? (
+					  <div style={{
+						  display: "flex",
+						  alignItems: "center",
+						  gap: "16px",
+						  padding: "20px",
+						  background: "linear-gradient(135deg, #6a0822 0%, #8a2342 100%)",
+						  borderRadius: "16px",
+						  marginBottom: "24px",
+						  color: "#fff"
+					  }}>
+						  <div style={{
+							  width: "60px",
+							  height: "60px",
+							  borderRadius: "50%",
+							  background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+							  display: "flex",
+							  alignItems: "center",
+							  justifyContent: "center",
+							  fontSize: "24px",
+							  border: "3px solid rgba(255, 255, 255, 0.2)"
+						  }}>
+							  👤
+						  </div>
+						  <div>
+							  <h3 style={{
+								  fontSize: "18px",
+								  fontWeight: "600",
+								  margin: "0 0 4px 0"
+							  }}>
+								  {currentUser?.email || "User"}
+							  </h3>
+							  <p style={{
+								  fontSize: "14px",
+								  margin: 0,
+								  opacity: 0.8
+							  }}>
+								  {currentUser?.role ? `${currentUser.role} Member` : "Member"}
+							  </p>
+						  </div>
+					  </div>
+					) : (
+					  <div style={{ marginBottom: "24px" }}>
+						<a
+						  href="/SignupPopup"
+						  onClick={closeMobileMenu}
+						  className="flex items-center justify-center gap-3 py-4 px-5 bg-[#6a0822] text-white rounded-xl no-underline font-semibold text-[16px] shadow transition-transform duration-300 active:scale-95"
+						>
+						  <span className="text-[20px]">🔐</span>
+						  Login / Signup
+						</a>
+					  </div>
+					)}
 
 					{/* Navigation Menu */}
 					<div style={{ marginBottom: "24px" }}>
@@ -441,8 +470,7 @@ const LNavBar = () => {
 					</div>
 
 					{currentUser && (
-						<CiShoppingCart size={34} onClick={() => navigate("/cart")} />
-
+						<CiShoppingCart size={34} onClick={() => { closeMobileMenu(); navigate("/cart"); }} style={{ cursor: "pointer", marginBottom: 16 }} />
 					)}
 					{/* Action Buttons */}
 					<div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
@@ -456,34 +484,34 @@ const LNavBar = () => {
 						</a>
 
 						<a
-							href="/logout"
-							onClick={closeMobileMenu}
-							style={{
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "center",
-								gap: "12px",
-								padding: "16px 20px",
-								background: "rgba(239, 68, 68, 0.1)",
-								color: "#EF4444",
-								borderRadius: "12px",
-								textDecoration: "none",
-								fontWeight: 600,
-								fontSize: "16px",
-								border: "1px solid rgba(239, 68, 68, 0.2)",
-								transition: "all 0.3s ease"
-							}}
-							onTouchStart={e => {
-								e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)";
-								e.currentTarget.style.transform = "scale(0.98)";
-							}}
-							onTouchEnd={e => {
-								e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)";
-								e.currentTarget.style.transform = "scale(1)";
-							}}
+						  href="/"
+						  onClick={e => { closeMobileMenu(); handleLogout(e); }}
+						  style={{
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							gap: "12px",
+							padding: "16px 20px",
+							background: "rgba(239, 68, 68, 0.1)",
+							color: "#EF4444",
+							borderRadius: "12px",
+							textDecoration: "none",
+							fontWeight: 600,
+							fontSize: "16px",
+							border: "1px solid rgba(239, 68, 68, 0.2)",
+							transition: "all 0.3s ease"
+						  }}
+						  onTouchStart={e => {
+							e.currentTarget.style.background = "rgba(239, 68, 68, 0.2)";
+							e.currentTarget.style.transform = "scale(0.98)";
+						  }}
+						  onTouchEnd={e => {
+							e.currentTarget.style.background = "rgba(239, 68, 68, 0.1)";
+							e.currentTarget.style.transform = "scale(1)";
+						  }}
 						>
-							<LogOut size={20} />
-							Logout
+						  <LogOut size={20} />
+						  Logout
 						</a>
 					</div>
 				</div>

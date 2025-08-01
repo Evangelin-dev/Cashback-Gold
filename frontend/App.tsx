@@ -78,11 +78,8 @@ import AOrderHistory from "./src/app/admin/OrderHistory/orderhistory";
 import FAQManagement from "./src/app/admin/FAQ/faq";
 import B2BRegistration from "./src/app/B2BRegistration/b2bregistration.tsx";
 import ChitJewelsPlans from "./src/app/user/ChitJewels/chitjewels.tsx";
-import LGoldSIPPlans from "./src/app/loginuser/GoldSIP/goldSIP.tsx";
 import GoldSIPPlans from "./src/app/user/GoldSIP/goldSIP.tsx";
-import LGoldPlantSchemes from "./src/app/loginuser/GoldSchemes/goldschemes.tsx";
 import GoldPlantSchemes from "./src/app/user/GoldSchemes/goldschemes.tsx";
-import BCommission from "./src/app/b2b/commission/Commission";
 import AdminProtectedRoute from './src/app/protectedRoutes/AdminProtectedRoute';
 import UserProtectedRoute from './src/app/protectedRoutes/UserProtectedRoute';
 import B2BProtectedRoute from './src/app/protectedRoutes/B2BProtectedRoute';
@@ -164,7 +161,7 @@ const AppRoutes: React.FC = () => {
       {/*User routes */}
       <Route element={<UserLayout />}>
         <Route path="/" element={<LUserHome />} />
-        <Route path="/navbar" element={<NavBar />} />
+        <Route path="/navbar" element={<LNavBar />} />
         <Route path="/footer" element={<Footer />} />
         <Route path="/terms" element={<Terms />} />
         <Route path="/contactus" element={<ContactUsPage />} />
@@ -202,8 +199,6 @@ const AppRoutes: React.FC = () => {
           <Route path="/lUserHome" element={<LUserHome />} />
           <Route path="paymentpopup" element={<PaymentPopup />} />
           <Route path="/lrefund" element={<LRefund />} />
-          <Route path="/lgoldsip" element={<LGoldSIPPlans />} />
-          <Route path="/lschemes" element={<LGoldPlantSchemes />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/lSIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
           <Route path="/lshippingpolicy" element={<LShippingPolicy />} />

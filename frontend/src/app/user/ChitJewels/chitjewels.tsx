@@ -52,7 +52,7 @@ const ChitJewelsPlans = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await axiosInstance.get<PlanFromApi[]>('/api/saving-plans');
+        const response = await axiosInstance.get<PlanFromApi[]>('api/user-savings');
         const activePlans = response.data.filter(plan => plan.status === 'ACTIVE');
         const processedPlans = activePlans.map((plan, index) => {
           const amount = parseAmount(plan.amount);
@@ -92,7 +92,7 @@ const ChitJewelsPlans = () => {
     };
 
     try {
-      await axiosInstance.post('/api/orders', orderPayload);
+      await axiosInstance.post('api/user-savings/enroll', orderPayload);
       
       // On success
       alert(`Successfully placed order for "${selectedPlan.name}"! You will be redirected for payment.`);

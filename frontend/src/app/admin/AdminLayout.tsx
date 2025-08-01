@@ -1,30 +1,48 @@
+
+import {
+  BadgeDollarSign,
+  Banknote,
+  BookOpen,
+  ClipboardList,
+  Clock,
+  Coins,
+  Gem,
+  Image,
+  LayoutDashboard,
+  LogOut,
+  Medal,
+  Percent,
+  Sprout,
+  Ticket,
+  User,
+  Users,
+  Wallet
+} from 'lucide-react';
 import React, { useEffect, useRef, useState } from 'react';
+import { useDispatch, useSelector } from 'react-redux';
 import { Outlet, useNavigate } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '../../store';
 import { logoutUser } from '../features/slices/authSlice'; // Ensure this path is correct
 import Notification from './Notification/notification';
-import { RootState } from '../../store';
 
 const menuItems = [
-  { label: 'My Dashboard', icon: '📊', path: '/admin' },
-  { label: 'My Profile', icon: '👤', path: '/adminprofile' },
-  { label: 'Manage Ornaments', icon: '💎', path: '/manageornaments' },
-  { label: "Manage User's", icon: '👥', path: '/manageusers' },
-  { label: 'Commission', icon: '%', path: '/commission' },
-  { label: 'Payout Request', icon: '💰', path: '/payoutrequest' },
-  { label: 'Gold Orders', icon: '🪙', path: '/goldorders' },
-  { label: 'Order History', icon: '⌛', path: '/orderhistory' },
-  { label: 'KYC', icon: '📋', path: '/kyc' },
-  { label: 'Chit Jewels Saving Plan', icon: '💍', path: '/savingplan' },
-  { label: 'Digital Gold SIP Plan', icon: '🥇', path: '/spiplan' },
-  { label: 'Gold Plant Scheme', icon: '🌱', path: '/plantscheme' },
-  { label: 'Schemes Flyer', icon: '🖼️', path: '/flayerschemes' },
-  { label: 'Market Resource', icon: '📊', path: '/resource' },
-  { label: 'Campaigns', icon: '📣', path: '/campaigns' },
-  { label: 'Manage FAQ', icon: '📚', path: '/faq' },
-  { label: 'My Bank Accounts', icon: '🏦', path: '/mybankaccounts' },
-  { label: 'Support Tickets', icon: '🧾', path: '/support-ticket' },
-  { label: 'Logout', icon: '🚪', path: '#' }
+  { label: 'My Dashboard', icon: LayoutDashboard, path: '/admin' },
+  { label: 'My Profile', icon: User, path: '/adminprofile' },
+  { label: 'Manage Ornaments', icon: Gem, path: '/manageornaments' },
+  { label: "Manage User's", icon: Users, path: '/manageusers' },
+  { label: 'Commission', icon: Percent, path: '/commission' },
+  { label: 'Payout Request', icon: Wallet, path: '/payoutrequest' },
+  { label: 'Gold Orders', icon: Coins, path: '/goldorders' },
+  { label: 'Order History', icon: Clock, path: '/orderhistory' },
+  { label: 'KYC', icon: ClipboardList, path: '/kyc' },
+  { label: 'Saving Scheme ', icon: BadgeDollarSign, path: '/savingplan' },
+  { label: 'CashBack Gold', icon: Medal, path: '/spiplan' },
+  { label: 'Gold Plant', icon: Sprout, path: '/plantscheme' },
+  { label: 'Schemes Flyer', icon: Image, path: '/flayerschemes' },
+  { label: 'Manage FAQ', icon: BookOpen, path: '/faq' },
+  { label: 'My Bank Accounts', icon: Banknote, path: '/mybankaccounts' },
+  { label: 'Support Tickets', icon: Ticket, path: '/support-ticket' },
+  { label: 'Logout', icon: LogOut, path: '#' }
 ];
 
 const SIDEBAR_BG = "#7a1335";
@@ -173,7 +191,7 @@ const AdminPanel: React.FC = () => {
           </button>
         </div>
         <ul style={{ flex: 1, overflowY: "auto", padding: "0.8rem 0" }}>
-          {menuItems.map(({ label, icon, path }, idx) => {
+          {menuItems.map(({ label, icon: Icon, path }, idx) => {
             const isActive = window.location.pathname === path;
             const handleClick = () => {
               setSidebarVisible(false);
@@ -222,7 +240,9 @@ const AdminPanel: React.FC = () => {
                     background: isActive ? "rgba(255,255,255,0.18)" : "rgba(255,255,255,0.08)",
                     borderRadius: 6,
                     transition: "background 0.18s"
-                  }}>{icon}</span>
+                  }}>
+                    <Icon size={16} color="#fff" />
+                  </span>
                   <span style={{
                     letterSpacing: 0.1,
                     fontWeight: isActive ? 600 : 400,
@@ -240,7 +260,7 @@ const AdminPanel: React.FC = () => {
       </nav>
 
       <div className="flex-1 flex flex-col min-w-0 md:ml-64">
-        <header className="fixed top-0 w-full md:w-[calc(100%-16rem)] md:left-64 z-30 bg-gradient-to-r from-[#8B1538] to-[#A91B47] text-white shadow-md h-16 flex justify-between items-center px-4 md:px-6">
+        <header className="fixed top-0 w-full md:w-[calc(100%-16rem)] md:left-64 z-30 bg-[#7a1335] text-white shadow-md h-16 flex justify-between items-center px-4 md:px-6">
           <div className="flex items-center gap-4">
             <button
               className="text-white text-xl md:hidden hover:bg-white/10 p-2 rounded-lg transition-colors"

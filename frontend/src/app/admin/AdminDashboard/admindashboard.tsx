@@ -1,5 +1,5 @@
-import { Activity, Award, ChevronLeft, ChevronRight, Clock, DollarSign, Download, Edit, Eye, Filter, Handshake, Loader, Save, TrendingUp, User, UserCheck, Users, X } from "lucide-react";
-import React, { useEffect, useRef, useState, useCallback } from "react";
+import { Activity, Award, ChevronLeft, ChevronRight, Clock, DollarSign, Edit, Filter, Handshake, Loader, Save, TrendingUp, User, UserCheck, Users } from "lucide-react";
+import { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../../../utils/axiosInstance";
 
 interface InventoryData {
@@ -45,106 +45,106 @@ const FILTERS = [
 
 const AdminDashboard = () => {
 
-    const [apiGoldPrice, setApiGoldPrice] = useState<string | null>(null);
-    const [apiSilverPrice, setApiSilverPrice] = useState<string | null>(null);
-    const [rateLoading, setRateLoading] = useState(true);
-    const [rateError, setRateError] = useState<string | null>(null);
+	const [apiGoldPrice, setApiGoldPrice] = useState<string | null>(null);
+	const [apiSilverPrice, setApiSilverPrice] = useState<string | null>(null);
+	const [rateLoading, setRateLoading] = useState(true);
+	const [rateError, setRateError] = useState<string | null>(null);
 
 
-    const [inventoryData, setInventoryData] = useState<InventoryData | null>(null);
-    const [inventoryLoading, setInventoryLoading] = useState(true);
-    const [inventoryError, setInventoryError] = useState<string | null>(null);
-    const [isInventoryInitialized, setIsInventoryInitialized] = useState(false);
-    const [editInventory, setEditInventory] = useState(false);
-    const [editStockValues, setEditStockValues] = useState<EditableInventory>({
-      totalStock: "", inStoreStock: "", goldStock: "", silverStock: "", diamondStock: ""
-    });
+	const [inventoryData, setInventoryData] = useState<InventoryData | null>(null);
+	const [inventoryLoading, setInventoryLoading] = useState(true);
+	const [inventoryError, setInventoryError] = useState<string | null>(null);
+	const [isInventoryInitialized, setIsInventoryInitialized] = useState(false);
+	const [editInventory, setEditInventory] = useState(false);
+	const [editStockValues, setEditStockValues] = useState<EditableInventory>({
+	  totalStock: "", inStoreStock: "", goldStock: "", silverStock: "", diamondStock: ""
+	});
 
 
 	const [activityPage, setActivityPage] = useState(1);
 	const [activityFilter, setActivityFilter] = useState("all");
-    const pageSize = 6;
+	const pageSize = 6;
 
-    const fetchRates = useCallback(async () => {
-        setRateLoading(true);
-        setRateError(null);
-        try {
-            const response = await axiosInstance.get('/api/metal-rates');
-            const { goldRateInrPerGram, silverRateInrPerGram } = response.data;
-            setApiGoldPrice(goldRateInrPerGram.toFixed(2));
-            setApiSilverPrice(silverRateInrPerGram.toFixed(2));
-        } catch (err) {
-            setRateError("Failed to fetch rates.");
-            console.error("Fetch rates error:", err);
-        } finally {
-            setRateLoading(false);
-        }
-    }, []);
+	const fetchRates = useCallback(async () => {
+		setRateLoading(true);
+		setRateError(null);
+		try {
+			const response = await axiosInstance.get('/api/metal-rates');
+			const { goldRateInrPerGram, silverRateInrPerGram } = response.data;
+			setApiGoldPrice(goldRateInrPerGram.toFixed(2));
+			setApiSilverPrice(silverRateInrPerGram.toFixed(2));
+		} catch (err) {
+			setRateError("Failed to fetch rates.");
+			console.error("Fetch rates error:", err);
+		} finally {
+			setRateLoading(false);
+		}
+	}, []);
 
-    const fetchInventory = useCallback(async () => {
-        setInventoryLoading(true);
-        setInventoryError(null);
-        try {
-            const response = await axiosInstance.get('/api/inventory');
-            setInventoryData(response.data);
-            setIsInventoryInitialized(true);
-        } catch (err: any) {
-            if (err.response && err.response.data && err.response.data.success === false) {
-                setIsInventoryInitialized(false);
-            } else {
-                setInventoryError("Could not load inventory data.");
-                console.error("Fetch inventory error:", err);
-            }
-        } finally {
-            setInventoryLoading(false);
-        }
-    }, []);
+	const fetchInventory = useCallback(async () => {
+		setInventoryLoading(true);
+		setInventoryError(null);
+		try {
+			const response = await axiosInstance.get('/api/inventory');
+			setInventoryData(response.data);
+			setIsInventoryInitialized(true);
+		} catch (err: any) {
+			if (err.response && err.response.data && err.response.data.success === false) {
+				setIsInventoryInitialized(false);
+			} else {
+				setInventoryError("Could not load inventory data.");
+				console.error("Fetch inventory error:", err);
+			}
+		} finally {
+			setInventoryLoading(false);
+		}
+	}, []);
 
-    useEffect(() => {
-        fetchRates();
-        fetchInventory();
-    }, [fetchRates, fetchInventory]);
+	useEffect(() => {
+		fetchRates();
+		fetchInventory();
+	}, [fetchRates, fetchInventory]);
 
 
-    const handleSaveInventory = async () => {
-        const numericPayload = {
-            totalStock: Number(editStockValues.totalStock),
-            inStoreStock: Number(editStockValues.inStoreStock),
-            goldStock: Number(editStockValues.goldStock),
-            silverStock: Number(editStockValues.silverStock),
-            diamondStock: Number(editStockValues.diamondStock),
-        };
+	const handleSaveInventory = async () => {
+		const numericPayload = {
+			totalStock: Number(editStockValues.totalStock),
+			inStoreStock: Number(editStockValues.inStoreStock),
+			goldStock: Number(editStockValues.goldStock),
+			silverStock: Number(editStockValues.silverStock),
+			diamondStock: Number(editStockValues.diamondStock),
+		};
 
-        for (const key in numericPayload) {
-            if (isNaN(numericPayload[key as keyof typeof numericPayload])) {
-                alert(`Invalid number for ${key}. Please check your inputs.`);
-                return;
-            }
-        }
+		for (const key in numericPayload) {
+			if (isNaN(numericPayload[key as keyof typeof numericPayload])) {
+				alert(`Invalid number for ${key}. Please check your inputs.`);
+				return;
+			}
+		}
 
-        const fullPayload = { ...numericPayload, unit: 'gram' };
+		const fullPayload = { ...numericPayload, unit: 'gram' };
 
-        setInventoryLoading(true);
-        try {
-            await axiosInstance.put('/api/inventory', fullPayload);
-            alert("Inventory updated successfully!");
-            setEditInventory(false);
-            await fetchInventory();
-        } catch (err) {
-            alert("Failed to update inventory.");
-            console.error("Save inventory error:", err);
-        } finally {
-            setInventoryLoading(false);
-        }
-    };
+		setInventoryLoading(true);
+		try {
+			await axiosInstance.put('/api/inventory', fullPayload);
+			alert("Inventory updated successfully!");
+			setEditInventory(false);
+			await fetchInventory();
+		} catch (err) {
+			alert("Failed to update inventory.");
+			console.error("Save inventory error:", err);
+		} finally {
+			setInventoryLoading(false);
+		}
+	};
 
 	const b2bInvoices = [{ id: "B2B-INV-001", customerName: "ABC Gold Traders", customerType: "b2b", goldType: "Gold Bar", quantity: 10, weight: "1kg", price: 6500000, date: "2024-06-01", status: "completed", paymentMethod: "Bank Transfer", address: "123 Market St, Mumbai" }];
-    const partnerInvoices = [{ id: "PART-INV-001", customerName: "Sunrise Jewels", customerType: "partner", goldType: "Gold Coin", quantity: 50, weight: "500g", price: 3250000, date: "2024-06-02", status: "completed", paymentMethod: "UPI", address: "789 Partner Rd, Chennai" }];
+	const partnerInvoices = [{ id: "PART-INV-001", customerName: "Sunrise Jewels", customerType: "partner", goldType: "Gold Coin", quantity: 50, weight: "500g", price: 3250000, date: "2024-06-02", status: "completed", paymentMethod: "UPI", address: "789 Partner Rd, Chennai" }];
 	const b2bVendorCount = 5;
 	let filteredActivities = activityData.filter(a => activityFilter === 'all' || a.type === activityFilter);
 	const totalPages = Math.ceil(filteredActivities.length / pageSize);
 	const pagedActivities = filteredActivities.slice((activityPage - 1) * pageSize, activityPage * pageSize);
-    const getActivityTypeColor = (type: string) => {
+	const getActivityTypeColor = (type: string) => {
 		switch (type) {
 			case "user": return "bg-blue-50 border-blue-200 text-blue-700";
 			case "partner": return "bg-purple-50 border-purple-200 text-purple-700";
@@ -153,155 +153,155 @@ const AdminDashboard = () => {
 	};
 
 
-	return (
-		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-4 lg:p-8">
-			<div className="mb-8">
-				<div className="flex items-center justify-between">
-					<div>
-						<h1 className="text-3xl lg:text-4xl font-bold text-gray-800 mb-2">Admin Dashboard</h1>
-						<p className="text-gray-600">Welcome back! Here's what's happening with your platform.</p>
-					</div>
-					<div className="hidden md:flex items-center space-x-2 bg-white px-4 py-2 rounded-full shadow-sm border">
-						<Activity className="w-4 h-4 text-green-500" />
-						<span className="text-sm font-medium text-gray-700">Live</span>
-					</div>
-				</div>
+return (
+	<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8">
+		<div className="mb-4 sm:mb-6">
+		  <div className="flex items-center justify-between flex-wrap gap-2">
+			<div>
+			  <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-gray-800 mb-1">Admin Dashboard</h1>
+			  <p className="text-xs sm:text-sm text-gray-600">Welcome back! Here's what's happening with your platform.</p>
 			</div>
-
-			<div className="mb-8">
-				<h2 className="text-xl font-semibold text-gray-800 mb-4">Live Market Prices</h2>
-				<div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 className="text-lg font-bold text-[#7a1335] mb-2">Gold Rate</h3>
-                        {rateLoading ? <Loader className="animate-spin text-[#7a1335]" /> :
-                         rateError ? <p className="text-red-500 font-semibold">{rateError}</p> :
-                         <p className="text-3xl font-bold text-gray-800">₹{apiGoldPrice}<span className="text-lg font-medium text-gray-500">/gram</span></p>
-                        }
-                    </div>
-                    <div className="bg-white rounded-2xl p-6 shadow-sm">
-                        <h3 className="text-lg font-bold text-[#7a1335] mb-2">Silver Rate</h3>
-                        {rateLoading ? <Loader className="animate-spin text-[#7a1335]" /> :
-                         rateError ? <p className="text-red-500 font-semibold">{rateError}</p> :
-                         <p className="text-3xl font-bold text-gray-800">₹{apiSilverPrice}<span className="text-lg font-medium text-gray-500">/gram</span></p>
-                        }
-                    </div>
-				</div>
+			<div className="hidden sm:flex items-center space-x-2 bg-white px-2 py-1 rounded-full shadow-sm border">
+			  <Activity className="w-4 h-4 text-green-500" />
+			  <span className="text-xs font-medium text-gray-700">Live</span>
 			</div>
+		  </div>
+		</div>
 
-			<div className="mb-8">
-				<div className="flex justify-between items-center mb-4">
-					<h2 className="text-xl font-semibold text-gray-800">Inventory Overview</h2>
-					{isInventoryInitialized && !editInventory && inventoryData && (
-                        <button onClick={() => {
-                            setEditStockValues({
-                                totalStock: String(inventoryData.totalStock),
-                                inStoreStock: String(inventoryData.inStoreStock),
-                                goldStock: String(inventoryData.goldStock),
-                                silverStock: String(inventoryData.silverStock),
-                                diamondStock: String(inventoryData.diamondStock),
-                            });
-                            setEditInventory(true);
-                        }} className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium flex items-center gap-2"><Edit size={14}/> Edit Inventory</button>
-                    )}
-				</div>
-                
-                {inventoryLoading && <div className="text-center p-8"><Loader className="animate-spin text-[#7a1335] mx-auto"/></div>}
-                
-                {!inventoryLoading && !isInventoryInitialized && !editInventory && (
-                    <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-4 rounded-r-lg text-center">
-                        <p className="font-bold">Inventory Not Initialized</p>
-                        <p className="text-sm">Please set up your initial stock values.</p>
-                        <button onClick={() => setEditInventory(true)} className="mt-2 px-4 py-2 bg-yellow-400 text-white rounded-lg text-sm font-medium">Setup Now</button>
-                    </div>
-                )}
-                
-                {!inventoryLoading && (isInventoryInitialized || editInventory) && (
-                    <div className="bg-white p-6 rounded-2xl shadow-sm">
-                        <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-                            {[
-                                { key: "totalStock", label: "Total Stock" }, { key: "inStoreStock", label: "In Store" },
-                                { key: "goldStock", label: "Gold" }, { key: "silverStock", label: "Silver" },
-                                { key: "diamondStock", label: "Diamond" }
-                            ].map(item => (
-                                <div key={item.key}>
-                                    <p className="text-sm font-medium text-gray-600 mb-1">{item.label}</p>
-                                    {editInventory ? (
-                                        <input
-                                            type="number"
-                                            value={editStockValues[item.key as keyof EditableInventory]}
-                                            onChange={e => setEditStockValues(vals => ({ ...vals, [item.key]: e.target.value }))}
-                                            className="text-lg font-bold text-gray-900 border border-gray-300 rounded-md px-2 py-1 w-full"
-                                        />
-                                    ) : (
-                                        inventoryData && (
-                                            <p className="text-2xl font-bold text-gray-900">
-                                                {(inventoryData[item.key as keyof InventoryData] as number).toLocaleString()}
-                                                <span className="text-base font-medium text-gray-500 ml-1">{inventoryData.unit}</span>
-                                            </p>
-                                        )
-                                    )}
-                                </div>
-                            ))}
-                        </div>
-                        {editInventory && (
-                            <div className="flex gap-4 mt-6 border-t pt-4">
-                                <button onClick={handleSaveInventory} className="px-4 py-2 bg-green-600 text-white rounded-lg text-sm font-medium flex items-center gap-2"><Save size={14}/> Save Inventory</button>
-                                <button onClick={() => setEditInventory(false)} className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium">Cancel</button>
-                            </div>
-                        )}
-                        {inventoryData?.updatedAt && !editInventory && (
-                            <p className="text-xs text-gray-400 mt-4 text-right">Last updated: {new Date(inventoryData.updatedAt).toLocaleString()}</p>
-                        )}
-                    </div>
-                )}
+		<div className="mb-4 sm:mb-6">
+		  <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Live Market Prices</h2>
+		  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+			<div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+			  <h3 className="text-base font-bold text-[#7a1335] mb-1">Gold Rate</h3>
+			  {rateLoading ? <Loader className="animate-spin text-[#7a1335] w-5 h-5" /> :
+				rateError ? <p className="text-red-500 font-semibold text-xs">{rateError}</p> :
+				<p className="text-xl sm:text-2xl font-bold text-gray-800">₹{apiGoldPrice}<span className="text-sm font-medium text-gray-500">/gram</span></p>
+			  }
 			</div>
+			<div className="bg-white rounded-xl p-3 sm:p-4 shadow-sm">
+			  <h3 className="text-base font-bold text-[#7a1335] mb-1">Silver Rate</h3>
+			  {rateLoading ? <Loader className="animate-spin text-[#7a1335] w-5 h-5" /> :
+				rateError ? <p className="text-red-500 font-semibold text-xs">{rateError}</p> :
+				<p className="text-xl sm:text-2xl font-bold text-gray-800">₹{apiSilverPrice}<span className="text-sm font-medium text-gray-500">/gram</span></p>
+			  }
+			</div>
+		  </div>
+		</div>
 
-			<div className="mb-8">
-				<h2 className="text-xl font-semibold text-gray-800 mb-4">Account Summary</h2>
-				<div className="grid grid-cols-2 md:grid-cols-5 lg:grid-cols-5 gap-6">
-					{stats.map((stat, idx) => (
-						<div
-							key={idx}
-							className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 p-6 border border-gray-100 hover:border-gray-200 overflow-hidden"
-						>
-							<div className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-							<div className="relative z-10">
-								<div className="flex items-center justify-between mb-4">
-									<div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}>
-										<stat.icon className="w-6 h-6 text-white" />
-									</div>
-									<div className="flex items-center space-x-1 text-green-600 text-sm font-medium">
-										<TrendingUp className="w-3 h-3" />
-										<span>{stat.trend}</span>
-									</div>
-								</div>
-								<div className="space-y-1">
-									<h3 className="text-2xl lg:text-3xl font-bold text-gray-800">{stat.value}</h3>
-									<p className="text-gray-600 text-sm font-medium">{stat.label}</p>
-								</div>
-							</div>
+		<div className="mb-4 sm:mb-6">
+		  <div className="flex justify-between items-center mb-2">
+			<h2 className="text-lg sm:text-xl font-semibold text-gray-800">Inventory Overview</h2>
+			{isInventoryInitialized && !editInventory && inventoryData && (
+			  <button onClick={() => {
+				setEditStockValues({
+				  totalStock: String(inventoryData.totalStock),
+				  inStoreStock: String(inventoryData.inStoreStock),
+				  goldStock: String(inventoryData.goldStock),
+				  silverStock: String(inventoryData.silverStock),
+				  diamondStock: String(inventoryData.diamondStock),
+				});
+				setEditInventory(true);
+			  }} className="px-3 py-1.5 bg-blue-600 text-white rounded-lg text-xs font-medium flex items-center gap-2"><Edit size={14}/> Edit</button>
+			)}
+		  </div>
+				
+				{inventoryLoading && <div className="text-center p-4"><Loader className="animate-spin text-[#7a1335] mx-auto w-6 h-6"/></div>}
+				
+				{!inventoryLoading && !isInventoryInitialized && !editInventory && (
+				  <div className="bg-yellow-50 border-l-4 border-yellow-400 text-yellow-700 p-2 rounded-r-lg text-center">
+					<p className="font-bold text-xs">Inventory Not Initialized</p>
+					<p className="text-xs">Please set up your initial stock values.</p>
+					<button onClick={() => setEditInventory(true)} className="mt-2 px-3 py-1.5 bg-yellow-400 text-white rounded-lg text-xs font-medium">Setup Now</button>
+				  </div>
+				)}
+				
+				{!inventoryLoading && (isInventoryInitialized || editInventory) && (
+				  <div className="bg-white p-3 sm:p-4 rounded-xl shadow-sm">
+					<div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+					  {[
+						{ key: "totalStock", label: "Total Stock" }, { key: "inStoreStock", label: "In Store" },
+						{ key: "goldStock", label: "Gold" }, { key: "silverStock", label: "Silver" },
+						{ key: "diamondStock", label: "Diamond" }
+					  ].map(item => (
+						<div key={item.key}>
+						  <p className="text-xs font-medium text-gray-600 mb-1">{item.label}</p>
+						  {editInventory ? (
+							<input
+							  type="number"
+							  value={editStockValues[item.key as keyof EditableInventory]}
+							  onChange={e => setEditStockValues(vals => ({ ...vals, [item.key]: e.target.value }))}
+							  className="text-base font-bold text-gray-900 border border-gray-300 rounded-md px-2 py-1 w-full"
+							/>
+						  ) : (
+							inventoryData && (
+							  <p className="text-lg font-bold text-gray-900">
+								{(inventoryData[item.key as keyof InventoryData] as number).toLocaleString()}
+								<span className="text-xs font-medium text-gray-500 ml-1">{inventoryData.unit}</span>
+							  </p>
+							)
+						  )}
 						</div>
-					))}
-					<div className="group relative bg-white rounded-2xl shadow-sm hover:shadow-lg transition-all duration-300 p-6 border border-gray-100 hover:border-gray-200 overflow-hidden">
-						<div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-						<div className="relative z-10">
-							<div className="flex items-center justify-between mb-4">
-								<div className="p-3 rounded-xl bg-gradient-to-r from-pink-400 to-pink-600 shadow-lg">
-									<Handshake className="w-6 h-6 text-white" />
-								</div>
-								<div className="flex items-center space-x-1 text-pink-600 text-sm font-medium">
-									<TrendingUp className="w-3 h-3" />
-									<span>+5%</span>
-								</div>
-							</div>
-							<div className="space-y-1">
-								<h3 className="text-2xl lg:text-3xl font-bold text-gray-800">{b2bVendorCount}</h3>
-								<p className="text-gray-600 text-sm font-medium">B2B Vendors</p>
-							</div>
-						</div>
+					  ))}
 					</div>
-				</div>
+					{editInventory && (
+					  <div className="flex gap-2 mt-4 border-t pt-3">
+						<button onClick={handleSaveInventory} className="px-3 py-1.5 bg-green-600 text-white rounded-lg text-xs font-medium flex items-center gap-2"><Save size={14}/> Save</button>
+						<button onClick={() => setEditInventory(false)} className="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-xs font-medium">Cancel</button>
+					  </div>
+					)}
+					{inventoryData?.updatedAt && !editInventory && (
+					  <p className="text-xs text-gray-400 mt-2 text-right">Last updated: {new Date(inventoryData.updatedAt).toLocaleString()}</p>
+					)}
+				  </div>
+				)}
 			</div>
+
+		<div className="mb-4 sm:mb-6">
+		  <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Account Summary</h2>
+		  <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+			{stats.map((stat, idx) => (
+			  <div
+				key={idx}
+				className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-3 sm:p-4 border border-gray-100 hover:border-gray-200 overflow-hidden"
+			  >
+				<div className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+				<div className="relative z-10">
+				  <div className="flex items-center justify-between mb-2">
+					<div className={`p-2 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}>
+					  <stat.icon className="w-5 h-5 text-white" />
+					</div>
+					<div className="flex items-center space-x-1 text-green-600 text-xs font-medium">
+					  <TrendingUp className="w-3 h-3" />
+					  <span>{stat.trend}</span>
+					</div>
+				  </div>
+				  <div className="space-y-1">
+					<h3 className="text-lg sm:text-xl font-bold text-gray-800">{stat.value}</h3>
+					<p className="text-gray-600 text-xs font-medium">{stat.label}</p>
+				  </div>
+				</div>
+			  </div>
+			))}
+			<div className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-3 sm:p-4 border border-gray-100 hover:border-gray-200 overflow-hidden">
+			  <div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
+			  <div className="relative z-10">
+				<div className="flex items-center justify-between mb-2">
+				  <div className="p-2 rounded-xl bg-gradient-to-r from-pink-400 to-pink-600 shadow-lg">
+					<Handshake className="w-5 h-5 text-white" />
+				  </div>
+				  <div className="flex items-center space-x-1 text-pink-600 text-xs font-medium">
+					<TrendingUp className="w-3 h-3" />
+					<span>+5%</span>
+				  </div>
+				</div>
+				<div className="space-y-1">
+				  <h3 className="text-lg sm:text-xl font-bold text-gray-800">{b2bVendorCount}</h3>
+				  <p className="text-gray-600 text-xs font-medium">B2B Vendors</p>
+				</div>
+			  </div>
+			</div>
+		  </div>
+		</div>
 
 			<div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
 				<div className="p-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">

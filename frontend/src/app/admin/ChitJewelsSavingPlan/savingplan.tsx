@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import axiosInstance from '../../../utils/axiosInstance';
 
 interface SavingPlanType {
@@ -43,76 +43,81 @@ const SavingPlan = () => {
 	const paginatedPlans = plans.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
 
-	const fetchPlans = useCallback(async () => {
-		setLoading(true);
-		try {
-			const response = await axiosInstance.get('/api/saving-plans');
-			setPlans(response.data);
-			setError(null);
-		} catch (err) {
-			console.error("Failed to fetch saving plans:", err);
-			setError("Could not load saving plans.");
-		} finally {
-			setLoading(false);
-		}
-	}, []);
+
+const fetchPlans = useCallback(async () => {
+	setLoading(true);
+	try {
+		const response = await axiosInstance.get('/api/saving-plans');
+		setPlans(response.data);
+		setError(null);
+	} catch (err) {
+		console.error("Failed to fetch saving plans:", err);
+		setError("Could not load saving plans.");
+	} finally {
+		setLoading(false);
+	}
+}, []);
 
 	useEffect(() => {
 		fetchPlans();
 	}, [fetchPlans]);
 
-	const handleCreatePlan = async (planData: Omit<SavingPlanType, 'id'>) => {
-		try {
-			await axiosInstance.post('/api/saving-plans', planData);
-			fetchPlans();
-			closeModal();
-		} catch (err) {
-			console.error("Failed to create plan:", err);
-			alert("An error occurred while creating the plan.");
-		}
-	};
 
-	const handleUpdatePlan = async (planData: SavingPlanType) => {
-		const { id, ...payload } = planData;
-		try {
-			await axiosInstance.put(`/api/saving-plans/${id}`, payload);
-			fetchPlans();
-			closeModal();
-		} catch (err) {
-			console.error("Failed to update plan:", err);
-			alert("An error occurred while updating the plan.");
-		}
-	};
+const handleCreatePlan = async (planData: Omit<SavingPlanType, 'id'>) => {
+	try {
+		await axiosInstance.post('/api/saving-plans', planData);
+		fetchPlans();
+		closeModal();
+	} catch (err) {
+		console.error("Failed to create plan:", err);
+		alert("An error occurred while creating the plan.");
+	}
+};
 
-	const handleStatusChange = async (id: number, newStatus: 'ACTIVE' | 'CLOSED') => {
-		const originalPlans = [...plans];
 
-		const updatedPlans = plans.map(plan =>
-			plan.id === id ? { ...plan, status: newStatus } : plan
-		);
-		setPlans(updatedPlans);
+const handleUpdatePlan = async (planData: SavingPlanType) => {
+	const { id, ...payload } = planData;
+	try {
+		await axiosInstance.put(`/api/user-savings${id}`, payload);
+		fetchPlans();
+		closeModal();
+	} catch (err) {
+		console.error("Failed to update plan:", err);
+		alert("An error occurred while updating the plan.");
+	}
+};
 
-		try {
-			await axiosInstance.put(`/api/saving-plans/${id}/status?status=${newStatus}`);
-		} catch (err) {
-			console.error("Failed to toggle status:", err);
-			alert("Failed to update status. Reverting change.");
-			setPlans(originalPlans);
-		}
-	};
 
-	const handleDelete = async () => {
-		if (!planToDelete) return;
-		try {
-			await axiosInstance.delete(`/api/saving-plans/${planToDelete.id}`);
-			setShowDeleteConfirm(false);
-			setPlanToDelete(null);
-			fetchPlans();
-		} catch (err) {
-			console.error("Failed to delete plan:", err);
-			alert("An error occurred while deleting the plan.");
-		}
-	};
+const handleStatusChange = async (id: number, newStatus: 'ACTIVE' | 'CLOSED') => {
+	const originalPlans = [...plans];
+
+	const updatedPlans = plans.map(plan =>
+		plan.id === id ? { ...plan, status: newStatus } : plan
+	);
+	setPlans(updatedPlans);
+
+	try {
+		await axiosInstance.put(`/api/user-savings${id}/status?status=${newStatus}`);
+	} catch (err) {
+		console.error("Failed to toggle status:", err);
+		alert("Failed to update status. Reverting change.");
+		setPlans(originalPlans);
+	}
+};
+
+
+const handleDelete = async () => {
+	if (!planToDelete) return;
+	try {
+		await axiosInstance.delete(`/api/user-savings${planToDelete.id}`);
+		setShowDeleteConfirm(false);
+		setPlanToDelete(null);
+		fetchPlans();
+	} catch (err) {
+		console.error("Failed to delete plan:", err);
+		alert("An error occurred while deleting the plan.");
+	}
+};
 
 
 	const openAddModal = () => {

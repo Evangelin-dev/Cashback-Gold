@@ -51,42 +51,40 @@ const LChitJewelsSavingPlan = () => {
   const navigate = useNavigate();
 
   // --- DATA FETCHING from /api/orders/my ---
-  useEffect(() => {
+useEffect(() => {
     const fetchUserPlans = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get<OrderFromApi[]>('/api/orders/my');
-        const chitOrders = (response.data || []).filter(order => order.planType === 'CHIT');
-
-        // --- FIX: Process ALL fetched chit orders, don't pre-filter by status ---
-        const processed = chitOrders.map((order): ProcessedPlan => {
-          const totalAmount = order.amount;
-          const durationMonths = parseDurationMonths(order.duration);
+        // Fetch enrolled chit plans for the user
+        const response = await axiosInstance.get('/api/user-savings/enroll');
+        const enrolledPlans = response.data || [];
+        // Map the API response to ProcessedPlan[]
+        const processed = enrolledPlans.map((plan: any) => {
+          const totalAmount = plan.amount || 0;
+          const durationMonths = parseDurationMonths(plan.duration || '1');
           const monthlyPayment = durationMonths > 0 ? totalAmount / durationMonths : 0;
           return {
-            id: order.orderId,
-            name: order.planName,
+            id: plan.id?.toString() || '',
+            name: plan.planName || plan.name || '',
             target: formatCurrency(totalAmount),
-            orderId: order.orderId,
-            planType: order.planType,
-            duration: order.duration,
+            orderId: plan.orderId || plan.id?.toString() || '',
+            planType: plan.planType || 'CHIT',
+            duration: plan.duration || '',
             amount: formatCurrency(totalAmount),
-            paymentMethod: order.paymentMethod,
-            customerName: order.customerName,
-            customerType: order.customerType,
-            createdAt: order.createdAt,
-            address: order.address,
+            paymentMethod: plan.paymentMethod || '',
+            customerName: plan.customerName || '',
+            customerType: plan.customerType || '',
+            createdAt: plan.createdAt || '',
+            address: plan.address || '',
             monthly: formatCurrency(monthlyPayment),
-            status: order.status.toLowerCase(), // Status will be 'pending', 'successful', etc.
+            status: (plan.status || '').toLowerCase(),
           };
         });
-
-        setUserChitPlans(processed); // Set the full list of chit plans
-
+        setUserChitPlans(processed);
       } catch (err) {
-        console.error("Failed to fetch user Chit plans:", err);
-        setError("Could not load your saving plans at this time.");
+        console.error("Failed to fetch enrolled Chit plans:", err);
+        setError("Could not load your enrolled saving plans at this time.");
       } finally {
         setLoading(false);
       }
