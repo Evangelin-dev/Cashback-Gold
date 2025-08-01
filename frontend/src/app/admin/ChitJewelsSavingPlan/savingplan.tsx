@@ -78,7 +78,7 @@ const handleCreatePlan = async (planData: Omit<SavingPlanType, 'id'>) => {
 const handleUpdatePlan = async (planData: SavingPlanType) => {
 	const { id, ...payload } = planData;
 	try {
-		await axiosInstance.put(`/api/user-savings${id}`, payload);
+		await axiosInstance.put(`/api/saving-plans${id}`, payload);
 		fetchPlans();
 		closeModal();
 	} catch (err) {
@@ -97,7 +97,7 @@ const handleStatusChange = async (id: number, newStatus: 'ACTIVE' | 'CLOSED') =>
 	setPlans(updatedPlans);
 
 	try {
-		await axiosInstance.put(`/api/user-savings${id}/status?status=${newStatus}`);
+		await axiosInstance.put(`/api/saving-plans${id}/status?status=${newStatus}`);
 	} catch (err) {
 		console.error("Failed to toggle status:", err);
 		alert("Failed to update status. Reverting change.");
@@ -109,7 +109,7 @@ const handleStatusChange = async (id: number, newStatus: 'ACTIVE' | 'CLOSED') =>
 const handleDelete = async () => {
 	if (!planToDelete) return;
 	try {
-		await axiosInstance.delete(`/api/user-savings${planToDelete.id}`);
+		await axiosInstance.delete(`/api/saving-plans${planToDelete.id}`);
 		setShowDeleteConfirm(false);
 		setPlanToDelete(null);
 		fetchPlans();

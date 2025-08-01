@@ -52,7 +52,7 @@ const ChitJewelsPlans = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await axiosInstance.get<PlanFromApi[]>('api/user-savings');
+        const response = await axiosInstance.get<PlanFromApi[]>('/api/saving-plans');
         const activePlans = response.data.filter(plan => plan.status === 'ACTIVE');
         const processedPlans = activePlans.map((plan, index) => {
           const amount = parseAmount(plan.amount);
@@ -92,7 +92,7 @@ const ChitJewelsPlans = () => {
     };
 
     try {
-      await axiosInstance.post('api/user-savings/enroll', orderPayload);
+      await axiosInstance.post('/api/saving-plans/enroll', orderPayload);
       
       // On success
       alert(`Successfully placed order for "${selectedPlan.name}"! You will be redirected for payment.`);
@@ -173,7 +173,7 @@ const ChitJewelsPlans = () => {
                 <div className="flex flex-wrap justify-center items-center w-full gap-8">
                   {/* Saving Scheme Card (first plan, if exists) */}
                   {plans.length > 0 && (
-                    <div className="relative bg-white rounded-2xl shadow-lg border-2 border-[#bf7e1a] flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:scale-105 text-[11px] p-3 mx-auto flex justify-center items-center" style={{ minWidth: '220px', maxWidth: '260px', minHeight: '260px' }}>
+                    <div className="relative bg-white rounded-2xl shadow-lg border-2 border-[#bf7e1a] flex flex-col justify-between h-full min-h-[260px] transition-all duration-300 hover:shadow-xl hover:scale-105 text-[11px] p-3 mx-auto items-center" style={{ minWidth: '220px', maxWidth: '260px' }}>
                       <div className="w-full flex justify-center items-center absolute -top-3 left-0">
                         <span className="bg-[#bf7e1a] text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap leading-tight">Saving Scheme</span>
                       </div>
@@ -194,7 +194,7 @@ const ChitJewelsPlans = () => {
                   )}
                   {/* Other Plans */}
                   {plans.slice(1).map((plan) => (
-                    <div key={plan.id} className={`relative bg-white rounded-2xl shadow-lg border-2 flex flex-col h-full transition-all duration-300 hover:shadow-xl hover:scale-105 ${plan.popular ? 'border-[#bf7e1a]' : 'border-gray-200'} text-[11px] p-3`} style={{ minWidth: '220px', maxWidth: '260px', minHeight: '260px' }}>
+                    <div key={plan.id} className={`relative bg-white rounded-2xl shadow-lg border-2 flex flex-col justify-between h-full min-h-[260px] transition-all duration-300 hover:shadow-xl hover:scale-105 ${plan.popular ? 'border-[#bf7e1a]' : 'border-gray-200'} text-[11px] p-3`} style={{ minWidth: '220px', maxWidth: '260px' }}>
                       {plan.popular && <div className="absolute -top-3 left-1/2 transform -translate-x-1/2"><span className="bg-[#bf7e1a] text-yellow-800 px-3 py-1 rounded-full text-[12px] font-bold">Most Popular</span></div>}
                       <div className="flex-1 flex flex-col pt-5">
                         <div className="text-center mb-2">
@@ -203,11 +203,7 @@ const ChitJewelsPlans = () => {
                           <div className="text-gray-600 mb-1">{plan.duration}</div>
                           <div className="bg-yellow-50 px-2 py-1 rounded-lg inline-block text-[12px] font-semibold text-yellow-800">Monthly: {plan.monthlyPayment}</div>
                         </div>
-                        <div className="text-gray-600 text-[12px] mb-2 h-24 overflow-auto">
-                          {plan.description.split(/(?<=\.)\s+/).map((sentence, idx) => (
-                            <div key={idx}>{sentence}</div>
-                          ))}
-                        </div>
+                        {/* Description removed from card, only shown in popup */}
                         <div className="space-y-1 mb-2">{plan.features.slice(0, 3).map((feature, index) => (<div key={index} className="flex items-center text-[12px]"><div className="h-2 w-2 bg-[#bf7e1a] rounded-full mr-2"></div><span className="text-gray-700">{feature}</span></div>))}</div>
                         <div className="mt-auto flex justify-center">
                           <button onClick={() => setSelectedPlan(plan)} className={`bg-[#7a1335] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#991313] transition-colors w-full`}>Start Saving</button>

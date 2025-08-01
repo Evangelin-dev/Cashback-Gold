@@ -57,7 +57,7 @@ useEffect(() => {
       setError(null);
       try {
         // Fetch enrolled chit plans for the user
-        const response = await axiosInstance.get('/api/user-savings/enroll');
+        const response = await axiosInstance.get('/api/saving-plans');
         const enrolledPlans = response.data || [];
         // Map the API response to ProcessedPlan[]
         const processed = enrolledPlans.map((plan: any) => {
@@ -152,9 +152,9 @@ useEffect(() => {
               <div className="flex items-center space-x-1 text-xs text-gray-500"><Calendar className="w-3 h-3" /><span>Updated today</span></div>
             </div>
             {plansToShow.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {plansToShow?.map((plan) => (
-                  <div key={plan.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 flex flex-col">
+                  <div key={plan.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 flex flex-col justify-between h-full min-h-[210px]">
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="text-sm font-bold text-gray-800">{plan.name}</h3>
@@ -162,11 +162,11 @@ useEffect(() => {
                       </div>
                       <div className="w-7 h-7 bg-gray-100 rounded flex-shrink-0"></div>
                     </div>
-                    <div className="space-y-1">
+                    <div className="space-y-1 flex-1">
                       <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Target Amount</span><span className="font-semibold text-gray-800">{plan.target}</span></div>
                       <div className="pt-2 border-t"><div className="flex justify-between items-center text-xs"><span className="text-gray-500">Monthly Payment</span><span className="font-bold text-[#6a0822]">{plan.monthly}</span></div></div>
                     </div>
-                    <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
+                    <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
                       <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
                     </div>
                   </div>
