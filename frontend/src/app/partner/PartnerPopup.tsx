@@ -205,7 +205,7 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
         </div>
 
         <h2 style={{ fontWeight: 800, fontSize: 24, marginBottom: 8, color: "#991313" }}>
-          {mode === "login" ? "Welcome Back, Partner!" : "Create your Partner Account"}
+          {mode === "login" ? "Welcome Back1, Partner!" : "Create your Partner Account"}
         </h2>
         <div style={{ borderBottom: "2px solid #991313", width: 60, margin: "0 auto 18px auto", opacity: 0.7 }} />
 
