@@ -12,7 +12,7 @@ import type {
 
 
 const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/auth`;
-console.log(import.meta.env.VITE_BACKEND_URL);
+console.log("Data",import.meta.env.VITE_BACKEND_URL);
 
 
 const getErrorMessage = (error: unknown): string => {
