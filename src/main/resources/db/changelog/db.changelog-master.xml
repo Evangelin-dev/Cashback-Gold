@@ -228,6 +228,18 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="5-2" author="azeem">
+        <addColumn tableName="ornaments">
+            <column name="origin" type="VARCHAR(20)" defaultValue="INDIAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="making_charge_percent" type="DECIMAL(5,2)" defaultValueNumeric="11.00">
+                <constraints nullable="false"/>
+            </column>
+        </addColumn>
+    </changeSet>
+
+
 
     <changeSet id="7" author="azeem">
         <createTable tableName="marketing_resources">
@@ -892,6 +904,29 @@
             <column name="payment_status" type="varchar(50)"/>
         </addColumn>
     </changeSet>
+
+    <changeSet id="26-1-update" author="azeeem">
+        <modifyDataType tableName="order_history" columnName="razorpay_order_id" newDataType="varchar(255)"/>
+        <modifyDataType tableName="order_history" columnName="razorpay_payment_id" newDataType="varchar(255)"/>
+        <modifyDataType tableName="order_history" columnName="razorpay_signature" newDataType="varchar(512)"/>
+        <modifyDataType tableName="order_history" columnName="receipt_id" newDataType="varchar(255)"/>
+        <modifyDataType tableName="order_history" columnName="payment_status" newDataType="varchar(100)"/>
+    </changeSet>
+
+    <changeSet id="update-plan-name" author="azeem">
+        <modifyDataType tableName="order_history" columnName="plan_name" newDataType="VARCHAR(255)"/>
+        <modifyDataType tableName="order_history" columnName="receipt_id" newDataType="VARCHAR(255)"/>
+    </changeSet>
+
+
+    <changeSet id="26-2" author="azeem">
+        <addColumn tableName="order_history">
+            <column name="cgst" type="DECIMAL(10,2)"/>
+            <column name="sgst" type="DECIMAL(10,2)"/>
+            <column name="gst" type="DECIMAL(10,2)"/>
+        </addColumn>
+    </changeSet>
+
 
     <changeSet id="30" author="azeem">
         <createTable tableName="user_saving_enrollments">

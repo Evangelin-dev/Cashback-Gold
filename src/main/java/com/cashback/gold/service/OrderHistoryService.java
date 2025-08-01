@@ -185,15 +185,9 @@
 package com.cashback.gold.service;
 
 import com.cashback.gold.dto.OrderRequest;
-import com.cashback.gold.entity.CartItem;
-import com.cashback.gold.entity.Commission;
-import com.cashback.gold.entity.OrderHistory;
-import com.cashback.gold.entity.User;
+import com.cashback.gold.entity.*;
 import com.cashback.gold.exception.InvalidArgumentException;
-import com.cashback.gold.repository.CartItemRepository;
-import com.cashback.gold.repository.CommissionRepository;
-import com.cashback.gold.repository.OrderHistoryRepository;
-import com.cashback.gold.repository.UserRepository;
+import com.cashback.gold.repository.*;
 import com.cashback.gold.security.UserPrincipal;
 import com.cashback.gold.utils.Utils;
 import com.razorpay.Order;
@@ -225,12 +219,23 @@ public class OrderHistoryService {
     private final UserRepository userRepository;
     private final CartItemRepository cartRepo;
     private final CommissionRepository commissionRepo;
+    private final MetalRateRepository metalRateRepository;
 
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
 
     @Value("${razorpay.key.secret}")
     private String razorpayKeySecret;
+
+    @Value("${commission.level1}")
+    private double level1Commission;
+
+    @Value("${commission.level2}")
+    private double level2Commission;
+
+    @Value("${commission.level3}")
+    private double level3Commission;
+
 
     @Transactional
     public Map<String, Object> createOrderFromUser(OrderRequest request, UserPrincipal userPrincipal) {
@@ -353,14 +358,25 @@ public class OrderHistoryService {
         List<CartItem> cartItems = cartRepo.findByUserId(user.getId());
         if (cartItems.isEmpty()) throw new InvalidArgumentException("Cart is empty");
 
-        Double total = cartItems.stream()
-                .mapToDouble(item -> item.getOrnament().getPrice() * item.getQuantity())
-                .sum();
+        double total = 0.0;
+        StringBuilder items = new StringBuilder();
 
-        String items = cartItems.stream()
-                .map(item -> item.getOrnament().getName() + " x" + item.getQuantity())
-                .collect(Collectors.joining(", "));
+        for (CartItem item : cartItems) {
+            Ornament ornament = item.getOrnament();
 
+            // ✅ Use stored price, multiply with quantity
+            double basePrice = ornament.getPrice() * item.getQuantity();
+
+            // ✅ Add 3% GST to each item price
+            double itemGst = basePrice * 0.03;
+            double finalItemPrice = basePrice + itemGst;
+
+            total += finalItemPrice;
+
+            items.append(ornament.getName()).append(" x").append(item.getQuantity()).append(", ");
+        }
+
+        String itemSummary = items.toString().replaceAll(", $", "");
         String address = userRepository.findById(user.getId())
                 .map(u -> String.join(", ", u.getTown(), u.getCity(), u.getState(), u.getCountry()))
                 .orElse("Unknown");
@@ -368,22 +384,37 @@ public class OrderHistoryService {
         try {
             RazorpayClient razorpay = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
 
+            // ✅ Step 1: Apply 1% discount if first order
+            boolean isFirstOrder = repository.countByUserId(user.getId()) == 0;
+            double discount = isFirstOrder ? total * 0.01 : 0.0;
+
+            double subtotal = total - discount;
+
+            // ✅ Split GST into CGST + SGST (1.5% + 1.5%)
+            double cgst = Math.round(subtotal * 0.015 * 100.0) / 100.0;
+            double sgst = Math.round(subtotal * 0.015 * 100.0) / 100.0;
+            double gst = cgst + sgst;
+
+            double finalAmount = subtotal + gst;
+
+            // ✅ Create Razorpay Order
             JSONObject orderRequest = new JSONObject();
-            orderRequest.put("amount", total * 100); // Amount in paise
+            orderRequest.put("amount", Math.round(finalAmount * 100)); // in paise
             orderRequest.put("currency", "INR");
             orderRequest.put("receipt", "rcpt_" + UUID.randomUUID().toString().substring(0, 10));
 
             Order razorpayOrder = razorpay.orders.create(orderRequest);
 
+            // ✅ Save Order
             OrderHistory order = OrderHistory.builder()
                     .orderId("ORD-" + LocalDateTime.now().getYear() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase())
                     .userId(user.getId())
                     .customerName(user.getUsername())
                     .customerType(user.getRole().toLowerCase())
                     .planType("ORNAMENT")
-                    .planName(items)
+                    .planName(itemSummary)
                     .duration("-")
-                    .amount(total)
+                    .amount(finalAmount)
                     .paymentMethod("RAZORPAY")
                     .status("pending")
                     .address(address)
@@ -391,31 +422,64 @@ public class OrderHistoryService {
                     .razorpayOrderId(razorpayOrder.get("id"))
                     .receiptId(razorpayOrder.get("receipt"))
                     .paymentStatus("created")
+                    .cgst(cgst)
+                    .sgst(sgst)
+                    .gst(gst)
                     .build();
 
+            // ✅ Clear cart
             cartRepo.deleteByUserId(user.getId());
 
+            // ✅ Commission Logic (unchanged)
             User userEntity = userRepository.findById(user.getId()).orElseThrow();
-            if (userEntity.getReferredBy() != null) {
+            Long currentReferrerId = userEntity.getReferredBy();
+            int level = 1;
+
+            while (currentReferrerId != null && level <= 3) {
+                Optional<User> referrerOpt = userRepository.findById(currentReferrerId);
+                if (referrerOpt.isEmpty()) break;
+
+                User referrer = referrerOpt.get();
+                if (!"PARTNER".equalsIgnoreCase(referrer.getRole())) break;
+
+                double commissionPercent = switch (level) {
+                    case 1 -> level1Commission;
+                    case 2 -> level2Commission;
+                    case 3 -> level3Commission;
+                    default -> 0.0;
+                };
+
+                double commissionAmount = finalAmount * commissionPercent;
+
                 Commission commission = Commission.builder()
-                        .partnerId(userEntity.getReferredBy())
+                        .partnerId(referrer.getId())
                         .userId(userEntity.getId())
                         .orderType("ORNAMENT")
-                        .orderAmount(total)
-                        .commissionAmount(total * 0.10)
+                        .orderAmount(finalAmount)
+                        .commissionAmount(commissionAmount)
+                        .level(level)
                         .createdAt(LocalDateTime.now())
                         .build();
                 commissionRepo.save(commission);
+
+                currentReferrerId = referrer.getReferredBy();
+                level++;
+                continue;
             }
 
             OrderHistory savedOrder = repository.save(order);
 
+            // ✅ Return response
             Map<String, Object> response = new HashMap<>();
             response.put("order", savedOrder);
             response.put("razorpayOrderId", razorpayOrder.get("id"));
-            response.put("amount", total * 100);
+            response.put("amount", Math.round(finalAmount * 100));
             response.put("currency", "INR");
             response.put("key", razorpayKeyId);
+            response.put("discount", discount);
+            response.put("cgst", cgst);
+            response.put("sgst", sgst);
+            response.put("gst", gst);
 
             return response;
 
@@ -423,6 +487,10 @@ public class OrderHistoryService {
             throw new InvalidArgumentException("Error creating Razorpay order: " + e.getMessage());
         }
     }
+
+
+
+
     public void verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {
         try {
             RazorpayClient razorpay = new RazorpayClient(razorpayKeyId, razorpayKeySecret);

@@ -57,6 +57,13 @@ public class Ornament {
     private String itemType;
     private String details;
 
+    @Column(nullable = false)
+    private String origin; // "INDIAN" or "INTERNATIONAL"
+
+    @Column(name = "making_charge_percent", nullable = false)
+    private Double makingChargePercent;
+
+
     @OneToMany(mappedBy = "ornament", cascade = CascadeType.ALL, orphanRemoval = true)
     @JsonManagedReference
     private List<PriceBreakup> priceBreakups;

@@ -51,4 +51,10 @@ public class OrderHistory {
     private String receiptId;
 
     private String paymentStatus; // created, success, failed
+
+    private Double cgst;
+
+    private Double sgst;
+
+    private Double gst;
 }

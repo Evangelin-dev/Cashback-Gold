@@ -26,5 +26,7 @@ public class OrnamentResponse {
     private String warranty;
     private String itemType;
     private String details;
+    private String origin;
+    private Double makingChargePercent;
     private List<PriceBreakupDTO> priceBreakups;
 }
