@@ -973,6 +973,15 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="31.1" author="azeeem">
+        <addColumn tableName="user_saving_payments">
+            <column name="razorpay_order_id" type="varchar(100)"/>
+            <column name="razorpay_payment_id" type="varchar(100)"/>
+            <column name="razorpay_signature" type="varchar(255)"/>
+        </addColumn>
+    </changeSet>
+
+
     <changeSet id="32" author="azeem">
         <createTable tableName="user_gold_plant_enrollments">
             <column name="id" type="BIGSERIAL">
@@ -1031,6 +1040,15 @@
                 referencedColumnNames="id"
                 constraintName="fk_gold_plant_scheme"/>
     </changeSet>
+
+    <changeSet id="32-2" author="azeem">
+        <addColumn tableName="user_gold_plant_enrollments">
+            <column name="razorpay_order_id" type="VARCHAR(100)"/>
+            <column name="razorpay_payment_id" type="VARCHAR(100)"/>
+            <column name="razorpay_signature" type="VARCHAR(255)"/>
+        </addColumn>
+    </changeSet>
+
 
     <changeSet id="33" author="azeem">
         <createTable tableName="cashback_gold_schemes">
@@ -1159,6 +1177,14 @@
                 referencedTableName="user_cashback_gold_enrollments"
                 referencedColumnNames="id"
                 onDelete="CASCADE"/>
+    </changeSet>
+
+    <changeSet id="35-1" author="azeem">
+        <addColumn tableName="user_cashback_gold_payments">
+            <column name="razorpay_order_id" type="VARCHAR(255)"/>
+            <column name="razorpay_payment_id" type="VARCHAR(255)"/>
+            <column name="razorpay_signature" type="VARCHAR(255)"/>
+        </addColumn>
     </changeSet>
 
     <changeSet id="36" author="azeem">
