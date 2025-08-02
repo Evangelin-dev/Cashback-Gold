@@ -47,7 +47,7 @@ const GoldSIPPlansPage = () => {
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await axiosInstance.get<SIPPlanFromApi[]>('/admin/sip-plans');
+        const response = await axiosInstance.get<SIPPlanFromApi[]>('/api/cashback-gold-schemes');
         const activePlans = response.data.filter(plan => plan.status === 'ACTIVE');
         const mockReturns = ["8-12%", "10-14%", "12-16%", "14-18%"];
         const processedPlans = activePlans.map((plan, index) => ({
@@ -58,8 +58,8 @@ const GoldSIPPlansPage = () => {
         }));
         setPlans(processedPlans);
       } catch (err) {
-        console.error("Failed to fetch SIP plans:", err);
-        setError("Could not load SIP plans at this time.");
+        console.error("Failed to fetch Gold Plans:", err);
+        setError("Could not load Gold Plans at this time.");
       } finally {
         setLoading(false);
       }
@@ -89,7 +89,7 @@ const GoldSIPPlansPage = () => {
     };
 
     try {
-      await axiosInstance.post('/api/orders', orderPayload);
+      await axiosInstance.post('/api/cashback-gold-user/enroll', orderPayload);
       alert(`Your order for "${selectedPlan.name}" has been placed successfully!`);
       setShowModal(false); // Close the modal on success
     } catch (err) {
@@ -116,8 +116,8 @@ const GoldSIPPlansPage = () => {
   const carouselSlides = [
     {
       icon: <Award className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mx-auto" />,
-      title: 'Gold SIP Plans',
-      desc: 'Invest in gold systematically with our flexible SIP plans. Build wealth steadily with the timeless value of gold.'
+      title: 'Cashback Gold',
+      desc: 'Invest in gold systematically with our flexible Gold Plans. Build wealth steadily with the timeless value of gold.'
     },
     {
       icon: <TrendingUp className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mx-auto" />,
@@ -132,7 +132,7 @@ const GoldSIPPlansPage = () => {
     {
       icon: <Star className="w-8 h-8 sm:w-10 sm:h-10 text-yellow-400 mx-auto" />,
       title: '24/7 Support',
-      desc: 'Our support team is always available to help you with your gold SIP journey.'
+      desc: 'Our support team is always available to help you with your gold Cashback Gold journey.'
     }
   ];
 
@@ -197,7 +197,7 @@ const GoldSIPPlansPage = () => {
             onMouseUp={handleDragEnd}
             onMouseLeave={handleDragEnd}
             role="region"
-            aria-label="Gold SIP Carousel"
+            aria-label="Gold Cashback Gold Carousel"
           >
             <div className="flex transition-all duration-500" style={{ transform: `translateX(-${carouselIdx * 100}%)` }}>
               {carouselSlides.map((slide, idx) => (
@@ -233,7 +233,7 @@ const GoldSIPPlansPage = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-6">
           <h2 className="text-lg sm:text-xl font-bold text-yellow-900 mb-2">Why Choose Gold SIP?</h2>
-          <p className="text-gray-600 max-w-2xl mx-auto text-xs sm:text-sm">Gold SIP (Systematic Investment Plan) allows you to invest in gold regularly with small amounts. It's a disciplined approach to wealth creation that helps you benefit from rupee cost averaging and the long-term appreciation of gold prices.</p>
+          <p className="text-gray-600 max-w-2xl mx-auto text-xs sm:text-sm">Gold Cashback Gold (Systematic Investment Plan) allows you to invest in gold regularly with small amounts. It's a disciplined approach to wealth creation that helps you benefit from rupee cost averaging and the long-term appreciation of gold prices.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="text-center p-4 rounded-lg bg-yellow-50">
@@ -255,11 +255,11 @@ const GoldSIPPlansPage = () => {
       </div>
     </div>
 
-    {/* SIP Plans Section */}
+    {/* Gold Plans Section */}
     <div className="py-8 px-2 sm:px-4 bg-yellow-50">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-yellow-900 mb-2">Choose Your SIP Plan</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-yellow-900 mb-2">Choose Your Cashback Gold Plan</h2>
           <p className="text-gray-600 text-xs sm:text-sm">Select the plan that best fits your investment goals and budget</p>
         </div>
         {loading && <div className="text-center text-gray-500">Loading plans...</div>}
@@ -316,11 +316,9 @@ const GoldSIPPlansPage = () => {
               {submitError && <div className="text-center text-red-600 mb-2 bg-red-50 p-2 rounded-lg text-xs">{submitError}</div>}
               <div className="space-y-2">
                 <button onClick={handlePlaceOrder} className="w-full bg-yellow-700 text-white py-2 rounded-lg font-semibold hover:bg-yellow-800 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-xs" disabled={isSubmitting}>
-                  {isSubmitting ? 'Processing...' : 'Start SIP Now'}
+                  {isSubmitting ? 'Processing...' : 'Start Cashback Gold Now'}
                 </button>
-                <button onClick={handlePlaceOrder} className="w-full bg-gray-200 text-gray-800 py-2 rounded-lg font-semibold hover:bg-gray-300 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-xs" disabled={isSubmitting}>
-                  {isSubmitting ? 'Processing...' : 'Buy This Plan'}
-                </button>
+               
               </div>
             </div>
           </div>
@@ -341,7 +339,7 @@ function FAQSection() {
     useEffect(() => {
         const fetchFaqs = async () => {
             try {
-                // Assuming FAQ type for SIP is 'SIP'
+                // Assuming FAQ type for Cashback Gold is 'SIP'
                 const response = await axiosInstance.get('/api/faqs?type=SIP');
                 setFaqs(response.data.content || []);
             } catch (err) {

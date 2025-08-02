@@ -330,6 +330,20 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
                 <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Name <span style={{ color: "#991313" }}>*</span></label>
                 <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 8, background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} required />
               </div>
+              {/* Mobile Number with Country Code - single row */}
+              <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
+                <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Mobile Number <span style={{ color: "#991313" }}>*</span></label>
+                <div style={{ display: "flex", gap: 6 }}>
+                  <select value={signupCountry} onChange={e => setSignupCountry(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: '8px 0 0 8px', background: "#f9f7f6", padding: "7px 10px", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none", minWidth: 80 }} required>
+                    <option value="+91">+91 (IN)</option>
+                    <option value="+1">+1 (US)</option>
+                    <option value="+44">+44 (UK)</option>
+                    <option value="+971">+971 (UAE)</option>
+                    {/* Add more country codes as needed */}
+                  </select>
+                  <input type="tel" placeholder="Enter mobile number" value={fullPhoneNumber || ""} onChange={e => setFullPhoneNumber(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: '0 8px 8px 0', background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} required />
+                </div>
+              </div>
               {/* Gender & D.O.B - same row */}
               <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                 <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>

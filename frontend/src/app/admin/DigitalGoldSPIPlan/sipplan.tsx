@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import ReactDOM from 'react-dom'; // 1. Import ReactDOM for portals
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
 
@@ -49,7 +49,7 @@ const SIPPlan = () => {
   const fetchPlans = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await axiosInstance.get('/admin/sip-plans');
+      const response = await axiosInstance.get('/api/cashback-gold-schemes');
       setSPIPlans(response.data);
       setError(null);
     } catch (err) {
@@ -66,7 +66,7 @@ const SIPPlan = () => {
 
   const handleCreatePlan = async (planData: Omit<SPIPlan, 'id'>) => {
     try {
-      await axiosInstance.post('/admin/sip-plans', planData);
+      await axiosInstance.post('/api/cashback-gold-schemes', planData);
       alert('Plan created successfully!');
       fetchPlans();
       closeModal();
@@ -79,7 +79,7 @@ const SIPPlan = () => {
   const handleUpdatePlan = async (planData: SPIPlan) => {
     const { id, ...payload } = planData;
     try {
-      await axiosInstance.put(`/admin/sip-plans/${id}`, payload);
+      await axiosInstance.put(`/api/cashback-gold-schemes/${id}`, payload);
       alert('Plan updated successfully!');
       fetchPlans();
       closeModal();
@@ -98,7 +98,7 @@ const SIPPlan = () => {
     setSPIPlans(updatedPlans);
 
     try {
-      await axiosInstance.patch(`/admin/sip-plans/${id}/status?status=${newStatus}`);
+      await axiosInstance.patch(`/api/cashback-gold-schemes/${id}/status?status=${newStatus}`);
     } catch (err) {
       console.error("Failed to toggle status:", err);
       alert("Failed to update status. Reverting change.");
@@ -109,7 +109,7 @@ const SIPPlan = () => {
   const handleDelete = async () => {
     if (!planToDelete) return;
     try {
-      await axiosInstance.delete(`/admin/sip-plans/${planToDelete.id}`);
+      await axiosInstance.delete(`/api/cashback-gold-schemes/${planToDelete.id}`);
       alert("Plan deleted successfully!");
       setShowDeleteConfirm(false);
       setPlanToDelete(null);

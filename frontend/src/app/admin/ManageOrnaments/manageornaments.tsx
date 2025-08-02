@@ -39,7 +39,7 @@ const CATEGORY_TREE = [
 const emptyFormState = {
   id: null,
   name: "",
-  price: "", // total gram
+  totalGram: "", // total gram
   gramPrice: "", // per gram price
   totalPrice: "", // calculated
   material: "",
@@ -56,7 +56,7 @@ const emptyFormState = {
   itemType: "", // Keep itemType for edit logic
 };
 
-const emptyBreakup = { component: "", goldRate18kt: "", weightG: "", discount: "", finalValue: "" };
+const emptyBreakup = { component: "", goldRate18kt: "", netWeight: "", grossWeight: "", discount: "", finalValue: "" };
 
 const ManageOrnaments: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -125,10 +125,9 @@ const ManageOrnaments: React.FC = () => {
 
   const handleEdit = (product: Ornament) => {
     setIsFormVisible(true);
-    // Always use latest fetched gold price for gramPrice
     setForm({
       ...product,
-      price: product.price.toString(),
+      totalGram: product.totalGram ? product.totalGram.toString() : "",
       gramPrice: goldPrice,
       warranty: product.warranty?.includes('years') ? 'other' : product.warranty,
       warrantyYears: product.warranty?.includes('years') ? product.warranty.match(/\d+/)?.[0] || '' : '',
@@ -163,11 +162,11 @@ const ManageOrnaments: React.FC = () => {
     const { name, value } = e.target;
     if (name === "warranty" && value !== "other") {
       setForm({ ...form, warranty: value, warrantyYears: "" });
-    } else if (name === "price") {
+    } else if (name === "totalGram") {
       // When grams change, recalculate totalPrice
       setForm((prev: any) => ({
         ...prev,
-        price: value,
+        totalGram: value,
         totalPrice: value && prev.gramPrice ? (parseFloat(value) * parseFloat(prev.gramPrice)).toFixed(2) : ""
       }));
     } else {
@@ -189,7 +188,7 @@ const ManageOrnaments: React.FC = () => {
   };
 
   const handleProductFormSave = () => {
-    const required = ["name", "price", "material", "purity", "quality", "details"];
+    const required = ["name", "totalGram", "material", "purity", "quality", "details"];
     for (const key of required) {
       if (!form[key] || String(form[key]).trim() === "") {
         alert(`Please fill the required field: ${key}`);
@@ -219,11 +218,13 @@ const ManageOrnaments: React.FC = () => {
     const warrantyValue = form.warranty === 'other' ? `${form.warrantyYears} years` : form.warranty;
 
     // --- CONSTRUCT PAYLOAD FROM DROPDOWN STATES ---
+    const totalGramValue = parseFloat(form.totalGram);
     const data: OrnamentApiData = {
       name: form.name,
-      price: parseFloat(form.price), // total gram
+      totalGram: totalGramValue,
+      price: totalGramValue, // legacy field for backend compatibility
       gramPrice: form.gramPrice ? parseFloat(form.gramPrice as any) : undefined, // per gram price
-      totalPrice: form.price && form.gramPrice ? parseFloat(form.price) * parseFloat(form.gramPrice as any) : undefined, // calculated
+      totalPrice: form.totalGram && form.gramPrice ? totalGramValue * parseFloat(form.gramPrice as any) : undefined, // calculated
       category: mainCategory,
       subCategory: subCategory,
       gender: subCategory, // The subCategory (Men, Women, etc.) maps to gender
@@ -238,7 +239,7 @@ const ManageOrnaments: React.FC = () => {
       warranty: warrantyValue,
       details: form.details,
       priceBreakups: form.priceBreakups.map((p: any) => ({
-        component: p.component, goldRate18kt: parseFloat(p.goldRate18kt), weightG: parseFloat(p.weightG), discount: parseFloat(p.discount), finalValue: parseFloat(p.finalValue)
+        component: p.component, goldRate18kt: parseFloat(p.goldRate18kt), netWeight: parseFloat(p.netWeight), grossWeight: parseFloat(p.grossWeight), discount: parseFloat(p.discount), finalValue: parseFloat(p.finalValue)
       }))
     };
 
@@ -296,12 +297,12 @@ const ManageOrnaments: React.FC = () => {
               </div>
               <input type="text" name="name" placeholder="Name *" value={form.name} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               {/* Total Gram field (was Price) */}
-              <input type="number" name="price" placeholder="Total Gram *" value={form.price} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
+              <input type="number" name="totalGram" placeholder="Total Gram *" value={form.totalGram} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               {/* Gram Price field from API (read-only) */}
               <input type="number" name="gramPrice" placeholder="Gram Price (from API) *" value={loadingGoldPrice ? "" : (form.gramPrice || '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" required />
               {goldPriceError && <div className="text-red-500 text-xs mb-2">{goldPriceError}</div>}
               {/* Total Price calculated field */}
-              <input type="number" name="totalPrice" placeholder="Total Price (auto-calculated)" value={form.totalPrice || (form.price && form.gramPrice ? (parseFloat(form.price) * parseFloat(form.gramPrice)).toFixed(2) : '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" />
+              <input type="number" name="totalPrice" placeholder="Total Price (auto-calculated)" value={form.totalPrice || (form.totalGram && form.gramPrice ? (parseFloat(form.totalGram) * parseFloat(form.gramPrice)).toFixed(2) : '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" />
 
               {/* --- RESTORED DROPDOWN UI --- */}
               <div className="mb-3 flex flex-col gap-3 bg-[#fbeaf0] p-4 rounded-lg shadow-inner">
@@ -359,7 +360,59 @@ const ManageOrnaments: React.FC = () => {
             </div>
           </div>
 
-          {!showPriceBreakup ? (<div className="flex gap-4 mt-8"><button onClick={handleProductFormSave} className="bg-[#7a1335] text-white font-semibold py-2 px-6 rounded hover:bg-[#a31d4b]">Next</button><button onClick={resetAndHideForm} className="bg-gray-400 text-white font-semibold py-2 px-6 rounded hover:bg-gray-500">Cancel</button></div>) : (<div className="mt-10 border-t pt-8"><h3 className="text-xl font-bold text-[#7a1335] mb-4">Price Breakup</h3><div className="overflow-x-auto mb-6"><table className="min-w-full bg-white"><thead><tr className="border-b"><th className="px-4 py-2 text-left text-[#7a1335]">Component</th><th className="px-4 py-2 text-left text-[#7a1335]">Gold Rate (18KT)</th><th className="px-4 py-2 text-left text-[#7a1335]">Weight (g)</th><th className="px-4 py-2 text-left text-[#7a1335]">Discount</th><th className="px-4 py-2 text-left text-[#7a1335]">Final Value</th><th className="px-4 py-2 text-left text-[#7a1335]">Actions</th></tr></thead><tbody>{form.priceBreakups.map((row: any, i: number) => (<tr key={i} className="border-b"><td className="p-2"><input type="text" name="component" placeholder="Component *" value={row.component} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td><td className="p-2"><input type="number" name="goldRate18kt" placeholder="Gold Rate *" value={row.goldRate18kt} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td><td className="p-2"><input type="number" name="weightG" placeholder="Weight (g) *" value={row.weightG} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td><td className="p-2"><input type="number" name="discount" placeholder="Discount *" value={row.discount} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td><td className="p-2"><input type="number" name="finalValue" placeholder="Final Value *" value={row.finalValue} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td><td className="p-2 flex gap-2"><button onClick={() => handleBreakupDelete(i)} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Delete</button></td></tr>))}</tbody></table></div><div className="flex gap-4"><button onClick={addBreakupRow} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Add Row</button></div><div className="flex gap-4 mt-8 border-t pt-6"><button onClick={handleFinalSave} disabled={status === 'loading'} className="bg-green-600 text-white font-semibold py-2 px-8 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">{status === 'loading' ? 'Saving...' : (form.id ? 'Update Product' : 'Save Product')}</button><button onClick={() => setShowPriceBreakup(false)} className="bg-gray-500 text-white font-semibold py-2 px-6 rounded">Back</button></div></div>)}
+          {!showPriceBreakup ? (<div className="flex gap-4 mt-8"><button onClick={handleProductFormSave} className="bg-[#7a1335] text-white font-semibold py-2 px-6 rounded hover:bg-[#a31d4b]">Next</button><button onClick={resetAndHideForm} className="bg-gray-400 text-white font-semibold py-2 px-6 rounded hover:bg-gray-500">Cancel</button></div>) : (<div className="mt-10 border-t pt-8"><h3 className="text-xl font-bold text-[#7a1335] mb-4">Price Breakup</h3><div className="overflow-x-auto mb-6"><table className="min-w-full bg-white"><thead><tr className="border-b">
+  <th className="px-4 py-2 text-left text-[#7a1335]">Product Details</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Rate</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Weight</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Discount</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Final Value</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Actions</th>
+</tr></thead><tbody>{form.priceBreakups.map((row: any, i: number) => (
+  <tr key={i} className="border-b">
+    <td className="p-2"><input type="text" name="component" placeholder="Product Details *" value={row.component} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2">
+      <input
+        type="number"
+        name="goldRate18kt"
+        placeholder="Rate *"
+        value={row.goldRate18kt}
+        onChange={e => handleBreakupChange(e, i)}
+        className="w-full px-2 py-1 border rounded mb-1"
+      />
+    </td>
+    <td className="p-2">
+      {row.netWeight && row.grossWeight
+        ? `${row.netWeight}g Net / ${row.grossWeight}g Gross`
+        : row.netWeight
+        ? `${row.netWeight}g Net`
+        : row.grossWeight
+        ? `${row.grossWeight}g Gross`
+        : '-'}
+      <div className="flex gap-2 mt-1">
+        <input type="number" name="netWeight" placeholder="Net Weight (g)" value={row.netWeight} onChange={e => handleBreakupChange(e, i)} className="w-1/2 px-2 py-1 border rounded" />
+        <input type="number" name="grossWeight" placeholder="Gross Weight (g)" value={row.grossWeight} onChange={e => handleBreakupChange(e, i)} className="w-1/2 px-2 py-1 border rounded" />
+      </div>
+    </td>
+    <td className="p-2"><input type="number" name="discount" placeholder="Discount *" value={row.discount} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2">
+      <input
+        type="number"
+        name="finalValue"
+        placeholder="Final Value *"
+        value={
+          row.netWeight && form.gramPrice
+            ? (parseFloat(row.netWeight) * parseFloat(form.gramPrice)).toFixed(2)
+            : row.grossWeight && form.gramPrice
+            ? (parseFloat(row.grossWeight) * parseFloat(form.gramPrice)).toFixed(2)
+            : row.finalValue
+        }
+        onChange={e => handleBreakupChange(e, i)}
+        className="w-full px-2 py-1 border rounded mb-1"
+      />
+    </td>
+    <td className="p-2 flex gap-2"><button onClick={() => handleBreakupDelete(i)} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Delete</button></td>
+  </tr>
+))}</tbody></table></div><div className="flex gap-4"><button onClick={addBreakupRow} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Add Row</button></div><div className="flex gap-4 mt-8 border-t pt-6"><button onClick={handleFinalSave} disabled={status === 'loading'} className="bg-green-600 text-white font-semibold py-2 px-8 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">{status === 'loading' ? 'Saving...' : (form.id ? 'Update Product' : 'Save Product')}</button><button onClick={() => setShowPriceBreakup(false)} className="bg-gray-500 text-white font-semibold py-2 px-6 rounded">Back</button></div></div>)}
         </div>
       )}
 

@@ -79,7 +79,8 @@ export interface LoginResponse extends ApiResponse {
 export interface Ornament {
   id: number;
   name: string;
-  price: number; // total gram
+  totalGram: number; // total gram
+  price: number; // legacy field for backend compatibility
   gramPrice?: number; // per gram price (optional for backward compatibility)
   totalPrice?: number; // calculated (optional for backward compatibility)
   meta: string;
@@ -135,7 +136,8 @@ export interface PriceBreakup {
   id: number;
   component: string;
   goldRate18kt: number;
-  weightG: number;
+  netWeight: number;
+  grossWeight: number;
   discount: number;
   finalValue: number;
 }
