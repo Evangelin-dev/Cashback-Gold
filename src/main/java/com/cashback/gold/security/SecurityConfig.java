@@ -99,8 +99,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/inventory").hasAnyAuthority("ADMIN", "B2B")
                                 .requestMatchers("/api/user-savings/**").hasAnyAuthority("USER")
                                 .requestMatchers("/user/gold-plant/**").hasAnyAuthority("USER")
+                                .requestMatchers(HttpMethod.GET, "/api/cashback-gold-schemes").hasAnyAuthority("USER", "ADMIN")
                                 .requestMatchers("/api/cashback-gold-schemes/**").hasAnyAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.GET,"/api/cashback-gold-schemes/**").hasAnyAuthority("USER")
                                 .requestMatchers("/api/cashback-gold-user/**").hasAnyAuthority("USER")
                                 // All other requests require authentication
                                 .anyRequest().authenticated()
