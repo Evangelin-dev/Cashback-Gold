@@ -55,7 +55,7 @@ const LDigitalGoldSIPPlan = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get<OrderFromApi[]>('/api/orders/my');
+        const response = await axiosInstance.get<OrderFromApi[]>('/api/cashback-gold-user/my-enrollments');
         const sipOrders = (response.data || []).filter(order => order.planType === 'SIP');
 
         const processed = sipOrders.map((order): ProcessedSIPPlan => {

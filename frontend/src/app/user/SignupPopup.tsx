@@ -44,7 +44,6 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const [signupCity, setSignupCity] = useState("");
   const [signupTown, setSignupTown] = useState("");
   const [signupState, setSignupState] = useState("");
-  const [signupCountryCode, setSignupCountryCode] = useState("+91");
   const [signupCountry, setSignupCountry] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
@@ -151,11 +150,11 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullPhoneNumber || !isValidPhoneNumber(signupCountryCode + fullPhoneNumber)) {
+    if (!fullPhoneNumber || !isValidPhoneNumber(fullPhoneNumber)) {
       setValidationError("Please enter a valid phone number.");
       return;
     }
-    if (!name.trim() || !signupGender || !signupDOB || !signupEmail.trim() || !signupCity.trim() || !signupTown.trim() || !signupState.trim() || !signupCountry.trim() || !signupCountryCode || !signupPassword || !signupConfirmPassword) {
+    if (!name.trim() || !signupGender || !signupDOB || !signupEmail.trim() || !signupCity.trim() || !signupTown.trim() || !signupState.trim() || !signupCountry.trim() || !signupPassword || !signupConfirmPassword) {
       setValidationError("Please fill all required fields.");
       return;
     }
@@ -175,14 +174,13 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
     setValidationError(null);
     dispatch(clearAuthError());
 
-    // Compose full phone number for parsing
-    const phoneInput = `${signupCountryCode}${fullPhoneNumber}`;
-    const phoneNumber = parsePhoneNumber(phoneInput);
+    const phoneNumber = parsePhoneNumber(fullPhoneNumber);
     if (!phoneNumber) {
       setValidationError("Invalid phone number format.");
       return;
     }
 
+    // UPDATED: Pass the referralCode to the thunk
     dispatch(sendRegistrationOtp({
       fullName: name,
       gender: signupGender,
@@ -196,7 +194,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       country: signupCountry,
       password: signupPassword,
       role: 'USER',
-      referralCode: referralCode,
+      referralCode: referralCode, // Pass the code from state
     })).then(result => {
       if (sendRegistrationOtp.fulfilled.match(result)) {
         setStep("otp");
@@ -216,13 +214,13 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
     if (mode === 'login') {
       dispatch(verifyLoginOtp({ identifier: loginIdentifier, otp: fullOtp }));
     } else {
-      const phoneInput = `${signupCountryCode}${fullPhoneNumber || ''}`;
-      const phoneNumber = parsePhoneNumber(phoneInput);
+      const phoneNumber = parsePhoneNumber(fullPhoneNumber || '');
       if (!phoneNumber) {
         setValidationError("Invalid phone number format.");
         return;
       }
       try {
+        // UPDATED: Pass the referralCode to the verification thunk
         await dispatch(verifyOtpAndRegister({
           email: signupEmail,
           otp: fullOtp,
@@ -237,7 +235,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
           country: signupCountry,
           password: signupPassword,
           role: 'USER',
-          referralCode: referralCode,
+          referralCode: referralCode, // Pass the code from state
         })).unwrap();
 
         alert("Registration successful! Please log in.");
@@ -336,15 +334,20 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
               <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
                 <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Mobile Number <span style={{ color: "#991313" }}>*</span></label>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <select value={signupCountryCode} onChange={e => setSignupCountryCode(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: '8px 0 0 8px', background: "#f9f7f6", padding: "7px 10px", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none", minWidth: 80 }} required>
+                  <select value={signupCountry} onChange={e => setSignupCountry(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: '8px 0 0 8px', background: "#f9f7f6", padding: "7px 10px", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none", minWidth: 80 }} required>
                     <option value="+91">+91 (IN)</option>
                     <option value="+1">+1 (US)</option>
                     <option value="+44">+44 (UK)</option>
                     <option value="+971">+971 (UAE)</option>
                     {/* Add more country codes as needed */}
                   </select>
-                  <input type="tel" placeholder="Enter mobile number" value={fullPhoneNumber || ""} onChange={e => setFullPhoneNumber(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: '0 8px 8px 0', background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} required />
+                  <input type="tel" placeholder="Enter mobile number" value={fullPhoneNumber || ""} onChange={e => setFullPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))} style={{ border: "1.5px solid #f0e3d1", borderRadius: '0 8px 8px 0', background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} pattern="[0-9]{7,15}" maxLength={15} required />
                 </div>
+                {validationError === "Please enter a valid phone number." && (
+                  <div style={{ color: "#991313", fontWeight: 600, marginTop: 2, fontSize: 12 }}>
+                    Please enter a valid phone number.
+                  </div>
+                )}
               </div>
               {/* Gender & D.O.B - same row */}
               <div style={{ display: 'flex', gap: 8, width: '100%' }}>

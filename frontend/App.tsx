@@ -162,24 +162,16 @@ const AppRoutes: React.FC = () => {
       <Route element={<UserLayout />}>
         <Route path="/" element={<LUserHome />} />
         <Route path="/navbar" element={<LNavBar />} />
-        <Route path="/footer" element={<Footer />} />
-        <Route path="/terms" element={<Terms />} />
-        <Route path="/contactus" element={<ContactUsPage />} />
+        <Route path="/footer" element={<LFooter />} />
+        <Route path="/terms" element={<LTerms />} />
+        <Route path="/contactus" element={<LContactUsPage />} />
         <Route path="/buyornaments" element={<BuyOrnamentsPage />} />
         <Route path="/buyornaments/:id" element={<JewelryProductPage />} />
-        <Route path="/aboutus" element={<AboutUsPage />} />
-        <Route path="/privacy" element={<PrivacyPlicyPage />} />
-        <Route path="/partnerpopup" element={<PartnerPopup open={true} onClose={() => { }} />} />
-        <Route path="/signuppopup" element={<SignupPopup open={true} onClose={() => { }} />} />
-          
-
-
-        <Route path="/refund" element={<Refund />} />
-        <Route path="/chit" element={<ChitJewelsPlans />} />
-        <Route path="/goldsip" element={<GoldSIPPlans />} />
-        <Route path="/schemes" element={<GoldPlantSchemes />} />
-        <Route path="/shippingpolicy" element={<ShippingPolicy />} />
-        <Route path="/SIPplandisclaimer" element={<SIPPlanDisclaimer />} />
+        <Route path="/aboutus" element={<LAboutUsPage />} />
+        <Route path="/privacy" element={<LPrivacyPlicyPage />} />
+        <Route path="/refund" element={<LRefund />} />
+        <Route path="/shippingpolicy" element={<LShippingPolicy />} />
+        <Route path="/SIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
       </Route >
 
 
@@ -204,6 +196,13 @@ const AppRoutes: React.FC = () => {
           <Route path="/lshippingpolicy" element={<LShippingPolicy />} />
 
 
+            {/* Scheme Plans */}
+          <Route path="/chit" element={<ChitJewelsPlans />} />
+          <Route path="/goldsip" element={<GoldSIPPlans />} />
+          <Route path="/schemes" element={<GoldPlantSchemes />} />
+
+
+
 
           <Route path="/userdash" element={<LMyDashboard />} />
           <Route path="/userprofile" element={<LMyProfile />} />
@@ -216,6 +215,8 @@ const AppRoutes: React.FC = () => {
           <Route path="/usermybankaccounts" element={<MyBankAccounts />} />
         </Route >
       </Route>
+      <Route path="/partnerpopup" element={<PartnerPopup open={true} onClose={() => { }} />} />
+        <Route path="/signuppopup" element={<SignupPopup open={true} onClose={() => { }} />} />
     </Routes>
 
   );

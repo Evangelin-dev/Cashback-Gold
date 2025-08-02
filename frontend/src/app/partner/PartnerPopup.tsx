@@ -125,7 +125,7 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullPhoneNumber || !isValidPhoneNumber(signupCountry + fullPhoneNumber)) { setValidationError("Please enter a valid phone number."); return; }
+    if (!fullPhoneNumber || !isValidPhoneNumber(fullPhoneNumber)) { setValidationError("Please enter a valid phone number."); return; }
     if (!name.trim() || !signupGender || !signupDOB || !signupEmail.trim() || !signupCity.trim() || !signupTown.trim() || !signupState.trim() || !signupCountry.trim() || !signupPassword || !signupConfirmPassword) { setValidationError("Please fill all required fields."); return; }
     if (!/^\S+@\S+\.\S+$/.test(signupEmail)) { setValidationError("Please enter a valid email address."); return; }
     if (signupPassword.length < 6) { setValidationError("Password must be at least 6 characters."); return; }
@@ -134,8 +134,7 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
     setValidationError(null);
     dispatch(clearAuthError());
 
-    const phoneInput = `${signupCountry}${fullPhoneNumber}`;
-    const phoneNumber = parsePhoneNumber(phoneInput);
+    const phoneNumber = parsePhoneNumber(fullPhoneNumber);
     if (!phoneNumber) { setValidationError("Invalid phone number format."); return; }
 
     dispatch(sendRegistrationOtp({
@@ -159,8 +158,7 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
     if (mode === 'login') {
       dispatch(verifyLoginOtp({ identifier: loginIdentifier, otp: fullOtp }));
     } else {
-      const phoneInput = `${signupCountry}${fullPhoneNumber || ''}`;
-      const phoneNumber = parsePhoneNumber(phoneInput);
+      const phoneNumber = parsePhoneNumber(fullPhoneNumber || '');
       if (!phoneNumber) { setValidationError("Invalid phone number format."); return; }
       try {
         await dispatch(verifyOtpAndRegister({
@@ -232,19 +230,6 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Name <span className="text-[#991313]">*</span></label>
                 <input type="text" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313]" required />
               </div>
-              {/* Mobile Number with Country Code - single row, next row after name */}
-              <div className="flex-1 min-w-[120px] text-left w-full" style={{marginTop: '8px'}}>
-                <label className="font-bold text-[#222] text-xs mb-0.5 block">Mobile Number <span className="text-[#991313]">*</span></label>
-                <div className="flex gap-1">
-                  <select value={signupCountry} onChange={e => setSignupCountry(e.target.value)} className="border border-[#f0e3d1] rounded-l-lg bg-[#f9f7f6] px-3 py-2 text-xs text-[#991313] outline-none min-w-[70px]">
-                    <option value="+91">+91 (IN)</option>
-                    <option value="+1">+1 (US)</option>
-                    <option value="+44">+44 (UK)</option>
-                    <option value="+971">+971 (UAE)</option>
-                  </select>
-                  <input type="tel" placeholder="Enter mobile number" value={fullPhoneNumber || ""} onChange={e => setFullPhoneNumber(e.target.value)} className="border border-[#f0e3d1] rounded-r-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
-                </div>
-              </div>
               {/* Gender & D.O.B - same row */}
               <div className="flex gap-2 w-full">
                 <div className="flex-1 min-w-[80px] text-left">
@@ -261,6 +246,12 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Email ID <span className="text-[#991313]">*</span></label>
                 <input type="email" placeholder="Email address" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313]" required />
               </div>
+              {/*
+              <div className="flex-1 min-w-[120px] text-left w-full">
+                <label className="font-bold text-[#222] text-xs mb-0.5 block">Phone <span className="text-[#991313]">*</span></label>
+                <PhoneInput className="phone-input-container" placeholder="Enter phone" value={fullPhoneNumber} onChange={setFullPhoneNumber} defaultCountry="IN" required />
+              </div>
+              */}
               {/* City & Town - same row */}
               <div className="flex gap-2 w-full">
                 <div className="flex-1 min-w-[80px] text-left">

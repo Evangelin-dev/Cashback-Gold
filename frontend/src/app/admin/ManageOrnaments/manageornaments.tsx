@@ -83,6 +83,7 @@ const ManageOrnaments: React.FC = () => {
     dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
   }, [currentPage, dispatch, pageSize]);
 
+  // Fetch gold price from API (same as AdminDashboard)
   useEffect(() => {
     const fetchGold = async () => {
       setLoadingGoldPrice(true);
@@ -360,55 +361,21 @@ const ManageOrnaments: React.FC = () => {
           </div>
 
           {!showPriceBreakup ? (<div className="flex gap-4 mt-8"><button onClick={handleProductFormSave} className="bg-[#7a1335] text-white font-semibold py-2 px-6 rounded hover:bg-[#a31d4b]">Next</button><button onClick={resetAndHideForm} className="bg-gray-400 text-white font-semibold py-2 px-6 rounded hover:bg-gray-500">Cancel</button></div>) : (<div className="mt-10 border-t pt-8"><h3 className="text-xl font-bold text-[#7a1335] mb-4">Price Breakup</h3><div className="overflow-x-auto mb-6"><table className="min-w-full bg-white"><thead><tr className="border-b">
-  <th className="px-4 py-2 text-left text-[#7a1335]">Product Details</th>
-  <th className="px-4 py-2 text-left text-[#7a1335]">Rate</th>
-  <th className="px-4 py-2 text-left text-[#7a1335]">Weight</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Component</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Gold Rate (18KT)</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Net Weight (g)</th>
+  <th className="px-4 py-2 text-left text-[#7a1335]">Gross Weight (g)</th>
   <th className="px-4 py-2 text-left text-[#7a1335]">Discount</th>
   <th className="px-4 py-2 text-left text-[#7a1335]">Final Value</th>
   <th className="px-4 py-2 text-left text-[#7a1335]">Actions</th>
 </tr></thead><tbody>{form.priceBreakups.map((row: any, i: number) => (
   <tr key={i} className="border-b">
-    <td className="p-2"><input type="text" name="component" placeholder="Product Details *" value={row.component} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2">
-      <input
-        type="number"
-        name="goldRate18kt"
-        placeholder="Rate *"
-        value={row.goldRate18kt}
-        onChange={e => handleBreakupChange(e, i)}
-        className="w-full px-2 py-1 border rounded mb-1"
-      />
-    </td>
-    <td className="p-2">
-      {row.netWeight && row.grossWeight
-        ? `${row.netWeight}g Net / ${row.grossWeight}g Gross`
-        : row.netWeight
-        ? `${row.netWeight}g Net`
-        : row.grossWeight
-        ? `${row.grossWeight}g Gross`
-        : '-'}
-      <div className="flex gap-2 mt-1">
-        <input type="number" name="netWeight" placeholder="Net Weight (g)" value={row.netWeight} onChange={e => handleBreakupChange(e, i)} className="w-1/2 px-2 py-1 border rounded" />
-        <input type="number" name="grossWeight" placeholder="Gross Weight (g)" value={row.grossWeight} onChange={e => handleBreakupChange(e, i)} className="w-1/2 px-2 py-1 border rounded" />
-      </div>
-    </td>
+    <td className="p-2"><input type="text" name="component" placeholder="Component *" value={row.component} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2"><input type="number" name="goldRate18kt" placeholder="Gold Rate *" value={row.goldRate18kt} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2"><input type="number" name="netWeight" placeholder="Net Weight (g) *" value={row.netWeight} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2"><input type="number" name="grossWeight" placeholder="Gross Weight (g) *" value={row.grossWeight} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
     <td className="p-2"><input type="number" name="discount" placeholder="Discount *" value={row.discount} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2">
-      <input
-        type="number"
-        name="finalValue"
-        placeholder="Final Value *"
-        value={
-          row.netWeight && form.gramPrice
-            ? (parseFloat(row.netWeight) * parseFloat(form.gramPrice)).toFixed(2)
-            : row.grossWeight && form.gramPrice
-            ? (parseFloat(row.grossWeight) * parseFloat(form.gramPrice)).toFixed(2)
-            : row.finalValue
-        }
-        onChange={e => handleBreakupChange(e, i)}
-        className="w-full px-2 py-1 border rounded mb-1"
-      />
-    </td>
+    <td className="p-2"><input type="number" name="finalValue" placeholder="Final Value *" value={row.finalValue} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
     <td className="p-2 flex gap-2"><button onClick={() => handleBreakupDelete(i)} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Delete</button></td>
   </tr>
 ))}</tbody></table></div><div className="flex gap-4"><button onClick={addBreakupRow} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Add Row</button></div><div className="flex gap-4 mt-8 border-t pt-6"><button onClick={handleFinalSave} disabled={status === 'loading'} className="bg-green-600 text-white font-semibold py-2 px-8 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">{status === 'loading' ? 'Saving...' : (form.id ? 'Update Product' : 'Save Product')}</button><button onClick={() => setShowPriceBreakup(false)} className="bg-gray-500 text-white font-semibold py-2 px-6 rounded">Back</button></div></div>)}
