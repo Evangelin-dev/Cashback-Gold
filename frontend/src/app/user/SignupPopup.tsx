@@ -44,6 +44,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const [signupCity, setSignupCity] = useState("");
   const [signupTown, setSignupTown] = useState("");
   const [signupState, setSignupState] = useState("");
+  const [signupCountryCode, setSignupCountryCode] = useState("+91");
   const [signupCountry, setSignupCountry] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
@@ -150,11 +151,11 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullPhoneNumber || !isValidPhoneNumber(fullPhoneNumber)) {
+    if (!fullPhoneNumber || !isValidPhoneNumber(signupCountryCode + fullPhoneNumber)) {
       setValidationError("Please enter a valid phone number.");
       return;
     }
-    if (!name.trim() || !signupGender || !signupDOB || !signupEmail.trim() || !signupCity.trim() || !signupTown.trim() || !signupState.trim() || !signupCountry.trim() || !signupPassword || !signupConfirmPassword) {
+    if (!name.trim() || !signupGender || !signupDOB || !signupEmail.trim() || !signupCity.trim() || !signupTown.trim() || !signupState.trim() || !signupCountry.trim() || !signupCountryCode || !signupPassword || !signupConfirmPassword) {
       setValidationError("Please fill all required fields.");
       return;
     }
@@ -174,13 +175,14 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
     setValidationError(null);
     dispatch(clearAuthError());
 
-    const phoneNumber = parsePhoneNumber(fullPhoneNumber);
+    // Compose full phone number for parsing
+    const phoneInput = `${signupCountryCode}${fullPhoneNumber}`;
+    const phoneNumber = parsePhoneNumber(phoneInput);
     if (!phoneNumber) {
       setValidationError("Invalid phone number format.");
       return;
     }
 
-    // UPDATED: Pass the referralCode to the thunk
     dispatch(sendRegistrationOtp({
       fullName: name,
       gender: signupGender,
@@ -194,7 +196,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       country: signupCountry,
       password: signupPassword,
       role: 'USER',
-      referralCode: referralCode, // Pass the code from state
+      referralCode: referralCode,
     })).then(result => {
       if (sendRegistrationOtp.fulfilled.match(result)) {
         setStep("otp");
@@ -214,13 +216,13 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
     if (mode === 'login') {
       dispatch(verifyLoginOtp({ identifier: loginIdentifier, otp: fullOtp }));
     } else {
-      const phoneNumber = parsePhoneNumber(fullPhoneNumber || '');
+      const phoneInput = `${signupCountryCode}${fullPhoneNumber || ''}`;
+      const phoneNumber = parsePhoneNumber(phoneInput);
       if (!phoneNumber) {
         setValidationError("Invalid phone number format.");
         return;
       }
       try {
-        // UPDATED: Pass the referralCode to the verification thunk
         await dispatch(verifyOtpAndRegister({
           email: signupEmail,
           otp: fullOtp,
@@ -235,7 +237,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
           country: signupCountry,
           password: signupPassword,
           role: 'USER',
-          referralCode: referralCode, // Pass the code from state
+          referralCode: referralCode,
         })).unwrap();
 
         alert("Registration successful! Please log in.");
@@ -334,7 +336,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
               <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
                 <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Mobile Number <span style={{ color: "#991313" }}>*</span></label>
                 <div style={{ display: "flex", gap: 6 }}>
-                  <select value={signupCountry} onChange={e => setSignupCountry(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: '8px 0 0 8px', background: "#f9f7f6", padding: "7px 10px", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none", minWidth: 80 }} required>
+                  <select value={signupCountryCode} onChange={e => setSignupCountryCode(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: '8px 0 0 8px', background: "#f9f7f6", padding: "7px 10px", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none", minWidth: 80 }} required>
                     <option value="+91">+91 (IN)</option>
                     <option value="+1">+1 (US)</option>
                     <option value="+44">+44 (UK)</option>

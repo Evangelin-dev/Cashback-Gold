@@ -125,7 +125,7 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
 
   const handleSignupSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!fullPhoneNumber || !isValidPhoneNumber(fullPhoneNumber)) { setValidationError("Please enter a valid phone number."); return; }
+    if (!fullPhoneNumber || !isValidPhoneNumber(signupCountry + fullPhoneNumber)) { setValidationError("Please enter a valid phone number."); return; }
     if (!name.trim() || !signupGender || !signupDOB || !signupEmail.trim() || !signupCity.trim() || !signupTown.trim() || !signupState.trim() || !signupCountry.trim() || !signupPassword || !signupConfirmPassword) { setValidationError("Please fill all required fields."); return; }
     if (!/^\S+@\S+\.\S+$/.test(signupEmail)) { setValidationError("Please enter a valid email address."); return; }
     if (signupPassword.length < 6) { setValidationError("Password must be at least 6 characters."); return; }
@@ -134,7 +134,8 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
     setValidationError(null);
     dispatch(clearAuthError());
 
-    const phoneNumber = parsePhoneNumber(fullPhoneNumber);
+    const phoneInput = `${signupCountry}${fullPhoneNumber}`;
+    const phoneNumber = parsePhoneNumber(phoneInput);
     if (!phoneNumber) { setValidationError("Invalid phone number format."); return; }
 
     dispatch(sendRegistrationOtp({
@@ -158,7 +159,8 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
     if (mode === 'login') {
       dispatch(verifyLoginOtp({ identifier: loginIdentifier, otp: fullOtp }));
     } else {
-      const phoneNumber = parsePhoneNumber(fullPhoneNumber || '');
+      const phoneInput = `${signupCountry}${fullPhoneNumber || ''}`;
+      const phoneNumber = parsePhoneNumber(phoneInput);
       if (!phoneNumber) { setValidationError("Invalid phone number format."); return; }
       try {
         await dispatch(verifyOtpAndRegister({

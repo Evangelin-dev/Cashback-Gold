@@ -83,7 +83,6 @@ const ManageOrnaments: React.FC = () => {
     dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
   }, [currentPage, dispatch, pageSize]);
 
-  // Fetch gold price from API (same as AdminDashboard)
   useEffect(() => {
     const fetchGold = async () => {
       setLoadingGoldPrice(true);
