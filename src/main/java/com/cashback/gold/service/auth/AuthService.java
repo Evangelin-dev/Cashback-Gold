@@ -201,9 +201,12 @@ public class AuthService {
             userRepo.save(user); // update with referral code
         }
 
-        // Mark OTP verified
-        otpVerification.setVerified(true);
-        otpRepo.save(otpVerification);
+//        // Mark OTP verified
+//        otpVerification.setVerified(true);
+//        otpRepo.save(otpVerification);
+
+        // Mark OTP verified and delete entry from OTP table
+        otpRepo.delete(otpVerification);
 
         return new ApiResponse(true, "User registered successfully. Awaiting admin approval.");
     }
