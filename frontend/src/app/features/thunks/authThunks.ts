@@ -11,7 +11,7 @@ import type {
 } from '../../types/type';
 
 console.log("Data",import.meta.env.VITE_BACKEND_URL);
-const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}/auth`;
+const API_BASE_URL = `${import.meta.env.VITE_BACKEND_URL}api/auth`;
 
 
 
