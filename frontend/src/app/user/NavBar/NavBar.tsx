@@ -85,7 +85,7 @@ const NavBar = () => {
 		   {!isMobile && (
 			 <span className="flex items-center gap-2 border-l border-white pl-3 min-w-0 text-white">
 			   <Mail className="w-5 h-5 mr-1" />
-			   <span className="font-semibold text-xs md:text-sm truncate">spprtgreenheapdigigold@gmail.com</span>
+			   <span className="font-semibold text-xs md:text-sm truncate">support@greenheapgold.com</span>
 			 </span>
 		   )}
 		 </div>

@@ -1,3 +1,4 @@
+import { ArrowRight } from "lucide-react";
 import React, { useEffect, useRef, useState } from "react";
 
 // Mock CustomImage component for demo
@@ -173,7 +174,7 @@ const LAboutUsPage = () => {
               <h2 className="font-bold mb-4 text-l sm:text-xl lg:text-2xl xl:text-3xl leading-tight text-[#991313] text-center">
                 Get access to the <span className="font-black">safest</span> way of procuring...
                 <br className="hidden sm:block" />
-                <span className="inline-block mt-2 bg-gradient-to-r from-[#f9e9c7] to-[#fff8e7] rounded px-2 py-1 sm:px-3 text-lg sm:text-xl lg:text-2xl font-black shadow-md">
+                <span className="inline-block mt-2 bg-gradient-to-r from-[#f9e9c7] to-[#fff8e7] rounded px-2 py-1 sm:px-3 text-lg sm:text-l lg:text-xl font-black shadow-md">
                   24K Gold / Silver
                 </span>
               </h2>
@@ -323,7 +324,7 @@ const LAboutUsPage = () => {
                     <span>{faq.q}</span>
                     <span
                       className={`text-lg sm:text-xl lg:text-2xl ml-3 transition-transform duration-300 ${openFaq === idx ? "rotate-180" : "rotate-0"}`}
-                    >▼</span>
+                    > <ArrowRight size={14} /></span>
                   </div>
                   <div
                     className="transition-all duration-400 ease-in-out bg-[#fff8e7] overflow-hidden"
@@ -351,27 +352,62 @@ const LAboutUsPage = () => {
         <div className="text-center mb-6">
           <h3 className="font-bold text-xl sm:text-2xl lg:text-3xl text-[#991313]">Our Trusted Partners</h3>
         </div>
-        
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4 lg:gap-6 justify-items-center">
-          {partners.map((partner, idx) => (
-            <div key={idx} className="w-full max-w-[140px]">
-              <div className="bg-white rounded-lg shadow-md p-2 sm:p-3 lg:p-4 flex items-center justify-center border-2 border-[#f0e3d1] transition-shadow duration-200 cursor-pointer hover:shadow-lg min-h-[60px] sm:min-h-[80px] lg:min-h-[100px]">
-                <CustomImage 
+        {/* Desktop View - Row Layout */}
+        <div className="hidden md:block">
+          <div className="mt-8 flex justify-center flex-wrap gap-[128px] px-4">
+            {partners.map((partner, index) => (
+              <img 
+                key={index}
+                src={partner.src} 
+                alt={partner.alt} 
+                className="h-20 object-contain hover:scale-105 transition-transform duration-300" 
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile View - Marquee Slider */}
+        <div className="md:hidden mt-8 overflow-hidden">
+          <div className="flex animate-marquee whitespace-nowrap">
+            {/* First set of partners */}
+            {partners.map((partner, index) => (
+              <div key={index} className="flex-shrink-0 mx-8">
+                <img 
                   src={partner.src} 
                   alt={partner.alt} 
-                  width="100%" 
-                  height="auto" 
-                  style={{ 
-                    objectFit: "contain", 
-                    width: "100%", 
-                    height: "auto",
-                    maxHeight: "40px"
-                  }} 
+                  className="h-16 object-contain" 
                 />
               </div>
-            </div>
-          ))}
+            ))}
+            {/* Duplicate set for seamless loop */}
+            {partners.map((partner, index) => (
+              <div key={`duplicate-${index}`} className="flex-shrink-0 mx-8">
+                <img 
+                  src={partner.src} 
+                  alt={partner.alt} 
+                  className="h-16 object-contain" 
+                />
+              </div>
+            ))}
+          </div>
         </div>
+
+        <style >{`
+          @keyframes marquee {
+            0% {
+              transform: translateX(0%);
+            }
+            100% {
+              transform: translateX(-50%);
+            }
+          }
+          .animate-marquee {
+            animation: marquee 15s linear infinite;
+          }
+          .animate-marquee:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
       </div>
     </div>
   );

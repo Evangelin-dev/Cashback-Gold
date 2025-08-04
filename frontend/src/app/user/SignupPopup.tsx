@@ -13,7 +13,7 @@ import {
 } from "../features/thunks/authThunks";
 
 import parsePhoneNumber from 'libphonenumber-js';
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
 interface SignupPopupProps {
@@ -330,18 +330,18 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
                 <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Name <span style={{ color: "#991313" }}>*</span></label>
                 <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 8, background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} required />
               </div>
-              {/* Mobile Number with Country Code - single row */}
+              {/* Phone input using react-phone-number-input */}
               <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
-                <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Mobile Number <span style={{ color: "#991313" }}>*</span></label>
-                <div style={{ display: "flex", gap: 6 }}>
-                  <select value={signupCountry} onChange={e => setSignupCountry(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: '8px 0 0 8px', background: "#f9f7f6", padding: "7px 10px", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none", minWidth: 80 }} required>
-                    <option value="+91">+91 (IN)</option>
-                    <option value="+1">+1 (US)</option>
-                    <option value="+44">+44 (UK)</option>
-                    <option value="+971">+971 (UAE)</option>
-                    {/* Add more country codes as needed */}
-                  </select>
-                  <input type="tel" placeholder="Enter mobile number" value={fullPhoneNumber || ""} onChange={e => setFullPhoneNumber(e.target.value.replace(/[^0-9]/g, ""))} style={{ border: "1.5px solid #f0e3d1", borderRadius: '0 8px 8px 0', background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} pattern="[0-9]{7,15}" maxLength={15} required />
+                <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Phone <span style={{ color: "#991313" }}>*</span></label>
+                <div className="phone-input-container">
+                  <PhoneInput
+                    className="phone-input-container"
+                    placeholder="Enter phone"
+                    value={fullPhoneNumber}
+                    onChange={setFullPhoneNumber}
+                    defaultCountry="IN"
+                    required
+                  />
                 </div>
                 {validationError === "Please enter a valid phone number." && (
                   <div style={{ color: "#991313", fontWeight: 600, marginTop: 2, fontSize: 12 }}>
@@ -420,34 +420,34 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
         )}
 
         <button onClick={handleClose} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", fontSize: 18, color: "#991313", cursor: "pointer", fontWeight: 700 }} aria-label="Close" disabled={isLoading}>×</button>
-        <style>{`
-            @keyframes popup-fade-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
-            .phone-input-container .PhoneInputInput, .phone-input-container .PhoneInputCountrySelect {
-                border: 1.5px solid #f0e3d1;
-                background: #f9f7f6;
-                color: #991313;
-                outline: none;
-                box-shadow: 0 1px 4px #f9e9c7;
-                transition: border 0.2s, background 0.2s;
-            }
-            .phone-input-container .PhoneInputInput {
-                padding: 10px 14px;
-                font-size: 15px;
-                font-weight: 500;
-                border-radius: 10px;
-            }
-            .phone-input-container .PhoneInputCountry {
-                margin: 0 5px;
-            }
-            .phone-input-container--focus .PhoneInputInput, .phone-input-container--focus .PhoneInputCountrySelect,
-            .phone-input-container:focus-within .PhoneInputInput, .phone-input-container:focus-within .PhoneInputCountrySelect {
-                border-color: #bf7e1a !important;
-                background: #fffbe8 !important;
-            }
-            .signup-fields-row { flex-wrap: wrap; }
-            @media (max-width: 900px) { .signup-fields-row { flex-direction: column !important; gap: 8px !important; } }
-            @media (max-width: 600px) { .signup-fields-row > div { min-width: 100% !important; } }
-        `}</style>
+            <style>{`
+                @keyframes popup-fade-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: 1); } }
+                .phone-input-container .PhoneInputInput, .phone-input-container .PhoneInputCountrySelect {
+                    border: 1.5px solid #f0e3d1;
+                    background: #f9f7f6;
+                    color: #991313;
+                    outline: none;
+                    box-shadow: 0 1px 4px #f9e9c7;
+                    transition: border 0.2s, background 0.2s;
+                }
+                .phone-input-container .PhoneInputInput {
+                    padding: 10px 14px;
+                    font-size: 15px;
+                    font-weight: 500;
+                    border-radius: 10px;
+                }
+                .phone-input-container .PhoneInputCountry {
+                    margin: 0 5px;
+                }
+                .phone-input-container--focus .PhoneInputInput, .phone-input-container--focus .PhoneInputCountrySelect,
+                .phone-input-container:focus-within .PhoneInputInput, .phone-input-container:focus-within .PhoneInputCountrySelect {
+                    border-color: #bf7e1a !important;
+                    background: #fffbe8 !important;
+                }
+                .signup-fields-row { flex-wrap: wrap; }
+                @media (max-width: 900px) { .signup-fields-row { flex-direction: column !important; gap: 8px !important; } }
+                @media (max-width: 600px) { .signup-fields-row > div { min-width: 100% !important; } }
+            `}</style>
       </div>
     </div>
   );

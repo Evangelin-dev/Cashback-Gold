@@ -12,7 +12,7 @@ export const MENU = [
 	{ name: "Contact Us", link: "/lcontactus" },
 ];
 
-const LNavBar = () => {
+const 	LNavBar = () => {
   const [selected, setSelected] = useState<string | null>(null);
   const [hovered, setHovered] = useState<string | null>(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
