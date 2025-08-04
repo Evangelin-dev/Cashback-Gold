@@ -16,7 +16,8 @@ public class WebConfig implements WebMvcConfigurer {
                         "http://greenheapgold.com",         // ✅ add this
                         "http://www.greenheapgold.com",     // ✅ optionally add this
                         "https://greenheapgold.com",        // future-proof
-                        "https://www.greenheapgold.com"
+                        "https://www.greenheapgold.com",
+                        "https://app.greenheapgold.com"
                 )
                 .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH")
                 .allowedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
