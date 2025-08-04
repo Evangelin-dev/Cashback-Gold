@@ -167,11 +167,12 @@ const AppRoutes: React.FC = () => {
         <Route path="/contactus" element={<LContactUsPage />} />
         <Route path="/buyornaments" element={<BuyOrnamentsPage />} />
         <Route path="/buyornaments/:id" element={<JewelryProductPage />} />
-        <Route path="/aboutus" element={<LAboutUsPage />} />
+        <Route path="/about-us" element={<LAboutUsPage />} />
         <Route path="/privacy" element={<LPrivacyPlicyPage />} />
         <Route path="/refund" element={<LRefund />} />
         <Route path="/shippingpolicy" element={<LShippingPolicy />} />
         <Route path="/SIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
+        
       </Route >
 
 

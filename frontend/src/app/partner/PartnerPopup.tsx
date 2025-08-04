@@ -12,7 +12,7 @@ import {
 } from "../features/thunks/authThunks"; // Make sure this path is correct
 
 import parsePhoneNumber from 'libphonenumber-js';
-import { isValidPhoneNumber } from 'react-phone-number-input';
+import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
 interface PartnerPopupProps {
@@ -246,12 +246,12 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Email ID <span className="text-[#991313]">*</span></label>
                 <input type="email" placeholder="Email address" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313]" required />
               </div>
-              {/*
+              
               <div className="flex-1 min-w-[120px] text-left w-full">
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Phone <span className="text-[#991313]">*</span></label>
                 <PhoneInput className="phone-input-container" placeholder="Enter phone" value={fullPhoneNumber} onChange={setFullPhoneNumber} defaultCountry="IN" required />
               </div>
-              */}
+             
               {/* City & Town - same row */}
               <div className="flex gap-2 w-full">
                 <div className="flex-1 min-w-[80px] text-left">

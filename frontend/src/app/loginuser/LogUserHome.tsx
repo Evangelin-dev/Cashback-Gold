@@ -134,7 +134,7 @@ const LUserHome = () => {
             <div>
               <div className="mb-2 border-b-2 border-[#991313] pb-1 flex items-center">
                 <span className="text-[#991313] font-semibold text-[16px] mr-2">
-                  Digital gold / Silver
+                  Digital Gold / Silver
                 </span>
               </div>
               <div className="row font-sans">
