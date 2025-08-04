@@ -3,8 +3,10 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.*;
 import com.cashback.gold.entity.*;
 import com.cashback.gold.enums.EnrollmentStatus;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.*;
 import com.cashback.gold.security.UserPrincipal;
+import com.razorpay.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,7 +15,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -25,6 +30,7 @@ public class CashbackGoldUserService {
     private final UserCashbackGoldPaymentRepository paymentRepo;
     private final GoldPurchaseOrderService goldRateService;
     private final UserRepository userRepository;
+    private final RazorpayService razorpayService;
 
     @Transactional
     public Object enroll(CashbackGoldEnrollmentRequest request, UserPrincipal principal) {
@@ -48,43 +54,116 @@ public class CashbackGoldUserService {
         return enrollmentRepo.save(enrollment);
     }
 
-    @Transactional
-    public Object pay(CashbackGoldPaymentRequest request, UserPrincipal principal) {
-        UserCashbackGoldEnrollment enrollment = enrollmentRepo.findById(request.getEnrollmentId())
-                .orElseThrow(() -> new RuntimeException("Enrollment not found"));
+//    @Transactional
+//    public Object pay(CashbackGoldPaymentRequest request, UserPrincipal principal) {
+//        UserCashbackGoldEnrollment enrollment = enrollmentRepo.findById(request.getEnrollmentId())
+//                .orElseThrow(() -> new RuntimeException("Enrollment not found"));
+//
+//        if (!enrollment.getUser().getId().equals(principal.getId())) {
+//            throw new RuntimeException("Unauthorized access to enrollment");
+//        }
+//
+//        double goldRate = goldRateService.getCurrentGoldRate(); // ₹ per gram
+//        double amountDouble = request.getAmountPaid();
+//        BigDecimal amount = BigDecimal.valueOf(amountDouble);
+//
+//        // Round goldGrams to 4 decimal places
+//        BigDecimal goldGrams = BigDecimal.valueOf(amountDouble / goldRate)
+//                .setScale(4, RoundingMode.HALF_UP);
+//
+//        UserCashbackGoldPayment payment = UserCashbackGoldPayment.builder()
+//                .enrollment(enrollment)
+//                .amountPaid(amount)
+//                .goldGrams(goldGrams)
+//                .paymentDate(LocalDate.now())
+//                .build();
+//
+//        paymentRepo.save(payment);
+//
+//        enrollment.setTotalAmountPaid(enrollment.getTotalAmountPaid().add(amount));
+//        enrollment.setGoldAccumulated(enrollment.getGoldAccumulated().add(goldGrams));
+//
+//        if (!enrollment.isActivated()
+//                && enrollment.getGoldAccumulated().compareTo(BigDecimal.valueOf(1.0)) >= 0) {
+//            enrollment.setActivated(true);
+//        }
+//
+//        return enrollmentRepo.save(enrollment);
+//    }
 
-        if (!enrollment.getUser().getId().equals(principal.getId())) {
-            throw new RuntimeException("Unauthorized access to enrollment");
+        public Map<String, Object> initiatePayment(CashbackGoldPaymentRequest request, Long userId) {
+            UserCashbackGoldEnrollment enrollment = enrollmentRepo.findById(request.getEnrollmentId())
+                    .orElseThrow(() -> new InvalidArgumentException("Enrollment not found"));
+
+            if (!enrollment.getUser().getId().equals(userId)) {
+                throw new InvalidArgumentException("Unauthorized access");
+            }
+
+            Order order = razorpayService.createOrder(
+                    BigDecimal.valueOf(request.getAmountPaid()), "PAY_" + UUID.randomUUID());
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("razorpayOrderId", order.get("id"));
+            response.put("amount", request.getAmountPaid());
+            response.put("enrollmentId", request.getEnrollmentId());
+
+            return response;
         }
 
-        double goldRate = goldRateService.getCurrentGoldRate(); // ₹ per gram
-        double amountDouble = request.getAmountPaid();
-        BigDecimal amount = BigDecimal.valueOf(amountDouble);
+    public UserCashbackGoldEnrollment handlePaymentCallback(CashbackGoldPaymentCallbackRequest request, Long userId) {
+        boolean valid = razorpayService.verifySignature(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature()
+        );
 
-        // Round goldGrams to 4 decimal places
-        BigDecimal goldGrams = BigDecimal.valueOf(amountDouble / goldRate)
+        if (!valid) {
+            throw new InvalidArgumentException("Invalid Razorpay payment signature.");
+        }
+
+        UserCashbackGoldEnrollment enrollment = enrollmentRepo.findById(request.getEnrollmentId())
+                .orElseThrow(() -> new InvalidArgumentException("Enrollment not found"));
+
+        if (!enrollment.getUser().getId().equals(userId)) {
+            throw new InvalidArgumentException("Unauthorized access to enrollment");
+        }
+
+        double goldRate = goldRateService.getCurrentGoldRate();
+        BigDecimal amount = BigDecimal.valueOf(request.getAmountPaid());
+
+        BigDecimal goldGrams = BigDecimal.valueOf(request.getAmountPaid() / goldRate)
                 .setScale(4, RoundingMode.HALF_UP);
 
+        // Save Razorpay payment details
+        razorpayService.savePayment(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature(),
+                amount,
+                "PAY",
+                enrollment.getId()
+        );
+
+        // Save the CashbackGold payment
         UserCashbackGoldPayment payment = UserCashbackGoldPayment.builder()
                 .enrollment(enrollment)
                 .amountPaid(amount)
                 .goldGrams(goldGrams)
                 .paymentDate(LocalDate.now())
                 .build();
-
         paymentRepo.save(payment);
 
+        // Update Enrollment
         enrollment.setTotalAmountPaid(enrollment.getTotalAmountPaid().add(amount));
         enrollment.setGoldAccumulated(enrollment.getGoldAccumulated().add(goldGrams));
 
-        if (!enrollment.isActivated()
-                && enrollment.getGoldAccumulated().compareTo(BigDecimal.valueOf(1.0)) >= 0) {
+        if (!enrollment.isActivated() &&
+                enrollment.getGoldAccumulated().compareTo(BigDecimal.valueOf(1.0)) >= 0) {
             enrollment.setActivated(true);
         }
 
         return enrollmentRepo.save(enrollment);
     }
-
 
     @Transactional
     public Object recall(CashbackGoldRecallRequest request, UserPrincipal principal) {

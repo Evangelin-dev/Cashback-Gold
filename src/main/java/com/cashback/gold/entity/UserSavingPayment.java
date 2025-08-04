@@ -32,4 +32,11 @@ public class UserSavingPayment {
     private Double bonusApplied;
 
     private Boolean onTime; // true = bonus eligible
+
+    // Razorpay Payment Details
+    private String razorpayOrderId;
+
+    private String razorpayPaymentId;
+
+    private String razorpaySignature;
 }

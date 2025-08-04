@@ -23,11 +23,24 @@ public class UserSavingPlanController {
         return ResponseEntity.ok(service.enroll(request, userPrincipal));
     }
 
-    @PostMapping("/pay-monthly")
-    public ResponseEntity<?> payMonthly(@RequestBody SavingPlanPaymentRequest request,
-                                        @AuthenticationPrincipal UserPrincipal userPrincipal) {
-        return ResponseEntity.ok(service.payMonthly(request, userPrincipal));
+//    @PostMapping("/pay-monthly")
+//    public ResponseEntity<?> payMonthly(@RequestBody SavingPlanPaymentRequest request,
+//                                        @AuthenticationPrincipal UserPrincipal userPrincipal) {
+//        return ResponseEntity.ok(service.payMonthly(request, userPrincipal));
+//    }
+
+    @PostMapping("/pay-monthly/initiate")
+    public ResponseEntity<?> initiatePayMonthly(@RequestBody SavingPlanPaymentRequest request,
+                                                @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(service.initiatePayMonthly(request, principal));
     }
+
+    @PostMapping("/pay-monthly/callback")
+    public ResponseEntity<?> payMonthlyCallback(@RequestBody PaymentCallbackRequest request,
+                                                @AuthenticationPrincipal UserPrincipal principal) {
+        return ResponseEntity.ok(service.payMonthlyCallback(request, principal));
+    }
+
 
     @PostMapping("/recall")
     public ResponseEntity<?> recallScheme(@RequestBody SavingPlanRecallRequest request,

@@ -151,8 +151,8 @@
             <column name="full_name" value="Admin User"/>
             <column name="gender" value="male"/>
             <column name="dob" value="1990-01-01"/>
-            <column name="email" value="admin@example.com"/>
-            <column name="mobile" value="+919999999999"/>
+            <column name="email" value="cseazeem@gmail.com"/>
+            <column name="mobile" value="+918601533220"/>
             <column name="country_code" value="+91"/>
             <column name="city" value="Admin City"/>
             <column name="town" value="Admin Town"/>
@@ -174,27 +174,36 @@
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="price" type="DECIMAL(10,2)">
+            <column name="total_gram" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gram_price" type="DECIMAL(10,2)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="total_price" type="DECIMAL(10,2)">
                 <constraints nullable="false"/>
             </column>
             <column name="category" type="VARCHAR(100)"/>
             <column name="sub_category" type="VARCHAR(100)"/>
-            <column name="gender" type="VARCHAR(20)"/>
+            <column name="gender" type="VARCHAR(50)"/>
+            <column name="item_type" type="VARCHAR(100)"/>
+            <column name="description" type="TEXT"/>
             <column name="description1" type="TEXT"/>
             <column name="description2" type="TEXT"/>
             <column name="description3" type="TEXT"/>
-            <column name="description" type="TEXT"/>
-            <column name="main_image" type="TEXT"/>
-            <column name="sub_image1" type="TEXT"/>
-            <column name="sub_image2" type="TEXT"/>
-            <column name="sub_image3" type="TEXT"/>
-            <column name="sub_image4" type="TEXT"/>
             <column name="material" type="VARCHAR(100)"/>
             <column name="purity" type="VARCHAR(100)"/>
             <column name="quality" type="VARCHAR(100)"/>
             <column name="warranty" type="VARCHAR(100)"/>
-            <column name="item_type" type="VARCHAR(100)"/>
             <column name="details" type="TEXT"/>
+            <column name="origin" type="VARCHAR(20)" defaultValue="INDIAN">
+                <constraints nullable="false"/>
+            </column>
+            <column name="making_charge_percent" type="DECIMAL(5,2)" defaultValueNumeric="11.00">
+                <constraints nullable="false"/>
+            </column>
+            <column name="main_image" type="TEXT"/>
+            <column name="sub_images" type="TEXT[]"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
@@ -211,34 +220,14 @@
             <column name="component" type="VARCHAR(100)">
                 <constraints nullable="false"/>
             </column>
-            <column name="gold_rate_18kt" type="DECIMAL(10,2)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="weight_g" type="DECIMAL(10,2)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="discount" type="DECIMAL(10,2)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="final_value" type="DECIMAL(10,2)">
-                <constraints nullable="false"/>
-            </column>
+            <column name="net_weight" type="DECIMAL(10,2)"/>
+            <column name="gross_weight" type="DECIMAL(10,2)"/>
+            <column name="discount" type="DECIMAL(10,2)"/>
+            <column name="final_value" type="DECIMAL(10,2)"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
     </changeSet>
-
-    <changeSet id="5-2" author="azeem">
-        <addColumn tableName="ornaments">
-            <column name="origin" type="VARCHAR(20)" defaultValue="INDIAN">
-                <constraints nullable="false"/>
-            </column>
-            <column name="making_charge_percent" type="DECIMAL(5,2)" defaultValueNumeric="11.00">
-                <constraints nullable="false"/>
-            </column>
-        </addColumn>
-    </changeSet>
-
 
 
     <changeSet id="7" author="azeem">
@@ -897,20 +886,12 @@
 
     <changeSet id="26-1" author="azeeem">
         <addColumn tableName="order_history">
-            <column name="razorpay_order_id" type="varchar(100)"/>
-            <column name="razorpay_payment_id" type="varchar(100)"/>
-            <column name="razorpay_signature" type="varchar(255)"/>
-            <column name="receipt_id" type="varchar(100)"/>
-            <column name="payment_status" type="varchar(50)"/>
+            <column name="razorpay_order_id" type="varchar(255)"/>
+            <column name="razorpay_payment_id" type="varchar(255)"/>
+            <column name="razorpay_signature" type="varchar(512)"/>
+            <column name="receipt_id" type="varchar(255)"/>
+            <column name="payment_status" type="varchar(100)"/>
         </addColumn>
-    </changeSet>
-
-    <changeSet id="26-1-update" author="azeeem">
-        <modifyDataType tableName="order_history" columnName="razorpay_order_id" newDataType="varchar(255)"/>
-        <modifyDataType tableName="order_history" columnName="razorpay_payment_id" newDataType="varchar(255)"/>
-        <modifyDataType tableName="order_history" columnName="razorpay_signature" newDataType="varchar(512)"/>
-        <modifyDataType tableName="order_history" columnName="receipt_id" newDataType="varchar(255)"/>
-        <modifyDataType tableName="order_history" columnName="payment_status" newDataType="varchar(100)"/>
     </changeSet>
 
     <changeSet id="update-plan-name" author="azeem">
@@ -1221,5 +1202,19 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="38" author="azeem">
+        <createTable tableName="razorpay_payment">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="razorpay_order_id" type="VARCHAR(255)"/>
+            <column name="razorpay_payment_id" type="VARCHAR(255)"/>
+            <column name="razorpay_signature" type="VARCHAR(255)"/>
+            <column name="amount" type="NUMERIC(10,2)"/>
+            <column name="payment_type" type="VARCHAR(50)"/>
+            <column name="enrollment_id" type="BIGINT"/>
+            <column name="created_at" type="TIMESTAMP"/>
+        </createTable>
+    </changeSet>
 
 </databaseChangeLog>

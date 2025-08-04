@@ -6,10 +6,10 @@ import lombok.Data;
 @Data
 @Builder
 public class PriceBreakupDTO {
-    private Long id; // Optional, for updates
+    private Long id;
     private String component;
-    private Double goldRate18kt;
-    private Double weightG;
+    private Double netWeight;
+    private Double grossWeight;
     private Double discount;
     private Double finalValue;
 }

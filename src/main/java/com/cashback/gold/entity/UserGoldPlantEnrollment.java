@@ -49,6 +49,15 @@ public class UserGoldPlantEnrollment {
     @Column(name = "recalled", nullable = false)
     private boolean recalled;
 
+    @Column(name = "razorpay_order_id")
+    private String razorpayOrderId;
+
+    @Column(name = "razorpay_payment_id")
+    private String razorpayPaymentId;
+
+    @Column(name = "razorpay_signature", length = 255)
+    private String razorpaySignature;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;

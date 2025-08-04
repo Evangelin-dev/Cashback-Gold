@@ -37,4 +37,13 @@ public class UserCashbackGoldPayment {
     @CreatedDate
     @Column(updatable = false)
     private LocalDate createdAt;
+
+    @Column(name = "razorpay_order_id")
+    private String razorpayOrderId;
+
+    @Column(name = "razorpay_payment_id")
+    private String razorpayPaymentId;
+
+    @Column(name = "razorpay_signature")
+    private String razorpaySignature;
 }

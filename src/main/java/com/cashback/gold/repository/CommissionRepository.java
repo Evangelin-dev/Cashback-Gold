@@ -4,6 +4,7 @@ import com.cashback.gold.entity.Commission;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 
@@ -11,5 +12,8 @@ public interface CommissionRepository extends JpaRepository<Commission, Long>, J
     List<Commission> findByPartnerIdAndStatus(Long partnerId, String status);
     @Query("SELECT COALESCE(SUM(c.commissionAmount), 0) FROM Commission c WHERE c.partnerId = :partnerId AND c.status = 'Approved'")
     Double getApprovedCommissionSumByPartnerId(Long partnerId);
+    @Query("SELECT COUNT(c) FROM Commission c WHERE c.userId = :userId")
+    long countByUserId(@Param("userId") Long userId);
+
 }
 

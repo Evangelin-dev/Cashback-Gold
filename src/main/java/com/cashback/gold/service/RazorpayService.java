@@ -80,4 +80,8 @@ public class RazorpayService {
             return false;
         }
     }
+    public String getKeyId() {
+        return keyId;
+    }
+
 }

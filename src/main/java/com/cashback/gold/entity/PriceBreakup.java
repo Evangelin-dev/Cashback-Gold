@@ -20,18 +20,18 @@ public class PriceBreakup {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ornament_id", nullable = false)
     @JsonBackReference
     private Ornament ornament;
 
     private String component;
 
-    @Column(name = "gold_rate_18kt")
-    private Double goldRate18kt;
+    @Column(name = "net_weight")
+    private Double netWeight;
 
-    @Column(name = "weight_g")
-    private Double weightG;
+    @Column(name = "gross_weight")
+    private Double grossWeight;
 
     private Double discount;
 

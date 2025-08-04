@@ -17,55 +17,59 @@ public class OrnamentController {
 
     private final OrnamentService service;
 
+    // ✅ Get all ornaments with pagination
     @GetMapping
     public ResponseEntity<List<OrnamentResponse>> all(
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size) { // Changed size to match frontend (5 items per page)
+            @RequestParam(defaultValue = "5") int size) {
         return ResponseEntity.ok(service.getAll(page, size));
     }
 
+    // ✅ Get single ornament by ID
     @GetMapping("/{id}")
     public ResponseEntity<OrnamentResponse> getById(@PathVariable Long id) {
         return ResponseEntity.ok(service.getById(id));
     }
 
-
+    // ✅ Create new ornament (multipart request)
     @PostMapping(consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<OrnamentResponse> create(
             @RequestPart("mainImage") MultipartFile mainImage,
             @RequestPart(value = "subImages", required = false) List<MultipartFile> subImages,
-            @RequestPart("data") String dataJson
-    ) {
-        // Validate mainImage
+            @RequestPart("data") String dataJson) {
+
         if (mainImage == null || mainImage.isEmpty()) {
             return ResponseEntity.badRequest().body(null);
         }
+
         return ResponseEntity.ok(service.create(mainImage, subImages, dataJson));
     }
 
+    // ✅ Update existing ornament
     @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<OrnamentResponse> update(
             @PathVariable Long id,
             @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
             @RequestPart(value = "subImages", required = false) List<MultipartFile> subImages,
-            @RequestPart("data") String dataJson
-    ) {
+            @RequestPart("data") String dataJson) {
+
         return ResponseEntity.ok(service.update(id, mainImage, subImages, dataJson));
     }
 
+    // ✅ Delete an ornament by ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<?> delete(@PathVariable Long id) {
+    public ResponseEntity<String> delete(@PathVariable Long id) {
         service.delete(id);
-        return ResponseEntity.ok().body("Deleted");
+        return ResponseEntity.ok("Deleted");
     }
 
+    // ✅ Filter ornaments by item type (e.g., Ring, Bracelet)
     @GetMapping("/by-item-type")
     public ResponseEntity<List<OrnamentResponse>> getByItemType(
             @RequestParam String itemType,
             @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "5") int size
-    ) {
+            @RequestParam(defaultValue = "5") int size) {
+
         return ResponseEntity.ok(service.getByItemType(itemType, page, size));
     }
-
 }

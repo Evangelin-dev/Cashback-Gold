@@ -9,41 +9,35 @@ import com.cashback.gold.entity.PriceBreakup;
 import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.MetalRateRepository;
 import com.cashback.gold.repository.OrnamentRepository;
-import com.cashback.gold.repository.PriceBreakupRepository;
 import com.cashback.gold.service.aws.S3Service;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class OrnamentService {
 
     private final OrnamentRepository repo;
-    private final PriceBreakupRepository priceBreakupRepo;
     private final S3Service s3Service;
     private final ObjectMapper objectMapper;
     private final MetalRateRepository metalRateRepo;
 
-
     public OrnamentResponse getById(Long id) {
         Ornament ornament = repo.findById(id)
-                .orElseThrow(() -> new InvalidArgumentException("Ornament not found with id: " + id));
+                .orElseThrow(() -> new InvalidArgumentException("Ornament not found"));
         return toResponse(ornament);
     }
 
     public List<OrnamentResponse> getAll(int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
         return repo.findAll(pageable)
-                .stream()
                 .map(this::toResponse)
                 .toList();
     }
@@ -53,113 +47,108 @@ public class OrnamentService {
         Ornament ornament = toEntity(req);
 
         ornament.setMainImage(s3Service.uploadFile(mainImage));
-        assignSubImages(ornament, subImages);
+        ornament.setSubImages(subImages.stream().map(s3Service::uploadFile).toArray(String[]::new));
 
-        List<PriceBreakup> priceBreakups = null;
-        double basePrice = 0.0;
-        double goldRate = metalRateRepo.findByMetalType("GOLD")
+        // Ensure gramPrice is set
+        double gramPrice = req.getGramPrice() != null
+                ? req.getGramPrice()
+                : metalRateRepo.findByMetalType("GOLD")
                 .map(MetalRate::getRateInrPerGram)
-                .orElseThrow(() -> new InvalidArgumentException("Gold rate not available"));
-        if (req.getPriceBreakups() != null && !req.getPriceBreakups().isEmpty()) {
+                .orElseThrow(() -> new InvalidArgumentException("Gold rate unavailable"));
 
+        ornament.setGramPrice(gramPrice);
 
-            priceBreakups = req.getPriceBreakups().stream()
-                    .map(dto -> toPriceBreakupEntity(dto, ornament))
-                    .toList();
-
-            for (PriceBreakup pb : priceBreakups) {
-                if (pb.getWeightG() != null && pb.getWeightG() > 0) {
-                    basePrice += pb.getWeightG() * goldRate;
+        // Calculate finalValue in priceBreakups only if not provided
+        for (PriceBreakupDTO dto : req.getPriceBreakups()) {
+            if (dto.getFinalValue() == null) { // Skip calculation if finalValue is provided
+                Double weight = dto.getNetWeight();
+                if (weight == null) {
+                    throw new InvalidArgumentException("Either netWeight or grossWeight must be provided when finalValue is not set for component: " + dto.getComponent());
                 }
-//                else {
-//                    basePrice += pb.getFinalValue() != null ? pb.getFinalValue() : 0;
-//                }
+                double discount = dto.getDiscount() != null ? dto.getDiscount() : 0;
+                double finalValue = (weight * gramPrice) - discount;
+                dto.setFinalValue(finalValue);
             }
-
-            ornament.setPriceBreakups(priceBreakups);
         }
 
-        // Apply making charges
-        double makingChargePercent = ornament.getMakingChargePercent() != null ? ornament.getMakingChargePercent() : 11.0;
-        double finalPrice = basePrice + (basePrice * makingChargePercent / 100);
-        ornament.setPrice(finalPrice);
+        double basePrice = req.getPriceBreakups().stream()
+                .mapToDouble(dto -> dto.getFinalValue() != null ? dto.getFinalValue() : 0)
+                .sum();
 
+        double finalPrice = basePrice + (basePrice * ornament.getMakingChargePercent() / 100);
 
-        return toResponse(repo.save(ornament));
+        ornament.setTotalGram(req.getTotalGram());
+        ornament.setTotalPrice(finalPrice);
+
+        List<PriceBreakup> breakups = req.getPriceBreakups().stream()
+                .map(dto -> toPriceBreakupEntity(dto, ornament))
+                .toList();
+        ornament.setPriceBreakups(breakups);
+
+        Ornament saved = repo.save(ornament);
+        return toResponse(saved);
     }
-
-
 
     public OrnamentResponse update(Long id, MultipartFile mainImage, List<MultipartFile> subImages, String dataJson) {
         OrnamentRequest req = parse(dataJson);
-        Ornament ornament = repo.findById(id).orElseThrow(() -> new InvalidArgumentException("Not found"));
+        Ornament ornament = repo.findById(id).orElseThrow(() -> new InvalidArgumentException("Ornament not found"));
 
         updateEntity(ornament, req);
 
-        if (mainImage != null && !mainImage.isEmpty()) {
+        if (mainImage != null) {
             ornament.setMainImage(s3Service.uploadFile(mainImage));
         }
-
         if (subImages != null && !subImages.isEmpty()) {
-            assignSubImages(ornament, subImages);
+            ornament.setSubImages(subImages.stream().map(s3Service::uploadFile).toArray(String[]::new));
         }
 
-        // Recalculate base price using updated price breakups
-        List<PriceBreakup> priceBreakups = null;
-        double basePrice = 0.0;
+        double basePrice = calculateBasePrice(req.getPriceBreakups(), req.getGramPrice());
+        double finalPrice = basePrice + (basePrice * ornament.getMakingChargePercent() / 100);
 
-        if (req.getPriceBreakups() != null && !req.getPriceBreakups().isEmpty()) {
-            double goldRate = metalRateRepo.findByMetalType("GOLD")
-                    .map(MetalRate::getRateInrPerGram)
-                    .orElseThrow(() -> new InvalidArgumentException("Gold rate not available"));
+        ornament.setTotalGram(req.getTotalGram());
+        ornament.setGramPrice(req.getGramPrice());
+        ornament.setTotalPrice(finalPrice);
 
-            priceBreakups = req.getPriceBreakups().stream()
-                    .map(dto -> toPriceBreakupEntity(dto, ornament))
-                    .toList();
+        ornament.getPriceBreakups().clear();
+        List<PriceBreakup> breakups = req.getPriceBreakups().stream()
+                .map(dto -> toPriceBreakupEntity(dto, ornament))
+                .toList();
+        ornament.getPriceBreakups().addAll(breakups);
 
-            ornament.getPriceBreakups().clear();
-            ornament.getPriceBreakups().addAll(priceBreakups);
-
-            for (PriceBreakup pb : priceBreakups) {
-                if (pb.getWeightG() != null && pb.getWeightG() > 0) {
-                    basePrice += pb.getWeightG() * goldRate;
-                } else {
-                    basePrice += pb.getFinalValue() != null ? pb.getFinalValue() : 0;
-                }
-            }
-        }
-
-        double makingChargePercent = ornament.getMakingChargePercent() != null ? ornament.getMakingChargePercent() : 11.0;
-        double finalPrice = basePrice + (basePrice * makingChargePercent / 100);
-
-        ornament.setPrice(finalPrice);
-
-        return toResponse(repo.save(ornament));
+        Ornament updated = repo.save(ornament);
+        return toResponse(updated);
     }
-
 
     public void delete(Long id) {
         Ornament ornament = repo.findById(id)
-                .orElseThrow(() -> new InvalidArgumentException("Ornament not found with id: " + id));
-
-        if (ornament.getMainImage() != null) {
-            s3Service.deleteFile(ornament.getMainImage());
+                .orElseThrow(() -> new InvalidArgumentException("Ornament not found"));
+        s3Service.deleteFile(ornament.getMainImage());
+        for (String img : ornament.getSubImages()) {
+            s3Service.deleteFile(img);
         }
-
-        if (ornament.getSubImage1() != null) s3Service.deleteFile(ornament.getSubImage1());
-        if (ornament.getSubImage2() != null) s3Service.deleteFile(ornament.getSubImage2());
-        if (ornament.getSubImage3() != null) s3Service.deleteFile(ornament.getSubImage3());
-        if (ornament.getSubImage4() != null) s3Service.deleteFile(ornament.getSubImage4());
-
-        repo.deleteById(id);
+        repo.delete(ornament);
     }
 
-    public List<OrnamentResponse> getByItemType(String itemType, int page, int size) {
-        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-        return repo.findByItemTypeIgnoreCase(itemType, pageable)
-                .stream()
-                .map(this::toResponse)
-                .toList();
+    private double calculateBasePrice(List<PriceBreakupDTO> breakups, Double providedGramPrice) {
+        double goldRate = providedGramPrice != null
+                ? providedGramPrice
+                : metalRateRepo.findByMetalType("GOLD")
+                .map(MetalRate::getRateInrPerGram)
+                .orElseThrow(() -> new InvalidArgumentException("Gold rate unavailable"));
+
+        return breakups.stream()
+                .mapToDouble(pb -> {
+                    if (pb.getFinalValue() != null) {
+                        return pb.getFinalValue(); // Use provided finalValue (e.g., for diamonds)
+                    }
+                    Double weight = pb.getNetWeight() != null ? pb.getNetWeight() : pb.getGrossWeight();
+                    if (weight == null) {
+                        throw new InvalidArgumentException("Either netWeight or grossWeight must be provided when finalValue is not set for component: " + pb.getComponent());
+                    }
+                    double discount = pb.getDiscount() != null ? pb.getDiscount() : 0;
+                    return (weight * goldRate) - discount;
+                })
+                .sum();
     }
 
     private OrnamentRequest parse(String json) {
@@ -172,130 +161,65 @@ public class OrnamentService {
 
     private Ornament toEntity(OrnamentRequest r) {
         return Ornament.builder()
-                .name(r.getName()).price(r.getPrice())
-                .category(r.getCategory()).subCategory(r.getSubCategory()).gender(r.getGender())
-                .description1(r.getDescription1()).description2(r.getDescription2()).description3(r.getDescription3())
-                .description(r.getDescription()).material(r.getMaterial())
-                .purity(r.getPurity()).quality(r.getQuality()).warranty(r.getWarranty())
-                .itemType(r.getItemType()).details(r.getDetails())
-                .origin(r.getOrigin() != null ? r.getOrigin() : "INDIAN")
-                .makingChargePercent(r.getMakingChargePercent() != null ? r.getMakingChargePercent() : 11.0)
+                .name(r.getName()).category(r.getCategory()).subCategory(r.getSubCategory()).gender(r.getGender())
+                .description(r.getDescription()).description1(r.getDescription1()).description2(r.getDescription2()).description3(r.getDescription3())
+                .material(r.getMaterial()).purity(r.getPurity()).quality(r.getQuality()).warranty(r.getWarranty()).itemType(r.getItemType())
+                .details(r.getDetails()).origin(r.getOrigin()).makingChargePercent(r.getMakingChargePercent())
                 .build();
     }
-
 
     private void updateEntity(Ornament o, OrnamentRequest r) {
         o.setName(r.getName());
         o.setCategory(r.getCategory());
         o.setSubCategory(r.getSubCategory());
         o.setGender(r.getGender());
+        o.setItemType(r.getItemType());
+        o.setDescription(r.getDescription());
         o.setDescription1(r.getDescription1());
         o.setDescription2(r.getDescription2());
         o.setDescription3(r.getDescription3());
-        o.setDescription(r.getDescription());
         o.setMaterial(r.getMaterial());
         o.setPurity(r.getPurity());
         o.setQuality(r.getQuality());
         o.setWarranty(r.getWarranty());
-        o.setItemType(r.getItemType());
         o.setDetails(r.getDetails());
         o.setOrigin(r.getOrigin());
         o.setMakingChargePercent(r.getMakingChargePercent());
-        // DO NOT set price here
-    }
-
-    private void assignSubImages(Ornament ornament, List<MultipartFile> subImages) {
-        if (subImages == null || subImages.isEmpty()) {
-            throw new InvalidArgumentException("All 4 subImages (subImage1 to subImage4) are required.");
-        }
-
-        for (int i = 0; i < subImages.size(); i++) {
-            MultipartFile file = subImages.get(i);
-            if (file == null || file.isEmpty()) {
-                throw new InvalidArgumentException("subImage" + (i + 1) + " is missing.");
-            }
-            if (!isValidImage(file)) {
-                throw new InvalidArgumentException("subImage" + (i + 1) + " must be a valid image (jpeg/png/webp).");
-            }
-        }
-
-        if (subImages.size() < 4) {
-            throw new InvalidArgumentException("Exactly 4 subImages are required.");
-        }
-
-        List<String> urls = subImages.stream()
-                .map(s3Service::uploadFile)
-                .toList();
-
-        ornament.setSubImage1(urls.get(0));
-        ornament.setSubImage2(urls.get(1));
-        ornament.setSubImage3(urls.get(2));
-        ornament.setSubImage4(urls.get(3));
-    }
-
-    private boolean isValidImage(MultipartFile file) {
-        String contentType = file.getContentType();
-        return contentType != null && (
-                contentType.equals("image/jpeg") ||
-                        contentType.equals("image/png") ||
-                        contentType.equals("image/webp")
-        );
     }
 
     private OrnamentResponse toResponse(Ornament o) {
         return OrnamentResponse.builder()
-                .id(o.getId())
-                .name(o.getName())
-                .price(o.getPrice())
-                .category(o.getCategory())
-                .subCategory(o.getSubCategory())
-                .gender(o.getGender())
-                .description1(o.getDescription1())
-                .description2(o.getDescription2())
-                .description3(o.getDescription3())
-                .description(o.getDescription())
-                .mainImage(o.getMainImage())
-                .subImages(List.of(
-                        o.getSubImage1(),
-                        o.getSubImage2(),
-                        o.getSubImage3(),
-                        o.getSubImage4()
-                ).stream().filter(url -> url != null).collect(Collectors.toList()))
-                .material(o.getMaterial())
-                .purity(o.getPurity())
-                .quality(o.getQuality())
-                .warranty(o.getWarranty())
-                .itemType(o.getItemType())
-                .details(o.getDetails())
-                .origin(o.getOrigin())
-                .makingChargePercent(o.getMakingChargePercent())
-                .priceBreakups(o.getPriceBreakups().stream()
-                        .map(this::toPriceBreakupDTO)
-                        .collect(Collectors.toList()))
+                .id(o.getId()).name(o.getName()).totalGram(o.getTotalGram()).gramPrice(o.getGramPrice()).totalPrice(o.getTotalPrice())
+                .category(o.getCategory()).subCategory(o.getSubCategory()).gender(o.getGender()).itemType(o.getItemType())
+                .description(o.getDescription()).description1(o.getDescription1()).description2(o.getDescription2()).description3(o.getDescription3())
+                .material(o.getMaterial()).purity(o.getPurity()).quality(o.getQuality()).warranty(o.getWarranty())
+                .details(o.getDetails()).origin(o.getOrigin()).makingChargePercent(o.getMakingChargePercent())
+                .mainImage(o.getMainImage()).subImages(List.of(o.getSubImages()))
+                .priceBreakups(o.getPriceBreakups().stream().map(this::toPriceBreakupDTO).toList())
                 .build();
     }
-
 
     private PriceBreakup toPriceBreakupEntity(PriceBreakupDTO dto, Ornament ornament) {
         return PriceBreakup.builder()
-                .id(dto.getId())
-                .ornament(ornament)
-                .component(dto.getComponent())
-                .goldRate18kt(dto.getGoldRate18kt())
-                .weightG(dto.getWeightG())
-                .discount(dto.getDiscount())
-                .finalValue(dto.getFinalValue())
+                .ornament(ornament).component(dto.getComponent())
+                .netWeight(dto.getNetWeight()).grossWeight(dto.getGrossWeight())
+                .discount(dto.getDiscount()).finalValue(dto.getFinalValue())
                 .build();
     }
 
-    private PriceBreakupDTO toPriceBreakupDTO(PriceBreakup entity) {
+    private PriceBreakupDTO toPriceBreakupDTO(PriceBreakup pb) {
         return PriceBreakupDTO.builder()
-                .id(entity.getId())
-                .component(entity.getComponent())
-                .goldRate18kt(entity.getGoldRate18kt())
-                .weightG(entity.getWeightG())
-                .discount(entity.getDiscount())
-                .finalValue(entity.getFinalValue())
+                .id(pb.getId()).component(pb.getComponent())
+                .netWeight(pb.getNetWeight()).grossWeight(pb.getGrossWeight())
+                .discount(pb.getDiscount()).finalValue(pb.getFinalValue())
                 .build();
+    }
+
+    public List<OrnamentResponse> getByItemType(String itemType, int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        return repo.findByItemTypeIgnoreCase(itemType, pageable)
+                .stream()
+                .map(this::toResponse)
+                .toList();
     }
 }

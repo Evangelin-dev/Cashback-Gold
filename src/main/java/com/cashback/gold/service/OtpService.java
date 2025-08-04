@@ -49,8 +49,6 @@ public class OtpService {
             smsService.sendOtpSms(identifier, otp);
         }
     }
-
-
     public boolean verifyOtp(String identifier, String otp) {
         OtpVerification record = otpRepo.findTopByIdentifierOrderByIdDesc(identifier)
                 .orElseThrow(() -> new InvalidArgumentException("OTP not found"));
@@ -59,8 +57,8 @@ public class OtpService {
             return false;
         }
 
-        record.setVerified(true);
-        otpRepo.save(record);
+        otpRepo.delete(record); // Remove OTP from DB after successful verification
         return true;
     }
+
 }

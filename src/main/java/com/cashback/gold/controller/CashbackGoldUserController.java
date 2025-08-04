@@ -1,14 +1,19 @@
 package com.cashback.gold.controller;
 
 import com.cashback.gold.dto.CashbackGoldEnrollmentRequest;
+import com.cashback.gold.dto.CashbackGoldPaymentCallbackRequest;
 import com.cashback.gold.dto.CashbackGoldPaymentRequest;
 import com.cashback.gold.dto.CashbackGoldRecallRequest;
+import com.cashback.gold.entity.UserCashbackGoldEnrollment;
 import com.cashback.gold.security.UserPrincipal;
 import com.cashback.gold.service.CashbackGoldUserService;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/cashback-gold-user")
@@ -23,10 +28,26 @@ public class CashbackGoldUserController {
         return ResponseEntity.ok(userService.enroll(request, principal));
     }
 
-    @PostMapping("/pay")
-    public ResponseEntity<?> pay(@RequestBody CashbackGoldPaymentRequest request,
-                                 @AuthenticationPrincipal UserPrincipal principal) {
-        return ResponseEntity.ok(userService.pay(request, principal));
+//    @PostMapping("/pay")
+//    public ResponseEntity<?> pay(@RequestBody CashbackGoldPaymentRequest request,
+//                                 @AuthenticationPrincipal UserPrincipal principal) {
+//        return ResponseEntity.ok(userService.pay(request, principal));
+//    }
+
+    @PostMapping("/pay/initiate")
+    public ResponseEntity<?> initiatePay(@RequestBody CashbackGoldPaymentRequest request,
+                                         @AuthenticationPrincipal UserPrincipal principal) {
+        Map<String, Object> response = userService.initiatePayment(request, principal.getId());
+        return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/pay/callback")
+    @Transactional
+    public ResponseEntity<?> payCallback(@RequestBody CashbackGoldPaymentCallbackRequest request,
+                                         @AuthenticationPrincipal UserPrincipal principal) {
+        UserCashbackGoldEnrollment updatedEnrollment =
+                userService.handlePaymentCallback(request, principal.getId());
+        return ResponseEntity.ok(updatedEnrollment);
     }
 
     @PostMapping("/recall")

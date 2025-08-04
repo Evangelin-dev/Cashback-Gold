@@ -31,9 +31,19 @@ public class SecurityConfig {
                                 .requestMatchers("/auth/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/admin/sip-plans").permitAll()
 
+                                // General Order Creation
                                 .requestMatchers(HttpMethod.POST, "/api/orders").hasAuthority("USER")
-                                .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyAuthority("USER", "ADMIN")
+
+                                // Razorpay checkout initiate & callback
+                                .requestMatchers(HttpMethod.POST, "/api/orders/checkout/initiate").hasAuthority("USER")
+                                .requestMatchers(HttpMethod.POST, "/api/orders/checkout/callback").hasAuthority("USER")
+                                .requestMatchers(HttpMethod.POST, "/api/orders/verify-payment").hasAnyAuthority("USER", "ADMIN")
+
+                                // Get current user's own orders
                                 .requestMatchers(HttpMethod.GET, "/api/orders/my").hasAnyAuthority("USER", "PARTNER", "B2B")
+
+                                // View orders (admin/user)
+                                .requestMatchers(HttpMethod.GET, "/api/orders/**").hasAnyAuthority("USER", "ADMIN")
 
                                 // 🛒 Ornament Cart & Order APIs
                                 .requestMatchers("/api/cart/add").hasAuthority("USER")

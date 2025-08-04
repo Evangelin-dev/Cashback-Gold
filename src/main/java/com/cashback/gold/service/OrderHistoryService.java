@@ -185,6 +185,7 @@
 package com.cashback.gold.service;
 
 import com.cashback.gold.dto.OrderRequest;
+import com.cashback.gold.dto.OrnamentPaymentCallbackRequest;
 import com.cashback.gold.entity.*;
 import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.*;
@@ -205,6 +206,7 @@ import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -220,6 +222,7 @@ public class OrderHistoryService {
     private final CartItemRepository cartRepo;
     private final CommissionRepository commissionRepo;
     private final MetalRateRepository metalRateRepository;
+    private final RazorpayService razorpayService;
 
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
@@ -236,6 +239,17 @@ public class OrderHistoryService {
     @Value("${commission.level3}")
     private double level3Commission;
 
+    @Value("${ornament.gst.rate}")
+    private double ornamentGstRate;
+
+    @Value("${ornament.discount.firstOrder}")
+    private double firstOrderDiscountRate;
+
+    @Value("${ornament.cgst.rate}")
+    private double cgstRate;
+
+    @Value("${ornament.sgst.rate}")
+    private double sgstRate;
 
     @Transactional
     public Map<String, Object> createOrderFromUser(OrderRequest request, UserPrincipal userPrincipal) {
@@ -353,143 +367,272 @@ public class OrderHistoryService {
         return repository.findByUserId(userId);
     }
 
+//    @Transactional
+//    public Map<String, Object> createOrnamentOrderFromCart(UserPrincipal user) {
+//        List<CartItem> cartItems = cartRepo.findByUserId(user.getId());
+//        if (cartItems.isEmpty()) {
+//            throw new InvalidArgumentException("Cart is empty");
+//        }
+//
+//        double total = 0.0;
+//        StringBuilder items = new StringBuilder();
+//
+//        for (CartItem item : cartItems) {
+//            Ornament ornament = item.getOrnament();
+//            if (ornament == null || item.getQuantity() <= 0) {
+//                throw new InvalidArgumentException("Invalid cart item: missing ornament or invalid quantity");
+//            }
+//
+//            // Use stored price and calculate item-wise GST
+//            double basePrice = ornament.getTotalPrice() * item.getQuantity();
+//            if (basePrice <= 0) {
+//                throw new InvalidArgumentException("Invalid price for ornament: " + ornament.getName());
+//            }
+//
+//            double itemGst = Math.round(basePrice * ornamentGstRate * 100.0) / 100.0;
+//            double finalItemPrice = basePrice + itemGst;
+//
+//            total += finalItemPrice;
+//            items.append(ornament.getName()).append(" x").append(item.getQuantity()).append(", ");
+//        }
+//
+//        String itemSummary = items.toString().replaceAll(", $", "");
+//
+//        String address = userRepository.findById(user.getId())
+//                .map(u -> String.join(", ",
+//                        u.getTown() != null ? u.getTown() : "",
+//                        u.getCity() != null ? u.getCity() : "",
+//                        u.getState() != null ? u.getState() : "",
+//                        u.getCountry() != null ? u.getCountry() : ""))
+//                .orElseThrow(() -> new InvalidArgumentException("User address not found"));
+//
+//        boolean isFirstOrder = repository.countByUserId(user.getId()) == 0;
+//        double discount = isFirstOrder ? Math.round(total * firstOrderDiscountRate * 100.0) / 100.0 : 0.0;
+//
+//        double subtotal = total - discount;
+//        double cgst = Math.round(subtotal * cgstRate * 100.0) / 100.0;
+//        double sgst = Math.round(subtotal * sgstRate * 100.0) / 100.0;
+//        double gst = cgst + sgst;
+//
+//        double finalAmount = subtotal + gst;
+//        if (finalAmount <= 0) {
+//            throw new InvalidArgumentException("Final amount must be greater than zero");
+//        }
+//
+//        OrderHistory order = OrderHistory.builder()
+//                .orderId("ORD-" + LocalDateTime.now().getYear() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase())
+//                .userId(user.getId())
+//                .customerName(user.getUsername())
+//                .customerType(user.getRole().toLowerCase())
+//                .planType("ORNAMENT")
+//                .planName(itemSummary)
+//                .duration("-")
+//                .amount(finalAmount)
+//                .paymentMethod("PENDING")
+//                .status("pending")
+//                .address(address)
+//                .createdAt(LocalDateTime.now())
+//                .cgst(cgst)
+//                .sgst(sgst)
+//                .gst(gst)
+//                .build();
+//
+//        OrderHistory savedOrder = repository.save(order);
+//        cartRepo.deleteByUserId(user.getId());
+//
+//        User userEntity = userRepository.findById(user.getId())
+//                .orElseThrow(() -> new InvalidArgumentException("User not found"));
+//
+//        // ✅ Only apply commission if it's the first order
+//        if (isFirstOrder) {
+//            Long currentReferrerId = userEntity.getReferredBy();
+//            int level = 1;
+//
+//            while (currentReferrerId != null && level <= 3) {
+//                Optional<User> referrerOpt = userRepository.findById(currentReferrerId);
+//                if (referrerOpt.isEmpty() || !"PARTNER".equalsIgnoreCase(referrerOpt.get().getRole())) {
+//                    break;
+//                }
+//
+//                User referrer = referrerOpt.get();
+//                double commissionPercent = switch (level) {
+//                    case 1 -> level1Commission;
+//                    case 2 -> level2Commission;
+//                    case 3 -> level3Commission;
+//                    default -> 0.0;
+//                };
+//
+//                double commissionAmount = Math.round(finalAmount * commissionPercent * 100.0) / 100.0;
+//
+//                Commission commission = Commission.builder()
+//                        .partnerId(referrer.getId())
+//                        .userId(userEntity.getId())
+//                        .orderType("ORNAMENT")
+//                        .orderAmount(finalAmount)
+//                        .commissionAmount(commissionAmount)
+//                        .level(level)
+//                        .createdAt(LocalDateTime.now())
+//                        .build();
+//
+//                commissionRepo.save(commission);
+//                currentReferrerId = referrer.getReferredBy();
+//                level++;
+//            }
+//        }
+//
+//        Map<String, Object> response = new HashMap<>();
+//        response.put("order", savedOrder);
+//        response.put("amount", finalAmount);
+//        response.put("discount", discount);
+//        response.put("cgst", cgst);
+//        response.put("sgst", sgst);
+//        response.put("gst", gst);
+//
+//        return response;
+//    }
+
     @Transactional
-    public Map<String, Object> createOrnamentOrderFromCart(UserPrincipal user) {
+    public Map<String, Object> initiateCheckoutOrnamentCart(UserPrincipal user) {
         List<CartItem> cartItems = cartRepo.findByUserId(user.getId());
-        if (cartItems.isEmpty()) throw new InvalidArgumentException("Cart is empty");
+        if (cartItems.isEmpty()) {
+            throw new InvalidArgumentException("Cart is empty");
+        }
 
         double total = 0.0;
         StringBuilder items = new StringBuilder();
 
         for (CartItem item : cartItems) {
             Ornament ornament = item.getOrnament();
+            if (ornament == null || item.getQuantity() <= 0) {
+                throw new InvalidArgumentException("Invalid cart item");
+            }
 
-            // ✅ Use stored price, multiply with quantity
-            double basePrice = ornament.getPrice() * item.getQuantity();
-
-            // ✅ Add 3% GST to each item price
-            double itemGst = basePrice * 0.03;
-            double finalItemPrice = basePrice + itemGst;
-
-            total += finalItemPrice;
-
+            double basePrice = ornament.getTotalPrice() * item.getQuantity();
+            double itemGst = Math.round(basePrice * ornamentGstRate * 100.0) / 100.0;
+            total += basePrice + itemGst;
             items.append(ornament.getName()).append(" x").append(item.getQuantity()).append(", ");
         }
 
         String itemSummary = items.toString().replaceAll(", $", "");
-        String address = userRepository.findById(user.getId())
-                .map(u -> String.join(", ", u.getTown(), u.getCity(), u.getState(), u.getCountry()))
-                .orElse("Unknown");
+        String address = userRepository.findById(user.getId()).map(u ->
+                String.join(", ", u.getTown(), u.getCity(), u.getState(), u.getCountry())
+        ).orElseThrow(() -> new InvalidArgumentException("User address not found"));
 
-        try {
-            RazorpayClient razorpay = new RazorpayClient(razorpayKeyId, razorpayKeySecret);
+        boolean isFirstOrder = repository.countByUserId(user.getId()) == 0;
+        double discount = isFirstOrder ? Math.round(total * firstOrderDiscountRate * 100.0) / 100.0 : 0.0;
+        double subtotal = total - discount;
+        double cgst = Math.round(subtotal * cgstRate * 100.0) / 100.0;
+        double sgst = Math.round(subtotal * sgstRate * 100.0) / 100.0;
+        double gst = cgst + sgst;
+        double finalAmount = subtotal + gst;
 
-            // ✅ Step 1: Apply 1% discount if first order
-            boolean isFirstOrder = repository.countByUserId(user.getId()) == 0;
-            double discount = isFirstOrder ? total * 0.01 : 0.0;
+        String receiptId = "ORN-" + UUID.randomUUID();
 
-            double subtotal = total - discount;
+        Order razorpayOrder = razorpayService.createOrder(BigDecimal.valueOf(finalAmount), receiptId);
+        razorpayService.savePayment(razorpayOrder.get("id"), null, null, BigDecimal.valueOf(finalAmount), "ORNAMENTS", null);
 
-            // ✅ Split GST into CGST + SGST (1.5% + 1.5%)
-            double cgst = Math.round(subtotal * 0.015 * 100.0) / 100.0;
-            double sgst = Math.round(subtotal * 0.015 * 100.0) / 100.0;
-            double gst = cgst + sgst;
+        OrderHistory order = OrderHistory.builder()
+                .orderId(receiptId)
+                .userId(user.getId())
+                .customerName(user.getUsername())
+                .razorpayOrderId(razorpayOrder.get("id").toString())
+                .customerType(user.getRole().toLowerCase())
+                .planType("ORNAMENT")
+                .planName(itemSummary)
+                .duration("-")
+                .amount(finalAmount)
+                .paymentMethod("PENDING")
+                .status("pending")
+                .address(address)
+                .createdAt(LocalDateTime.now())
+                .cgst(cgst)
+                .sgst(sgst)
+                .gst(gst)
+                .build();
 
-            double finalAmount = subtotal + gst;
+        repository.save(order);
 
-            // ✅ Create Razorpay Order
-            JSONObject orderRequest = new JSONObject();
-            orderRequest.put("amount", Math.round(finalAmount * 100)); // in paise
-            orderRequest.put("currency", "INR");
-            orderRequest.put("receipt", "rcpt_" + UUID.randomUUID().toString().substring(0, 10));
+        Map<String, Object> response = new HashMap<>();
+        response.put("orderId", razorpayOrder.get("id"));
+        response.put("amount", finalAmount);
+        response.put("currency", "INR");
+        response.put("key", razorpayService.getKeyId());
+        response.put("receipt", receiptId);
 
-            Order razorpayOrder = razorpay.orders.create(orderRequest);
+        return response;
+    }
 
-            // ✅ Save Order
-            OrderHistory order = OrderHistory.builder()
-                    .orderId("ORD-" + LocalDateTime.now().getYear() + "-" + UUID.randomUUID().toString().substring(0, 6).toUpperCase())
-                    .userId(user.getId())
-                    .customerName(user.getUsername())
-                    .customerType(user.getRole().toLowerCase())
-                    .planType("ORNAMENT")
-                    .planName(itemSummary)
-                    .duration("-")
-                    .amount(finalAmount)
-                    .paymentMethod("RAZORPAY")
-                    .status("pending")
-                    .address(address)
-                    .createdAt(LocalDateTime.now())
-                    .razorpayOrderId(razorpayOrder.get("id"))
-                    .receiptId(razorpayOrder.get("receipt"))
-                    .paymentStatus("created")
-                    .cgst(cgst)
-                    .sgst(sgst)
-                    .gst(gst)
-                    .build();
+    @Transactional
+    public RazorpayPayment verifyCheckoutOrnamentPayment(OrnamentPaymentCallbackRequest request, UserPrincipal user) {
+        boolean isValid = razorpayService.verifySignature(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature()
+        );
 
-            // ✅ Clear cart
-            cartRepo.deleteByUserId(user.getId());
+        if (!isValid) {
+            throw new InvalidArgumentException("Invalid payment signature");
+        }
 
-            // ✅ Commission Logic (unchanged)
-            User userEntity = userRepository.findById(user.getId()).orElseThrow();
-            Long currentReferrerId = userEntity.getReferredBy();
+        RazorpayPayment saved = razorpayService.savePayment(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature(),
+                request.getAmount(),
+                "ORNAMENTS",
+                null
+        );
+
+        OrderHistory order = repository.findByRazorpayOrderId(request.getRazorpayOrderId())
+                .orElseThrow(() -> new InvalidArgumentException("Order not found"));
+
+        order.setStatus("confirmed");
+        order.setPaymentMethod("RAZORPAY");
+        order.setRazorpayPaymentId(request.getRazorpayPaymentId());
+        order.setRazorpayOrderId(request.getRazorpayOrderId());
+        order.setRazorpaySignature(request.getRazorpaySignature());
+        repository.save(order);
+
+        cartRepo.deleteByUserId(user.getId());
+
+        User userEntity = userRepository.findById(user.getId())
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
+
+        boolean isFirstOrder = commissionRepo.countByUserId(user.getId()) == 0;
+
+        if (isFirstOrder) {
+            Long referrerId = userEntity.getReferredBy();
             int level = 1;
+            while (referrerId != null && level <= 3) {
+                Optional<User> refOpt = userRepository.findById(referrerId);
+                if (refOpt.isEmpty() || !"PARTNER".equalsIgnoreCase(refOpt.get().getRole())) break;
 
-            while (currentReferrerId != null && level <= 3) {
-                Optional<User> referrerOpt = userRepository.findById(currentReferrerId);
-                if (referrerOpt.isEmpty()) break;
-
-                User referrer = referrerOpt.get();
-                if (!"PARTNER".equalsIgnoreCase(referrer.getRole())) break;
-
-                double commissionPercent = switch (level) {
+                User ref = refOpt.get();
+                double percent = switch (level) {
                     case 1 -> level1Commission;
                     case 2 -> level2Commission;
                     case 3 -> level3Commission;
                     default -> 0.0;
                 };
 
-                double commissionAmount = finalAmount * commissionPercent;
-
-                Commission commission = Commission.builder()
-                        .partnerId(referrer.getId())
-                        .userId(userEntity.getId())
+                double commissionAmt = Math.round(request.getAmount().doubleValue() * percent * 100.0) / 100.0;
+                Commission c = Commission.builder()
+                        .partnerId(ref.getId())
+                        .userId(user.getId())
                         .orderType("ORNAMENT")
-                        .orderAmount(finalAmount)
-                        .commissionAmount(commissionAmount)
+                        .orderAmount(request.getAmount().doubleValue())
+                        .commissionAmount(commissionAmt)
                         .level(level)
                         .createdAt(LocalDateTime.now())
                         .build();
-                commissionRepo.save(commission);
-
-                currentReferrerId = referrer.getReferredBy();
+                commissionRepo.save(c);
+                referrerId = ref.getReferredBy();
                 level++;
-                continue;
             }
-
-            OrderHistory savedOrder = repository.save(order);
-
-            // ✅ Return response
-            Map<String, Object> response = new HashMap<>();
-            response.put("order", savedOrder);
-            response.put("razorpayOrderId", razorpayOrder.get("id"));
-            response.put("amount", Math.round(finalAmount * 100));
-            response.put("currency", "INR");
-            response.put("key", razorpayKeyId);
-            response.put("discount", discount);
-            response.put("cgst", cgst);
-            response.put("sgst", sgst);
-            response.put("gst", gst);
-
-            return response;
-
-        } catch (RazorpayException e) {
-            throw new InvalidArgumentException("Error creating Razorpay order: " + e.getMessage());
         }
+
+        return saved;
     }
-
-
-
 
     public void verifyPayment(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {
         try {

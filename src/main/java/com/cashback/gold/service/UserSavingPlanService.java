@@ -5,9 +5,11 @@ import com.cashback.gold.entity.*;
 import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.*;
 import com.cashback.gold.security.UserPrincipal;
+import com.razorpay.Order;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.*;
 
@@ -20,6 +22,7 @@ public class UserSavingPlanService {
     private final UserSavingEnrollmentRepository enrollRepo;
     private final UserSavingPaymentRepository paymentRepo;
     private final GoldPurchaseOrderService goldPurchaseOrderService;
+    private final RazorpayService razorpayService;
 
     public SavingPlanEnrollmentResponse enroll(SavingPlanEnrollRequest request, UserPrincipal principal) {
         User user = userRepo.findById(principal.getId()).orElseThrow();
@@ -40,12 +43,101 @@ public class UserSavingPlanService {
         return buildResponse(enrollment, new ArrayList<>());
     }
 
-    public SavingPlanEnrollmentResponse payMonthly(SavingPlanPaymentRequest request, UserPrincipal principal) {
-        User user = userRepo.findById(principal.getId()).orElseThrow();
-        UserSavingEnrollment enrollment = enrollRepo.findById(request.getEnrollmentId()).orElseThrow();
+//    public SavingPlanEnrollmentResponse payMonthly(SavingPlanPaymentRequest request, UserPrincipal principal) {
+//        User user = userRepo.findById(principal.getId()).orElseThrow();
+//        UserSavingEnrollment enrollment = enrollRepo.findById(request.getEnrollmentId()).orElseThrow();
+//
+//        if (!enrollment.getUser().getId().equals(user.getId()))
+//            throw new InvalidArgumentException("Unauthorized");
+//
+//        int currentMonth = enrollment.getPayments().size() + 1;
+//        int totalMonthsAllowed = 12 + (enrollment.getExtraMonths() != null ? enrollment.getExtraMonths() : 0);
+//
+//        if (currentMonth > totalMonthsAllowed) {
+//            throw new InvalidArgumentException("Plan already completed");
+//        }
+//
+//        boolean onTime = LocalDate.now().getDayOfMonth() <= 5;
+//
+//        double goldRatePerGram = goldPurchaseOrderService.getCurrentGoldRate();
+//        double goldGrams = request.getAmountPaid() / goldRatePerGram;
+//
+//        double bonus = 0.0;
+//        if (onTime) {
+//            if (currentMonth == 4 || currentMonth == 10) {
+//                bonus = request.getAmountPaid() * 0.10;
+//            } else if (currentMonth == 12) {
+//                bonus = request.getAmountPaid() * 0.05;
+//            }
+//        }
+//
+//        // Save payment
+//        UserSavingPayment payment = UserSavingPayment.builder()
+//                .enrollment(enrollment)
+//                .month(currentMonth)
+//                .paymentDate(LocalDate.now())
+//                .amountPaid(request.getAmountPaid())
+//                .goldGrams(goldGrams)
+//                .bonusApplied(bonus)
+//                .onTime(onTime)
+//                .build();
+//        paymentRepo.save(payment);
+//
+//        // Update user progress
+//        enrollment.setAccumulatedAmount(enrollment.getAccumulatedAmount() + request.getAmountPaid());
+//        enrollment.setAccumulatedGoldGrams(enrollment.getAccumulatedGoldGrams() + goldGrams);
+//        enrollment.setTotalBonus(enrollment.getTotalBonus() + bonus);
+//        enrollRepo.save(enrollment);
+//
+//        List<UserSavingPayment> allPayments = paymentRepo.findByEnrollment(enrollment);
+//        return buildResponse(enrollment, allPayments);
+//    }
+    public Map<String, Object> initiatePayMonthly(SavingPlanPaymentRequest request, UserPrincipal principal) {
+        User user = userRepo.findById(principal.getId())
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
 
-        if (!enrollment.getUser().getId().equals(user.getId()))
+        UserSavingEnrollment enrollment = enrollRepo.findById(request.getEnrollmentId())
+                .orElseThrow(() -> new InvalidArgumentException("Enrollment not found"));
+
+        if (!enrollment.getUser().getId().equals(user.getId())) {
             throw new InvalidArgumentException("Unauthorized");
+        }
+
+        Order order = razorpayService.createOrder(
+                BigDecimal.valueOf(request.getAmountPaid()),
+                "PM_" + UUID.randomUUID().toString().replace("-", "").substring(0, 30)
+        );
+
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("razorpayOrderId", order.get("id"));
+        response.put("amount", request.getAmountPaid());
+        response.put("enrollmentId", request.getEnrollmentId());
+
+        return response;
+    }
+
+    public SavingPlanEnrollmentResponse  payMonthlyCallback(PaymentCallbackRequest request, UserPrincipal principal) {
+
+        boolean valid = razorpayService.verifySignature(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature()
+        );
+
+        if (!valid) {
+            throw new InvalidArgumentException("Invalid Razorpay payment signature.");
+        }
+
+        User user = userRepo.findById(principal.getId())
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
+
+        UserSavingEnrollment enrollment = enrollRepo.findById(request.getEnrollmentId())
+                .orElseThrow(() -> new InvalidArgumentException("Enrollment not found"));
+
+        if (!enrollment.getUser().getId().equals(user.getId())) {
+            throw new InvalidArgumentException("Unauthorized");
+        }
 
         int currentMonth = enrollment.getPayments().size() + 1;
         int totalMonthsAllowed = 12 + (enrollment.getExtraMonths() != null ? enrollment.getExtraMonths() : 0);
@@ -55,7 +147,6 @@ public class UserSavingPlanService {
         }
 
         boolean onTime = LocalDate.now().getDayOfMonth() <= 5;
-
         double goldRatePerGram = goldPurchaseOrderService.getCurrentGoldRate();
         double goldGrams = request.getAmountPaid() / goldRatePerGram;
 
@@ -68,7 +159,17 @@ public class UserSavingPlanService {
             }
         }
 
-        // Save payment
+        // Save Razorpay payment details
+        razorpayService.savePayment(
+                request.getRazorpayOrderId(),
+                request.getRazorpayPaymentId(),
+                request.getRazorpaySignature(),
+                BigDecimal.valueOf(request.getAmountPaid()),
+                "PAY_MONTHLY",
+                enrollment.getId()
+        );
+
+        // Save monthly payment
         UserSavingPayment payment = UserSavingPayment.builder()
                 .enrollment(enrollment)
                 .month(currentMonth)
@@ -77,10 +178,13 @@ public class UserSavingPlanService {
                 .goldGrams(goldGrams)
                 .bonusApplied(bonus)
                 .onTime(onTime)
+                .razorpaySignature(request.getRazorpaySignature())
+                .razorpayPaymentId(request.getRazorpayPaymentId())
+                .razorpayOrderId(request.getRazorpayOrderId())
                 .build();
         paymentRepo.save(payment);
 
-        // Update user progress
+        // Update enrollment with new totals
         enrollment.setAccumulatedAmount(enrollment.getAccumulatedAmount() + request.getAmountPaid());
         enrollment.setAccumulatedGoldGrams(enrollment.getAccumulatedGoldGrams() + goldGrams);
         enrollment.setTotalBonus(enrollment.getTotalBonus() + bonus);
