@@ -3,6 +3,14 @@ import { useEffect, useState, useState as useStateReact } from 'react';
 import axiosInstance from '../../../utils/axiosInstance';
 import Portal from '../Portal';
 
+// Razorpay type declaration for window
+declare global {
+  interface Window {
+    Razorpay?: any;
+    RAZORPAY_KEY_ID?: string;
+  }
+}
+
 
 // --- Interfaces & Helpers ---
 interface PlanFromApi { id: number; name: string; duration: string; amount: string; description: string; status: "ACTIVE" | "INACTIVE"; keyPoint1: string; keyPoint2: string; keyPoint3: string; }
@@ -47,6 +55,11 @@ const ChitJewelsPlans = () => {
   // --- NEW STATE FOR ORDER SUBMISSION ---
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  // Payment summary popup state
+  const [showPaymentSummary, setShowPaymentSummary] = useState(false);
+  // Final payment result popup state
+  const [finalPaymentResult, setFinalPaymentResult] = useState<any | null>(null);
+  const [enrollmentId, setEnrollmentId] = useState<number | null>(null);
 
   // --- DATA FETCHING (Unchanged) ---
   useEffect(() => {
@@ -77,31 +90,100 @@ const ChitJewelsPlans = () => {
   }, [selectedPlan]);
   
   // --- NEW FUNCTION TO HANDLE PLAN SELECTION AND API POST ---
-  const handleChoosePlan = async () => {
-    if (!selectedPlan) return;
+  // Show payment summary popup after choosing plan
+  const handleChoosePlan = () => {
+    setShowPaymentSummary(true);
+  };
 
+  // Handle payment flow: enroll, initiate payment, callback, show result
+  // Razorpay real integration
+  const handleMakePayment = async () => {
+    if (!selectedPlan) return;
     setIsSubmitting(true);
     setSubmitError(null);
-
-    const orderPayload = {
-      planType: "CHIT",
-      planName: selectedPlan.name,
-      duration: selectedPlan.duration,
-      amount: parseAmount(selectedPlan.amount),
-      paymentMethod: "Razorpay"
-    };
-
     try {
-      await axiosInstance.post('/api/saving-plans/enroll', orderPayload);
-      
-      // On success
-      alert(`Successfully placed order for "${selectedPlan.name}"! You will be redirected for payment.`);
-      setSelectedPlan(null); // Close the modal
+      // 1. Enroll user in plan
+      const enrollRes = await axiosInstance.post('/api/user-savings/enroll', {
+        planName: selectedPlan.name,
+        duration: selectedPlan.duration,
+        amount: parseAmount(selectedPlan.amount),
+        paymentMethod: "Razorpay"
+      });
+      const enrollmentId = enrollRes.data.enrollmentId;
+      setEnrollmentId(enrollmentId);
 
-    } catch (err) {
-      console.error("Failed to submit order:", err);
-      setSubmitError("Sorry, we couldn't process your order at this time. Please try again.");
-    } finally {
+      // 2. Initiate monthly payment
+      const initiateRes = await axiosInstance.post('/api/user-savings/pay-monthly/initiate', {
+        enrollmentId,
+        amount: parseAmount(selectedPlan.monthlyPayment)
+      });
+      const razorpayOrderId = initiateRes.data.razorpayOrderId;
+      const amount = parseAmount(selectedPlan.monthlyPayment);
+
+      // 3. Open Razorpay checkout
+      const options = {
+        key: window.RAZORPAY_KEY_ID, // Razorpay key (set on window)
+        amount: amount * 100, // in paise
+        currency: 'INR',
+        name: 'Chit Jewels',
+        description: selectedPlan.name,
+        order_id: razorpayOrderId,
+        handler: async function (response: any) {
+          // On payment success, call callback API
+          try {
+            const paymentCallbackRes = await axiosInstance.post('/api/user-savings/pay-monthly/callback', {
+              enrollmentId,
+              razorpayOrderId,
+              paymentStatus: 'success',
+              amountPaid: amount,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature
+            });
+            setFinalPaymentResult(paymentCallbackRes.data);
+            setShowPaymentSummary(false);
+          } catch (err) {
+            setSubmitError("Payment succeeded but callback failed. Please contact support.");
+          }
+        },
+        prefill: {
+          name: '',
+          email: '',
+          contact: ''
+        },
+        theme: {
+          color: '#7a1335'
+        },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+          }
+        }
+      };
+      // Load Razorpay script if not present
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => {
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        };
+        document.body.appendChild(script);
+      } else {
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      }
+    } catch (err: any) {
+      console.error("Payment flow error:", err);
+      let apiError = "Sorry, we couldn't process your payment at this time. Please try again.";
+      if (err?.response) {
+        if (typeof err.response.data === 'string' && err.response.data) {
+          apiError = err.response.data;
+        } else if (err.response.data?.message) {
+          apiError = err.response.data.message;
+        }
+      }
+      setSubmitError(apiError);
       setIsSubmitting(false);
     }
   };
@@ -217,10 +299,10 @@ const ChitJewelsPlans = () => {
           </div>
         </div>
      
-        {selectedPlan && (
+        {selectedPlan && !showPaymentSummary && (
           <Portal>
             <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
-            <div className="bg-white rounded-2xl p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative animate-fade-in text-xs">
+              <div className="bg-white rounded-2xl p-4 max-w-3xl w-full max-h-[90vh] overflow-y-auto relative animate-fade-in text-xs">
                 <button onClick={() => setSelectedPlan(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl" disabled={isSubmitting}>×</button>
                 <div className="text-center mb-4">
                   <h3 className="font-bold text-gray-900 mb-1 text-xs">{selectedPlan.name}</h3>
@@ -247,6 +329,77 @@ const ChitJewelsPlans = () => {
                   >
                     {isSubmitting ? 'Processing...' : 'Choose This Plan'}
                   </button>
+                </div>
+              </div>
+            </div>
+          </Portal>
+        )}
+
+        {/* Payment Summary Popup */}
+        {selectedPlan && showPaymentSummary && (
+          <Portal>
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-4 max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-fade-in text-xs">
+                <button onClick={() => setShowPaymentSummary(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl" disabled={isSubmitting}>×</button>
+                <div className="text-center mb-4">
+                  <h3 className="font-bold text-gray-900 mb-1 text-xs">Payment Summary</h3>
+                  <div className="font-bold text-[#7a1335] mb-1 text-xs">{selectedPlan.name}</div>
+                  <div className="text-gray-600 mb-2 text-xs">Duration: {selectedPlan.duration}</div>
+                  <div className="text-gray-600 mb-2 text-xs">Total Amount: {selectedPlan.amount}</div>
+                  <div className="bg-yellow-50 px-2 py-1 rounded-lg inline-block text-xs"><span className="font-semibold text-yellow-800">Monthly Payment: {selectedPlan.monthlyPayment}</span></div>
+                  <div className="mt-2 text-xs text-gray-700">Payment Method: <span className="font-semibold">Razorpay</span></div>
+                </div>
+                {submitError && <div className="text-center text-red-600 mb-2 bg-red-50 p-2 rounded-lg text-xs">{submitError}</div>}
+                <div className="flex space-x-2">
+                  <button onClick={() => setShowPaymentSummary(false)} className="flex-1 py-2 px-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-xs" disabled={isSubmitting}>Back</button>
+                  <button 
+                    onClick={handleMakePayment}
+                    className="flex-1 py-2 px-2 bg-[#7a1335] text-white rounded-lg font-semibold hover:bg-[#991313] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? 'Processing...' : 'Make Payment'}
+                  </button>
+                </div>
+              </div>
+            </div>
+          </Portal>
+        )}
+        {/* Final Payment Result Popup */}
+        {finalPaymentResult && (
+          <Portal>
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-4 max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-fade-in text-xs">
+                <button onClick={() => { setFinalPaymentResult(null); setSelectedPlan(null); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">×</button>
+                <div className="text-center mb-4">
+                  <h3 className="font-bold text-[#7a1335] mb-2 text-base">Payment Successful!</h3>
+                  <div className="font-bold text-gray-900 mb-1 text-xs">{finalPaymentResult.planName}</div>
+                  <div className="text-gray-600 mb-2 text-xs">Start Date: {finalPaymentResult.startDate}</div>
+                  <div className="text-gray-600 mb-2 text-xs">Status: {finalPaymentResult.status}</div>
+                  <div className="text-gray-600 mb-2 text-xs">Total Amount Paid: <span className="font-bold">₹{finalPaymentResult.totalAmountPaid}</span></div>
+                  <div className="text-gray-600 mb-2 text-xs">Total Gold Accumulated: <span className="font-bold">{finalPaymentResult.totalGoldAccumulated?.toFixed(3)}g</span></div>
+                  <div className="text-gray-600 mb-2 text-xs">Total Bonus: <span className="font-bold">₹{finalPaymentResult.totalBonus}</span></div>
+                </div>
+                <div className="mb-4">
+                  <h4 className="font-semibold text-gray-900 mb-2 text-xs">Payments:</h4>
+                  <div className="space-y-2">
+                    {finalPaymentResult.payments && finalPaymentResult.payments.length > 0 ? (
+                      finalPaymentResult.payments.map((p: any, idx: number) => (
+                        <div key={idx} className="flex flex-col text-xs bg-yellow-50 rounded p-2 mb-1">
+                          <div>Month: {p.month}</div>
+                          <div>Date: {p.paymentDate}</div>
+                          <div>Amount Paid: ₹{p.amountPaid}</div>
+                          <div>Gold Grams: {p.goldGrams?.toFixed(3)}</div>
+                          <div>Bonus Applied: ₹{p.bonusApplied}</div>
+                          <div>On Time: {p.onTime ? 'Yes' : 'No'}</div>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-gray-500">No payments yet.</div>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-center">
+                  <button onClick={() => { setFinalPaymentResult(null); setSelectedPlan(null); }} className="py-2 px-6 rounded bg-[#7a1335] text-white font-semibold transition-transform hover:scale-105">Close</button>
                 </div>
               </div>
             </div>
