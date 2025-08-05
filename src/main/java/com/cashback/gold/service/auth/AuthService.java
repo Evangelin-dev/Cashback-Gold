@@ -244,6 +244,10 @@ public class AuthService {
             throw new InvalidArgumentException("User is not approved by admin");
         }
 
+        if (!user.getRole().equalsIgnoreCase("ADMIN")) {
+            throw new InvalidArgumentException("Only ADMIN users are allowed to login here");
+        }
+
         if (user.getPassword() == null || !passwordEncoder.matches(request.getPassword(), user.getPassword())) {
             throw new InvalidArgumentException("Invalid password");
         }
