@@ -113,10 +113,11 @@ const BuyOrnamentsPage = () => {
     }
   };
   
-  const getProductWeight = (product: Product) => {
-    const goldComponent = product.priceBreakups?.find(pb => pb.component.toLowerCase().includes('gold'));
-    return goldComponent ? `${goldComponent.weightG}g` : 'N/A';
-  };
+const getProductWeight = (product: Product) => {
+  if (!Array.isArray(product.priceBreakups)) return 'N/A';
+  const goldComponent = product.priceBreakups.find((pb: any) => pb.component && pb.component.toLowerCase().includes('gold'));
+  return goldComponent && goldComponent.netWeight != null ? `${goldComponent.netWeight}g` : 'N/A';
+};
   
   const toggleLike = (productId: number, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
@@ -497,7 +498,14 @@ const BuyOrnamentsPage = () => {
                       <div className="mt-auto">
                         <div className="text-center mb-3.5">
                           <div className="text-[1.1rem] font-bold text-[#7a1335] tracking-tight">
-                            {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(product.price)}
+                            {(() => {
+                              let totalPrice = NaN;
+                              if (Array.isArray(product.priceBreakups)) {
+                                totalPrice = product.priceBreakups.reduce((sum: number, pb: any) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
+                              }
+                              if (!Number.isFinite(totalPrice)) totalPrice = 0;
+                              return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(totalPrice);
+                            })()}
                           </div>
                           <div className="text-[0.7rem] text-[#64748b] mt-0.5">Inclusive of all taxes</div>
                         </div>

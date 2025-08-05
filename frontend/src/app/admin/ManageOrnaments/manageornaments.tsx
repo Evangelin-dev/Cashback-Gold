@@ -8,8 +8,7 @@ import {
   addOrnament,
   deleteOrnament,
   fetchAllOrnaments,
-  updateOrnament,
-  type OrnamentApiData,
+  updateOrnament
 } from "../../features/thunks/adminThunks";
 import type { Ornament } from "../../types/type";
 
@@ -56,7 +55,7 @@ const emptyFormState = {
   itemType: "", // Keep itemType for edit logic
 };
 
-const emptyBreakup = { component: "", goldRate18kt: "", netWeight: "", grossWeight: "", discount: "", finalValue: "" };
+const emptyBreakup = { component: "", netWeight: "", grossWeight: "", discount: "", finalValue: "" };
 
 const ManageOrnaments: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -216,30 +215,34 @@ const ManageOrnaments: React.FC = () => {
     }
 
     const warrantyValue = form.warranty === 'other' ? `${form.warrantyYears} years` : form.warranty;
-
-    // --- CONSTRUCT PAYLOAD FROM DROPDOWN STATES ---
     const totalGramValue = parseFloat(form.totalGram);
-    const data: OrnamentApiData = {
+    const data = {
       name: form.name,
       totalGram: totalGramValue,
-      price: totalGramValue, // legacy field for backend compatibility
-      gramPrice: form.gramPrice ? parseFloat(form.gramPrice as any) : undefined, // per gram price
-      totalPrice: form.totalGram && form.gramPrice ? totalGramValue * parseFloat(form.gramPrice as any) : undefined, // calculated
+      price: 0, // required by type but not sent to API
+      gramPrice: 0,
+      totalPrice: 0,
       category: mainCategory,
       subCategory: subCategory,
-      gender: subCategory, // The subCategory (Men, Women, etc.) maps to gender
+      gender: form.gender || subCategory,
       itemType: item === "Other" ? customItem : item,
+      description: form.description,
       description1: form.description1,
       description2: form.description2,
       description3: form.description3,
-      description: form.description,
       material: form.material,
       purity: form.purity,
       quality: form.quality,
       warranty: warrantyValue,
       details: form.details,
+      origin: form.origin ? form.origin : "",
+      makingChargePercent: form.makingChargePercent ? parseFloat(form.makingChargePercent) : 0,
       priceBreakups: form.priceBreakups.map((p: any) => ({
-        component: p.component, goldRate18kt: parseFloat(p.goldRate18kt), netWeight: parseFloat(p.netWeight), grossWeight: parseFloat(p.grossWeight), discount: parseFloat(p.discount), finalValue: parseFloat(p.finalValue)
+        component: p.component,
+        netWeight: p.netWeight === "" || p.netWeight === undefined ? null : parseFloat(p.netWeight),
+        grossWeight: p.grossWeight === "" || p.grossWeight === undefined ? null : parseFloat(p.grossWeight),
+        discount: p.discount === "" ? null : parseFloat(p.discount),
+        finalValue: p.finalValue === "" ? null : parseFloat(p.finalValue)
       }))
     };
 
@@ -257,11 +260,40 @@ const ManageOrnaments: React.FC = () => {
       resetAndHideForm();
       dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
     } catch (err: any) {
-      alert(`Error: ${err.message || 'An unknown error occurred'}`);
+      console.error('Error in handleFinalSave:', err);
+      let errorMsg = 'An unknown error occurred';
+      if (err && typeof err === 'object') {
+        if (err.message) errorMsg = err.message;
+        else if (err.response && err.response.data && err.response.data.message) errorMsg = err.response.data.message;
+        else if (err.response && err.response.data) errorMsg = JSON.stringify(err.response.data);
+      } else if (typeof err === 'string') {
+        errorMsg = err;
+      }
+      alert(`Error: ${errorMsg}`);
     }
   };
 
-  const handleDelete = async (id: number) => { if (window.confirm("Are you sure?")) { try { await dispatch(deleteOrnament(id)).unwrap(); alert("Ornament deleted."); dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize })); } catch (err: any) { alert(`Error: ${err.message || 'An unknown error occurred'}`); } } };
+ 
+  const handleDelete = async (id: number) => {
+    if (window.confirm("Are you sure?")) {
+      try {
+        await dispatch(deleteOrnament(id)).unwrap();
+        alert("Ornament deleted.");
+        dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
+      } catch (err: any) {
+        console.error('Error in handleDelete:', err);
+        let errorMsg = 'An unknown error occurred';
+        if (err && typeof err === 'object') {
+          if (err.message) errorMsg = err.message;
+          else if (err.response && err.response.data && err.response.data.message) errorMsg = err.response.data.message;
+          else if (err.response && err.response.data) errorMsg = JSON.stringify(err.response.data);
+        } else if (typeof err === 'string') {
+          errorMsg = err;
+        }
+        alert(`Error: ${errorMsg}`);
+      }
+    }
+  };
   const handleBreakupChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => { const { name, value } = e.target; const updatedBreakups = form.priceBreakups.map((item: any, i: number) => i === index ? { ...item, [name]: value } : item); setForm({ ...form, priceBreakups: updatedBreakups }); };
   const addBreakupRow = () => { setForm((f: any) => ({ ...f, priceBreakups: [...f.priceBreakups, emptyBreakup] })); };
   const handleBreakupDelete = (idx: number) => { setForm((f: any) => ({ ...f, priceBreakups: f.priceBreakups.filter((_: any, i: number) => i !== idx) })); };
@@ -303,6 +335,19 @@ const ManageOrnaments: React.FC = () => {
               {goldPriceError && <div className="text-red-500 text-xs mb-2">{goldPriceError}</div>}
               {/* Total Price calculated field */}
               <input type="number" name="totalPrice" placeholder="Total Price (auto-calculated)" value={form.totalPrice || (form.totalGram && form.gramPrice ? (parseFloat(form.totalGram) * parseFloat(form.gramPrice)).toFixed(2) : '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" />
+
+              {/* Making Charge Percent field */}
+              <input
+                type="number"
+                name="makingChargePercent"
+                placeholder="Making Charge Percent *"
+                value={form.makingChargePercent || ''}
+                onChange={handleChange}
+                className="mb-3 px-3 py-2 border rounded w-full"
+                required
+                min="0"
+                step="0.01"
+              />
 
               {/* --- RESTORED DROPDOWN UI --- */}
               <div className="mb-3 flex flex-col gap-3 bg-[#fbeaf0] p-4 rounded-lg shadow-inner">
@@ -361,21 +406,19 @@ const ManageOrnaments: React.FC = () => {
           </div>
 
           {!showPriceBreakup ? (<div className="flex gap-4 mt-8"><button onClick={handleProductFormSave} className="bg-[#7a1335] text-white font-semibold py-2 px-6 rounded hover:bg-[#a31d4b]">Next</button><button onClick={resetAndHideForm} className="bg-gray-400 text-white font-semibold py-2 px-6 rounded hover:bg-gray-500">Cancel</button></div>) : (<div className="mt-10 border-t pt-8"><h3 className="text-xl font-bold text-[#7a1335] mb-4">Price Breakup</h3><div className="overflow-x-auto mb-6"><table className="min-w-full bg-white"><thead><tr className="border-b">
-  <th className="px-4 py-2 text-left text-[#7a1335]">Component</th>
-  <th className="px-4 py-2 text-left text-[#7a1335]">Gold Rate (18KT)</th>
-  <th className="px-4 py-2 text-left text-[#7a1335]">Net Weight (g)</th>
-  <th className="px-4 py-2 text-left text-[#7a1335]">Gross Weight (g)</th>
-  <th className="px-4 py-2 text-left text-[#7a1335]">Discount</th>
-  <th className="px-4 py-2 text-left text-[#7a1335]">Final Value</th>
-  <th className="px-4 py-2 text-left text-[#7a1335]">Actions</th>
+          <th className="px-4 py-2 text-left text-[#7a1335]">Component</th>
+          <th className="px-4 py-2 text-left text-[#7a1335]">Net Weight (g)</th>
+          <th className="px-4 py-2 text-left text-[#7a1335]">Gross Weight (g)</th>
+          <th className="px-4 py-2 text-left text-[#7a1335]">Discount</th>
+          <th className="px-4 py-2 text-left text-[#7a1335]">Final Value</th>
+          <th className="px-4 py-2 text-left text-[#7a1335]">Actions</th>
 </tr></thead><tbody>{form.priceBreakups.map((row: any, i: number) => (
   <tr key={i} className="border-b">
     <td className="p-2"><input type="text" name="component" placeholder="Component *" value={row.component} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2"><input type="number" name="goldRate18kt" placeholder="Gold Rate *" value={row.goldRate18kt} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2"><input type="number" name="netWeight" placeholder="Net Weight (g) *" value={row.netWeight} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2"><input type="number" name="grossWeight" placeholder="Gross Weight (g) *" value={row.grossWeight} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2"><input type="number" name="discount" placeholder="Discount *" value={row.discount} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2"><input type="number" name="finalValue" placeholder="Final Value *" value={row.finalValue} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2"><input type="number" name="netWeight" placeholder="Net Weight (g)" value={row.netWeight} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2"><input type="number" name="grossWeight" placeholder="Gross Weight (g)" value={row.grossWeight} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2"><input type="number" name="discount" placeholder="Discount" value={row.discount} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2"><input type="number" name="finalValue" placeholder="Final Value" value={row.finalValue} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
     <td className="p-2 flex gap-2"><button onClick={() => handleBreakupDelete(i)} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Delete</button></td>
   </tr>
 ))}</tbody></table></div><div className="flex gap-4"><button onClick={addBreakupRow} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Add Row</button></div><div className="flex gap-4 mt-8 border-t pt-6"><button onClick={handleFinalSave} disabled={status === 'loading'} className="bg-green-600 text-white font-semibold py-2 px-8 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">{status === 'loading' ? 'Saving...' : (form.id ? 'Update Product' : 'Save Product')}</button><button onClick={() => setShowPriceBreakup(false)} className="bg-gray-500 text-white font-semibold py-2 px-6 rounded">Back</button></div></div>)}

@@ -4,34 +4,27 @@ import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
 import Portal from '../../user/Portal';
 
-interface OrderFromApi {
-  id: number;
-  orderId: string;
+// API response type for /user/gold-plant/my-enrollments
+interface GoldPlantEnrollment {
+  enrollmentId: number;
   planName: string;
-  amount: number;
-  duration: string;
+  startDate: string;
   status: string;
-  address: string;
-  createdAt: string;
-  paymentMethod: string;
-  customerName: string;
-  customerType: 'user' | 'b2b' | 'partner' | 'admin';
-  planType: 'CHIT' | 'SIP' | 'SCHEME' | 'ORNAMENT';
+  investedAmount: number;
+  goldAccumulated: number;
+  lockinCompleted: boolean;
+  recalled: boolean;
 }
 
 interface ProcessedPlan {
   id: string;
   name: string;
-  amount: string;
-  duration: string;
   status: string;
-  orderId: string;
-  planType: 'CHIT' | 'SIP' | 'SCHEME' | 'ORNAMENT';
-  paymentMethod: string;
-  customerName: string;
-  customerType: 'user' | 'b2b' | 'partner' | 'admin';
-  createdAt: string;
-  address: string;
+  investedAmount: string;
+  goldAccumulated: string;
+  startDate: string;
+  lockinCompleted: boolean;
+  recalled: boolean;
 }
 
 // --- HELPER FUNCTION ---
@@ -47,33 +40,27 @@ const LGoldPlantScheme = () => {
   const [selectedTab, setSelectedTab] = useState('active');
   const [viewedPlan, setViewedPlan] = useState<ProcessedPlan | null>(null);
 
-  // --- DATA FETCHING from /api/orders/my ---
+  // --- DATA FETCHING from /user/gold-plant/my-enrollments ---
   useEffect(() => {
     const fetchUserSchemes = async () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get<OrderFromApi[]>('/api/orders/my');
-        // Filter for SCHEME plans only
-        const schemeOrders = (response.data || []).filter(order => order.planType === 'SCHEME');
-
-        const processed = schemeOrders.map((order): ProcessedPlan => ({
-          id: order.orderId,
-          name: order.planName,
-          amount: formatCurrency(order.amount),
-          duration: order.duration,
-          status: order.status.toLowerCase(),
-          orderId: order.orderId,
-          planType: order.planType,
-          paymentMethod: order.paymentMethod,
-          customerName: order.customerName,
-          customerType: order.customerType,
-          createdAt: order.createdAt,
-          address: order.address,
+        const response = await axiosInstance.get<GoldPlantEnrollment[]>('/user/gold-plant/my-enrollments');
+        const enrollments = response.data || [];
+        const processed = enrollments.map((enroll): ProcessedPlan => ({
+          id: enroll.enrollmentId.toString(),
+          name: enroll.planName,
+          status: enroll.status ? enroll.status.toLowerCase() : '',
+          investedAmount: formatCurrency(enroll.investedAmount),
+          goldAccumulated: enroll.goldAccumulated?.toFixed(4) + 'g',
+          startDate: enroll.startDate,
+          lockinCompleted: enroll.lockinCompleted,
+          recalled: enroll.recalled,
         }));
         setUserSchemePlans(processed);
       } catch (err) {
-        console.error("Failed to fetch user schemes:", err);
+        console.error("Failed to fetch user gold plant enrollments:", err);
         setError("Could not load your Gold Plant Schemes at this time.");
       } finally {
         setLoading(false);
@@ -84,7 +71,7 @@ const LGoldPlantScheme = () => {
 
   // --- DYNAMIC STATS BASED ON USER ORDERS ---
   const stats = useMemo(() => {
-    const active = userSchemePlans.filter(p => p.status === 'successful').length;
+    const active = userSchemePlans.filter(p => p.status === 'enrolled').length;
     const pending = userSchemePlans.filter(p => p.status === 'pending').length;
     const rejected = userSchemePlans.filter(p => p.status === 'rejected').length;
     return [
@@ -95,7 +82,7 @@ const LGoldPlantScheme = () => {
   }, [userSchemePlans]);
 
   const plansToShow = useMemo(() => {
-    if (selectedTab === 'active') return userSchemePlans.filter(p => p.status === 'successful');
+    if (selectedTab === 'active') return userSchemePlans.filter(p => p.status === 'enrolled');
     if (selectedTab === 'pending') return userSchemePlans.filter(p => p.status === 'pending');
     if (selectedTab === 'rejected') return userSchemePlans.filter(p => p.status === 'rejected');
     return [];
@@ -147,14 +134,26 @@ const LGoldPlantScheme = () => {
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h3 className="text-sm font-bold text-gray-800">{plan.name}</h3>
-                    <p className="text-xs text-gray-500">{plan.duration}</p>
+                    <p className="text-xs text-gray-500">Start Date: {plan.startDate}</p>
                   </div>
                   <div className="w-7 h-7 bg-gray-100 rounded flex-shrink-0"></div>
                 </div>
                 <div className="space-y-1">
                   <div className="flex justify-between items-center text-xs">
-                    <span className="text-gray-500">Investment Amount</span>
-                    <span className="font-semibold text-gray-800">{plan.amount}</span>
+                    <span className="text-gray-500">Invested Amount</span>
+                    <span className="font-semibold text-gray-800">{plan.investedAmount}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500">Gold Accumulated</span>
+                    <span className="font-semibold text-gray-800">{plan.goldAccumulated}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500">Lock-in Completed</span>
+                    <span className="font-semibold text-gray-800">{plan.lockinCompleted ? 'Yes' : 'No'}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-500">Recalled</span>
+                    <span className="font-semibold text-gray-800">{plan.recalled ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
@@ -180,15 +179,12 @@ const LGoldPlantScheme = () => {
               <button onClick={() => setViewedPlan(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
               <div className="text-center"><h3 className="text-lg font-bold text-[#6a0822] mb-2">{viewedPlan.name}</h3></div>
               <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600">
-                <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'successful' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
-                <div className="flex justify-between items-center"><span>Plan Type:</span><span className="font-semibold">{viewedPlan.planType}</span></div>
-                <div className="flex justify-between items-center"><span>Order ID:</span><span className="font-semibold">{viewedPlan.orderId}</span></div>
-                <div className="flex justify-between items-center"><span>Total Amount:</span><span className="font-semibold">{viewedPlan.amount}</span></div>
-                <div className="flex justify-between items-center"><span>Duration:</span><span className="font-semibold">{viewedPlan.duration}</span></div>
-                <div className="flex justify-between items-center"><span>Payment Method:</span><span className="font-semibold">{viewedPlan.paymentMethod}</span></div>
-                <div className="flex justify-between items-center"><span>Customer:</span><span className="font-semibold">{viewedPlan.customerName}</span></div>
-                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{new Date(viewedPlan.createdAt).toLocaleDateString()}</span></div>
-                <div className="flex justify-between items-start text-left"><span className="flex-shrink-0 mr-2">Address:</span><span className="font-semibold text-right">{viewedPlan.address}</span></div>
+                <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'enrolled' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
+                <div className="flex justify-between items-center"><span>Invested Amount:</span><span className="font-semibold">{viewedPlan.investedAmount}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{viewedPlan.goldAccumulated}</span></div>
+                <div className="flex justify-between items-center"><span>Lock-in Completed:</span><span className="font-semibold">{viewedPlan.lockinCompleted ? 'Yes' : 'No'}</span></div>
+                <div className="flex justify-between items-center"><span>Recalled:</span><span className="font-semibold">{viewedPlan.recalled ? 'Yes' : 'No'}</span></div>
+                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{viewedPlan.startDate ? new Date(viewedPlan.startDate).toLocaleDateString() : '-'}</span></div>
               </div>
             </div>
           </div>

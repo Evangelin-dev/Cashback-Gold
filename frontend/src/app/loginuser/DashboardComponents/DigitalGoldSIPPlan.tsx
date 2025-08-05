@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle, ShieldX, Sparkles, Star, TrendingUp, X } from 'lucide-react';
+import { Calendar, CheckCircle, ShieldX, Sparkles, Star, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
@@ -22,18 +22,12 @@ interface OrderFromApi {
 
 interface ProcessedSIPPlan {
   id: string;
-  name: string;
-  amount: string;
-  duration: string;
-  monthly: string;
+  schemeName: string;
+  totalPaid: string;
+  goldAccumulated: string;
+  activated: boolean;
+  recalled: boolean;
   status: string;
-  orderId: string;
-  planType: 'CHIT' | 'SIP' | 'SCHEME' | 'ORNAMENT';
-  paymentMethod: string;
-  customerName: string;
-  customerType: 'user' | 'b2b' | 'partner' | 'admin';
-  createdAt: string;
-  address: string;
 }
 
 // --- HELPER FUNCTIONS ---
@@ -55,32 +49,18 @@ const LDigitalGoldSIPPlan = () => {
       setLoading(true);
       setError(null);
       try {
-        const response = await axiosInstance.get<OrderFromApi[]>('/api/cashback-gold-user/my-enrollments');
-        const sipOrders = (response.data || []).filter(order => order.planType === 'SIP');
-
-        const processed = sipOrders.map((order): ProcessedSIPPlan => {
-          const totalAmount = order.amount;
-          const durationMonths = parseDurationMonths(order.duration);
-          const monthlyPayment = durationMonths > 0 ? totalAmount / durationMonths : 0;
-          return {
-            id: order.orderId,
-            name: order.planName,
-            amount: formatCurrency(totalAmount),
-            duration: order.duration,
-            monthly: formatCurrency(monthlyPayment),
-            status: order.status.toLowerCase(),
-            orderId: order.orderId,
-            planType: order.planType,
-            paymentMethod: order.paymentMethod,
-            customerName: order.customerName,
-            customerType: order.customerType,
-            createdAt: order.createdAt,
-            address: order.address,
-          };
-        });
-
+        const response = await axiosInstance.get('/api/cashback-gold-user/my-enrollments');
+        const enrollments = response.data || [];
+        const processed = enrollments.map((enrollment: any): ProcessedSIPPlan => ({
+          id: enrollment.enrollmentId?.toString() || '',
+          schemeName: enrollment.schemeName || '',
+          totalPaid: formatCurrency(enrollment.totalPaid || 0),
+          goldAccumulated: (enrollment.goldAccumulated || 0).toFixed(4) + 'g',
+          activated: !!enrollment.activated,
+          recalled: !!enrollment.recalled,
+          status: (enrollment.status || '').toLowerCase(),
+        }));
         setUserSIPPlans(processed);
-
       } catch (err) {
         console.error("Failed to fetch user SIP plans:", err);
         setError("Could not load your SIP plans at this time.");
@@ -93,20 +73,20 @@ const LDigitalGoldSIPPlan = () => {
 
   // --- DYNAMIC STATS BASED ON USER ORDERS ---
   const stats = useMemo(() => {
-    const active = userSIPPlans.filter(p => p.status === 'successful').length;
-    const pending = userSIPPlans.filter(p => p.status === 'pending').length;
-    const rejected = userSIPPlans.filter(p => p.status === 'rejected').length;
+    const active = userSIPPlans.filter(p => p.status === 'enrolled').length;
+    const recalled = userSIPPlans.filter(p => p.recalled).length;
+    const activated = userSIPPlans.filter(p => p.activated).length;
     return [
       { label: 'Active', count: active, icon: CheckCircle },
-      { label: 'pending', count: pending, icon: TrendingUp },
-      { label: 'Rejected', count: rejected, icon: ShieldX }
+      { label: 'Activated', count: activated, icon: Sparkles },
+      { label: 'Recalled', count: recalled, icon: ShieldX }
     ];
   }, [userSIPPlans]);
 
   const plansToShow = useMemo(() => {
-    if (selectedTab === 'active') return userSIPPlans.filter(p => p.status === 'successful');
-    if (selectedTab === 'pending') return userSIPPlans.filter(p => p.status === 'pending');
-    if (selectedTab === 'rejected') return userSIPPlans.filter(p => p.status === 'rejected');
+    if (selectedTab === 'active') return userSIPPlans.filter(p => p.status === 'enrolled');
+    if (selectedTab === 'activated') return userSIPPlans.filter(p => p.activated);
+    if (selectedTab === 'recalled') return userSIPPlans.filter(p => p.recalled);
     return [];
   }, [selectedTab, userSIPPlans]);
 
@@ -154,14 +134,15 @@ const LDigitalGoldSIPPlan = () => {
               <div key={plan.id} className="bg-white rounded-lg shadow-sm hover:shadow-md transition-shadow p-3 flex flex-col">
                 <div className="flex items-start justify-between mb-2">
                   <div>
-                    <h3 className="text-sm font-bold text-gray-800">{plan.name}</h3>
-                    <p className="text-xs text-gray-500">{plan.duration}</p>
+                    <h3 className="text-sm font-bold text-gray-800">{plan.schemeName}</h3>
                   </div>
                   <div className="w-7 h-7 bg-gray-100 rounded flex-shrink-0"></div>
                 </div>
                 <div className="space-y-1">
-                  <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Total Amount</span><span className="font-semibold text-gray-800">{plan.amount}</span></div>
-                  <div className="pt-2 border-t"><div className="flex justify-between items-center text-xs"><span className="text-gray-500">Monthly Payment</span><span className="font-bold text-[#6a0822]">{plan.monthly}</span></div></div>
+                  <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Total Paid</span><span className="font-semibold text-gray-800">{plan.totalPaid}</span></div>
+                  <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Gold Accumulated</span><span className="font-semibold text-gray-800">{plan.goldAccumulated}</span></div>
+                  <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Activated</span><span className="font-semibold text-gray-800">{plan.activated ? 'Yes' : 'No'}</span></div>
+                  <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Recalled</span><span className="font-semibold text-gray-800">{plan.recalled ? 'Yes' : 'No'}</span></div>
                 </div>
                 <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
                   <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
@@ -184,19 +165,13 @@ const LDigitalGoldSIPPlan = () => {
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
             <div className="bg-white rounded-xl p-4 max-w-xs w-full mx-auto relative shadow-xl">
               <button onClick={() => setViewedPlan(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
-              <div className="text-center"><h3 className="text-lg font-bold text-[#6a0822] mb-2">{viewedPlan.name}</h3></div>
+              <div className="text-center"><h3 className="text-lg font-bold text-[#6a0822] mb-2">{viewedPlan.schemeName}</h3></div>
               <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600">
-                <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'successful' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
-                <div className="flex justify-between items-center"><span>Plan Type:</span><span className="font-semibold">{viewedPlan.planType}</span></div>
-                <div className="flex justify-between items-center"><span>Order ID:</span><span className="font-semibold">{viewedPlan.orderId}</span></div>
-                <div className="flex justify-between items-center"><span>Total Amount:</span><span className="font-semibold">{viewedPlan.amount}</span></div>
-                <div className="flex justify-between items-center"><span>Monthly Payment:</span><span className="font-semibold">{viewedPlan.monthly || '-'}</span></div>
-                <div className="flex justify-between items-center"><span>Duration:</span><span className="font-semibold">{viewedPlan.duration}</span></div>
-                <div className="flex justify-between items-center"><span>Payment Method:</span><span className="font-semibold">{viewedPlan.paymentMethod}</span></div>
-                <div className="flex justify-between items-center"><span>Customer:</span><span className="font-semibold">{viewedPlan.customerName}</span></div>
-                <div className="flex justify-between items-center"><span>Customer Type:</span><span className="font-semibold capitalize">{viewedPlan.customerType}</span></div>
-                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{new Date(viewedPlan.createdAt).toLocaleDateString()}</span></div>
-                <div className="flex justify-between items-start text-left"><span className="flex-shrink-0 mr-2">Address:</span><span className="font-semibold text-right">{viewedPlan.address}</span></div>
+                <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'enrolled' ? 'bg-green-100 text-green-800' : viewedPlan.status === 'recalled' ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
+                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{viewedPlan.totalPaid}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{viewedPlan.goldAccumulated}</span></div>
+                <div className="flex justify-between items-center"><span>Activated:</span><span className="font-semibold">{viewedPlan.activated ? 'Yes' : 'No'}</span></div>
+                <div className="flex justify-between items-center"><span>Recalled:</span><span className="font-semibold">{viewedPlan.recalled ? 'Yes' : 'No'}</span></div>
               </div>
             </div>
           </div>

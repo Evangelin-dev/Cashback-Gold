@@ -1,40 +1,43 @@
-import { Award, Eye, Heart, Share2, Shield, ShoppingCart, Sparkles, Star, Zap, Loader, Plus, Minus } from 'lucide-react';
-import React, { useEffect, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
-import axiosInstance from '../../../../utils/axiosInstance';
-import { RootState } from '../../../../store';
+import { Award, Heart, Loader, Minus, Plus, Share2, Shield, ShoppingCart, Sparkles, Zap } from 'lucide-react';
+import { useEffect, useState } from "react";
 import { useSelector } from 'react-redux';
+import { useNavigate, useParams } from "react-router-dom";
+import { RootState } from '../../../../store';
+import axiosInstance from '../../../../utils/axiosInstance';
 
 // --- Interfaces to match your API response ---
-interface priceBreakup {
-  id: number;
+
+interface PriceBreakup {
   component: string;
-  goldRate18kt: number;
-  weightG: number;
+  netWeight: number | null;
+  grossWeight: number | null;
   discount: number;
-  finalValue: number;
+  finalValue?: number;
 }
 
 interface Product {
   id: number;
   name: string;
-  price: number;
+  totalGram: number;
   category: string;
   subCategory: string;
   gender: string;
+  itemType: string | null;
   description: string;
-  description1: string;
-  description2: string;
-  description3: string;
-  mainImage: string;
-  subImages: string[];
   material: string;
   purity: string;
   quality: string;
   warranty: string;
-  itemType: string | null;
   details: string;
-  priceBreakups: priceBreakup[];
+  origin: string;
+  makingChargePercent: number;
+  mainImage: string;
+  subImages: string[];
+  description1?: string;
+  description2?: string;
+  description3?: string;
+  priceBreakups: PriceBreakup[];
+  totalPrice?: number;
 }
 
 const JewelryProductPage = () => {
@@ -153,7 +156,20 @@ const JewelryProductPage = () => {
             </div>
 
             <div className="lg:col-span-6 space-y-4 flex flex-col">
-              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-white/20"><h1 className="text-2xl font-bold text-[#7a1335] mb-2">{product.name}</h1><div className="flex items-center space-x-3"><span className="text-3xl font-bold text-[#7a1335]">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}</span></div></div>
+              <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-white/20">
+                <h1 className="text-2xl font-bold text-[#7a1335] mb-2">{product.name}</h1>
+                <div className="flex items-center space-x-3">
+                  <span className="text-3xl font-bold text-[#7a1335]">
+                    {(() => {
+                      let totalPrice = typeof product.totalPrice === 'number' ? product.totalPrice : NaN;
+                      if (isNaN(totalPrice) && Array.isArray(product.priceBreakups)) {
+                        totalPrice = product.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
+                      }
+                      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice);
+                    })()}
+                  </span>
+                </div>
+              </div>
               <div className="grid grid-cols-2 gap-3">{[ { icon: Award, label: "Material", value: product.material }, { icon: Shield, label: "Purity", value: product.purity }, { icon: Sparkles, label: "Quality", value: product.quality }, { icon: Zap, label: "Warranty", value: product.warranty }].map((item, index) => (<div key={index} className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 group"><div className="flex items-center space-x-2"><item.icon className="w-4 h-4 text-[#7a1335] group-hover:scale-110 transition-transform" /><div><div className="text-xs text-[#7a1335]/70">{item.label}</div><div className="font-semibold text-[#7a1335] text-sm">{item.value}</div></div></div></div>))}</div>
 
               {/* --- NEW QUANTITY SELECTOR & UPDATED BUTTONS --- */}
@@ -182,7 +198,46 @@ const JewelryProductPage = () => {
             <div className="flex border-b border-[#7a1335]/20">{['details', 'pricing'].map((tab) => (<button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 font-medium text-sm transition-all duration-300 ${activeTab === tab ? 'text-[#7a1335] border-b-2 border-[#7a1335] bg-[#7a1335]/5' : 'text-[#7a1335]/70 hover:text-[#7a1335] hover:bg-[#7a1335]/5'}`}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>))}</div>
             <div className="p-6">
               {activeTab === 'details' && ( <div className="grid md:grid-cols-2 gap-6"> <div> <h3 className="font-bold text-[#7a1335] mb-3">{product.description}</h3> <div className="space-y-2">{keyFeatures.map((point, idx) => (<div key={idx} className="flex items-start space-x-2 group"><div className="w-2 h-2 bg-[#7a1335] rounded-full mt-2 flex-shrink-0 group-hover:scale-125 transition-transform"></div><span className="text-sm text-[#7a1335]/80">{point}</span></div>))}</div></div><div className="bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-xl p-4"><h4 className="font-semibold text-[#7a1335] mb-2">Care Instructions</h4><ul className="text-sm text-[#7a1335]/80 space-y-1"><li>• Store in provided jewelry box</li><li>• Clean with soft cloth regularly</li><li>• Avoid exposure to chemicals</li><li>• Professional cleaning recommended</li></ul></div></div>)}
-              {activeTab === 'pricing' && ( <div className="bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-xl p-4"> <h3 className="font-bold text-[#7a1335] mb-4">price Breakdown</h3> <div className="overflow-x-auto"> <table className="w-full text-sm"><thead><tr className="border-b border-[#7a1335]/20"><th className="text-left py-2 text-[#7a1335] font-semibold">Component</th><th className="text-left py-2 text-[#7a1335] font-semibold">Rate</th><th className="text-left py-2 text-[#7a1335] font-semibold">Weight</th><th className="text-left py-2 text-[#7a1335] font-semibold">Discount</th><th className="text-left py-2 text-[#7a1335] font-semibold">Final</th></tr></thead><tbody>{product.priceBreakups.map((row) => (<tr key={row.id} className="hover:bg-white/50 transition-colors"><td className="py-2 font-medium text-[#7a1335]">{row.component}</td><td className="py-2 text-[#7a1335]">{row.goldRate18kt.toFixed(2)}</td><td className="py-2 text-[#7a1335]">{row.weightG.toFixed(2)}g</td><td className="py-2 text-green-600 font-medium">{row.discount.toFixed(2)}</td><td className="py-2 font-bold text-[#7a1335]">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(row.finalValue)}</td></tr>))}</tbody></table><div className="mt-4 pt-4 border-t border-[#7a1335]/20 text-right"><div className="text-xl font-bold text-[#7a1335]">Total: {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.price)}</div></div></div></div>)}
+              {activeTab === 'pricing' && (
+                <div className="bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-xl p-4">
+                  <h3 className="font-bold text-[#7a1335] mb-4">Price Breakdown</h3>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-[#7a1335]/20">
+                          <th className="text-left py-2 text-[#7a1335] font-semibold">Component</th>
+                          <th className="text-left py-2 text-[#7a1335] font-semibold">Net Weight</th>
+                          <th className="text-left py-2 text-[#7a1335] font-semibold">Gross Weight</th>
+                          <th className="text-left py-2 text-[#7a1335] font-semibold">Discount</th>
+                          <th className="text-left py-2 text-[#7a1335] font-semibold">Final</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {product.priceBreakups.map((row, idx) => (
+                          <tr key={idx} className="hover:bg-white/50 transition-colors">
+                            <td className="py-2 font-medium text-[#7a1335]">{row.component}</td>
+                            <td className="py-2 text-[#7a1335]">{row.netWeight != null ? row.netWeight + 'g' : 'N/A'}</td>
+                            <td className="py-2 text-[#7a1335]">{row.grossWeight != null ? row.grossWeight + 'g' : 'N/A'}</td>
+                            <td className="py-2 text-green-600 font-medium">{row.discount != null ? row.discount : 0}</td>
+                            <td className="py-2 font-bold text-[#7a1335]">{row.finalValue != null ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(row.finalValue) : 'N/A'}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                    <div className="mt-4 pt-4 border-t border-[#7a1335]/20 text-right">
+                      <div className="text-xl font-bold text-[#7a1335]">
+                        Total: {(() => {
+                          let totalPrice = typeof product.totalPrice === 'number' ? product.totalPrice : NaN;
+                          if (isNaN(totalPrice) && Array.isArray(product.priceBreakups)) {
+                            totalPrice = product.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
+                          }
+                          return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice);
+                        })()}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           </div>
           
@@ -190,7 +245,25 @@ const JewelryProductPage = () => {
             <section className="mb-12">
               <h2 className="text-3xl font-bold text-[#7a1335] mb-8">Similar Products You May Like</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {similarProducts?.map((p) => (<div key={p.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer" onClick={() => navigate(`/buyornaments/${p.id}`)}><div className="aspect-square overflow-hidden"><img src={p.mainImage} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" /></div><div className="p-4"><h4 className="font-semibold text-gray-800 mb-1 truncate">{p.name}</h4><p className="text-lg font-bold text-[#7a1335] mb-2">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(p.price)}</p><button className="w-full bg-[#7a1335]/10 text-[#7a1335] py-2 px-3 rounded-lg text-sm font-medium hover:bg-[#7a1335] hover:text-white transition-all duration-300">View Details</button></div></div>))}
+                {similarProducts?.map((p) => {
+                  let totalPrice = typeof p.totalPrice === 'number' ? p.totalPrice : NaN;
+                  if (isNaN(totalPrice) && Array.isArray(p.priceBreakups)) {
+                    totalPrice = p.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
+                  }
+                  if (!Number.isFinite(totalPrice)) totalPrice = 0;
+                  return (
+                    <div key={p.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer" onClick={() => navigate(`/buyornaments/${p.id}`)}>
+                      <div className="aspect-square overflow-hidden">
+                        <img src={p.mainImage} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      </div>
+                      <div className="p-4">
+                        <h4 className="font-semibold text-gray-800 mb-1 truncate">{p.name}</h4>
+                        <p className="text-lg font-bold text-[#7a1335] mb-2">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice)}</p>
+                        <button className="w-full bg-[#7a1335]/10 text-[#7a1335] py-2 px-3 rounded-lg text-sm font-medium hover:bg-[#7a1335] hover:text-white transition-all duration-300">View Details</button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </section>
           )}

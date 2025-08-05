@@ -20,21 +20,16 @@ interface OrderFromApi {
   planType: 'CHIT' | 'SIP' | 'SCHEME' | 'ORNAMENT';
 }
 
+// Match chitjewels.tsx ProcessedPlan type
 interface ProcessedPlan {
   id: string;
   name: string;
-  target: string;
-  duration: string;
-  monthly: string;
+  startDate: string;
   status: string;
-  orderId: string;
-  amount: string;
-  customerName: string;
-  paymentMethod: string;
-  address: string;
-  createdAt: string;
-  customerType: 'user' | 'b2b' | 'partner' | 'admin';
-  planType: 'CHIT' | 'SIP' | 'SCHEME' | 'ORNAMENT';
+  totalAmountPaid: string;
+  totalGoldAccumulated: string;
+  totalBonus: string;
+  payments: any[];
 }
 
 // --- HELPER FUNCTIONS ---
@@ -42,6 +37,12 @@ const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { styl
 const parseDurationMonths = (durationStr: string): number => parseInt(durationStr, 10) || 1;
 
 const LChitJewelsSavingPlan = () => {
+  // --- NEXT PAYMENT HANDLER ---
+  // --- NEXT PAYMENT MODAL STATE ---
+  const [paymentModalPlan, setPaymentModalPlan] = useState<ProcessedPlan | null>(null);
+  const handleNextPayment = (plan: ProcessedPlan) => {
+    setPaymentModalPlan(plan);
+  };
   // --- STATE MANAGEMENT ---
   const [userChitPlans, setUserChitPlans] = useState<ProcessedPlan[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,26 +60,21 @@ useEffect(() => {
         // Fetch enrolled chit plans for the user
         const response = await axiosInstance.get('/api/user-savings/my-enrollments');
         const enrolledPlans = response.data || [];
-        // Map the API response to ProcessedPlan[]
+        // Map the API response to new format
         const processed = enrolledPlans.map((plan: any) => {
-          const totalAmount = plan.amount || 0;
-          const durationMonths = parseDurationMonths(plan.duration || '1');
-          const monthlyPayment = durationMonths > 0 ? totalAmount / durationMonths : 0;
+          let status = (plan.status || '').toLowerCase();
+          if (status === 'enrolled') status = 'successful';
+          if (status === 'pending') status = 'pending';
+          if (status === 'rejected' || status === 'failed') status = 'rejected';
           return {
-            id: plan.id?.toString() || '',
-            name: plan.planName || plan.name || '',
-            target: formatCurrency(totalAmount),
-            orderId: plan.orderId || plan.id?.toString() || '',
-            planType: plan.planType || 'CHIT',
-            duration: plan.duration || '',
-            amount: formatCurrency(totalAmount),
-            paymentMethod: plan.paymentMethod || '',
-            customerName: plan.customerName || '',
-            customerType: plan.customerType || '',
-            createdAt: plan.createdAt || '',
-            address: plan.address || '',
-            monthly: formatCurrency(monthlyPayment),
-            status: (plan.status || '').toLowerCase(),
+            id: plan.enrollmentId?.toString() || '',
+            name: plan.planName || '',
+            startDate: plan.startDate || '',
+            status,
+            totalAmountPaid: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(plan.totalAmountPaid || 0),
+            totalGoldAccumulated: (plan.totalGoldAccumulated || 0).toFixed(4) + 'g',
+            totalBonus: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(plan.totalBonus || 0),
+            payments: plan.payments || [],
           };
         });
         setUserChitPlans(processed);
@@ -158,19 +154,23 @@ useEffect(() => {
                     <div className="flex items-start justify-between mb-2">
                       <div>
                         <h3 className="text-sm font-bold text-gray-800">{plan.name}</h3>
-                        <p className="text-xs text-gray-500">{plan.duration}</p>
                       </div>
                       <div className="w-7 h-7 bg-gray-100 rounded flex-shrink-0"></div>
                     </div>
                     <div className="space-y-1 flex-1">
-                      <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Target Amount</span><span className="font-semibold text-gray-800">{plan.target}</span></div>
-                      <div className="pt-2 border-t"><div className="flex justify-between items-center text-xs"><span className="text-gray-500">Monthly Payment</span><span className="font-bold text-[#6a0822]">{plan.monthly}</span></div></div>
+                      <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Start Date</span><span className="font-semibold text-gray-800">{plan.startDate ? new Date(plan.startDate).toLocaleDateString() : '-'}</span></div>
+                      <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Total Paid</span><span className="font-semibold text-gray-800">{plan.totalAmountPaid}</span></div>
+                      <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Gold Accumulated</span><span className="font-semibold text-gray-800">{plan.totalGoldAccumulated}</span></div>
+                      <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Bonus</span><span className="font-semibold text-gray-800">{plan.totalBonus}</span></div>
                     </div>
                     <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
                       <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
+                      <button className="flex-1 bg-[#6a0822] text-white py-1.5 px-2 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold" onClick={() => handleNextPayment(plan)}>Next Payment</button>
                     </div>
                   </div>
                 ))}
+
+
               </div>
             ) : (
               <div className="bg-white rounded-xl shadow-sm p-6 text-center">
@@ -194,65 +194,63 @@ useEffect(() => {
               >
                 <X size={18} />
               </button>
-
               <div className="text-center">
                 <h3 className="text-lg font-bold text-[#6a0822] mb-2">{viewedPlan.name}</h3>
-
                 <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600">
                   <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'successful' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
-                  <div className="flex justify-between items-center">
-                    <span>Plan Type:</span>
-                    <span className="font-semibold">{viewedPlan.planType}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span>Order ID:</span>
-                    <span className="font-semibold">{viewedPlan.orderId}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span>Total Amount:</span>
-                    <span className="font-semibold">₹{viewedPlan.amount}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span>Monthly Payment:</span>
-                    <span className="font-semibold">{viewedPlan.monthly || '-'}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span>Duration:</span>
-                    <span className="font-semibold">{viewedPlan.duration}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span>Payment Method:</span>
-                    <span className="font-semibold">{viewedPlan.paymentMethod}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span>Customer:</span>
-                    <span className="font-semibold">{viewedPlan.customerName}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span>Customer Type:</span>
-                    <span className="font-semibold capitalize">{viewedPlan.customerType}</span>
-                  </div>
-
-                  <div className="flex justify-between items-center">
-                    <span>Start Date:</span>
-                    <span className="font-semibold">
-                      {new Date(viewedPlan.createdAt).toLocaleDateString()}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-start">
-                    <span>Address:</span>
-                    <span className="font-semibold text-right max-w-[50%]">{viewedPlan.address}</span>
-                  </div>
+                  <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{viewedPlan.startDate ? new Date(viewedPlan.startDate).toLocaleDateString() : '-'}</span></div>
+                  <div className="flex justify-between items-center"><span>Total Amount Paid:</span><span className="font-semibold">{viewedPlan.totalAmountPaid}</span></div>
+                  <div className="flex justify-between items-center"><span>Total Gold Accumulated:</span><span className="font-semibold">{viewedPlan.totalGoldAccumulated}</span></div>
+                  <div className="flex justify-between items-center"><span>Total Bonus:</span><span className="font-semibold">{viewedPlan.totalBonus}</span></div>
                 </div>
+                {viewedPlan.payments && viewedPlan.payments.length > 0 && (
+                  <div className="mt-4 text-left">
+                    <h4 className="font-bold text-[#6a0822] mb-2">Payments</h4>
+                    <div className="space-y-2">
+                      {viewedPlan.payments.map((p, idx) => (
+                        <div key={idx} className="bg-yellow-50 rounded p-2 text-xs">
+                          <div>Month: {p.month}</div>
+                          <div>Date: {p.paymentDate}</div>
+                          <div>Amount Paid: {formatCurrency(p.amountPaid)}</div>
+                          <div>Gold Grams: {p.goldGrams?.toFixed(4)}</div>
+                          <div>Bonus Applied: {formatCurrency(p.bonusApplied)}</div>
+                          <div>On Time: {p.onTime ? 'Yes' : 'No'}</div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* --- NEXT PAYMENT MODAL --- */}
+      {paymentModalPlan && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+            <div className="bg-white rounded-xl p-4 max-w-xs w-full mx-auto relative shadow-xl flex flex-col items-center">
+              <button
+                onClick={() => setPaymentModalPlan(null)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Next Payment</h3>
+              <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600 w-full">
+                <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{paymentModalPlan.name}</span></div>
+                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{paymentModalPlan.startDate ? new Date(paymentModalPlan.startDate).toLocaleDateString() : '-'}</span></div>
+                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{paymentModalPlan.totalAmountPaid}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{paymentModalPlan.totalGoldAccumulated}</span></div>
+                <div className="flex justify-between items-center"><span>Bonus:</span><span className="font-semibold">{paymentModalPlan.totalBonus}</span></div>
+              </div>
+              <button
+                className="mt-4 bg-[#6a0822] text-white py-1.5 px-4 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold w-full"
+                onClick={() => { alert('Payment flow coming soon!'); }}
+              >
+                Pay Now
+              </button>
             </div>
           </div>
         </Portal>

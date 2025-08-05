@@ -1,5 +1,3 @@
-
-
 import { createAsyncThunk } from '@reduxjs/toolkit';
 import axiosInstance from '../../../utils/axiosInstance';
 import type { AdminProfileData, Ornament, PaginatedResponse, User } from '../../types/type';
@@ -49,13 +47,14 @@ export interface OrnamentApiData {
   quality: string;
   warranty: string;
   details: string;
+  origin: string;
+  makingChargePercent?: number;
   priceBreakups: Array<{
     component: string;
-    goldRate18kt: number;
-    netWeight: number;
-    grossWeight: number;
-    discount: number;
-    finalValue: number;
+    netWeight: number | null;
+    grossWeight: number | null;
+    discount: number | null;
+    finalValue: number | null;
   }>;
 }
 
