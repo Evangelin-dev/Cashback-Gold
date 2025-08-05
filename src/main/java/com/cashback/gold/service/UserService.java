@@ -1,9 +1,6 @@
 package com.cashback.gold.service;
 
-import com.cashback.gold.dto.ReferralCodeResponse;
-import com.cashback.gold.dto.UserCountResponse;
-import com.cashback.gold.dto.UserResponse;
-import com.cashback.gold.dto.UserStatsResponse;
+import com.cashback.gold.dto.*;
 import com.cashback.gold.entity.User;
 import com.cashback.gold.repository.UserRepository;
 import com.cashback.gold.security.UserPrincipal;
@@ -62,4 +59,22 @@ public class UserService {
 
         return new ReferralCodeResponse(user.getId(), user.getReferralCode());
     }
+
+    public UserProfileResponse getUserProfile(UserPrincipal principal) {
+        User user = userRepository.findById(principal.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        return new UserProfileResponse(
+                user.getFullName(),
+                user.getDob(),
+                user.getGender(),
+                user.getEmail(),
+                user.getMobile(),
+                user.getCity(),
+                user.getTown(),
+                user.getState(),
+                user.getCountry()
+        );
+    }
+
 }

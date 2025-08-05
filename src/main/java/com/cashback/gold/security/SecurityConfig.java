@@ -113,6 +113,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/cashback-gold-schemes/**").hasAnyAuthority("ADMIN")
                                 .requestMatchers("/api/cashback-gold-user/**").hasAnyAuthority("USER")
                                 .requestMatchers("/partner").hasAnyAuthority("PARTNER")
+                                .requestMatchers("/user").hasAnyAuthority("USER", "PARTNER")
                                 // All other requests require authentication
                                 .anyRequest().authenticated()
                 )
