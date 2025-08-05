@@ -1,10 +1,12 @@
 package com.cashback.gold.service;
 
+import com.cashback.gold.dto.ReferralCodeResponse;
 import com.cashback.gold.dto.UserCountResponse;
 import com.cashback.gold.dto.UserResponse;
 import com.cashback.gold.dto.UserStatsResponse;
 import com.cashback.gold.entity.User;
 import com.cashback.gold.repository.UserRepository;
+import com.cashback.gold.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
@@ -48,5 +50,16 @@ public class UserService {
         long b2b = userRepository.countByRole("B2B");
 
         return new UserStatsResponse(total, partners, b2b);
+    }
+
+    public ReferralCodeResponse getReferralCode(UserPrincipal userPrincipal) {
+        User user = userRepository.findById(userPrincipal.getId())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        if (!"PARTNER".equalsIgnoreCase(user.getRole())) {
+            throw new RuntimeException("Referral code is only available for PARTNER role users.");
+        }
+
+        return new ReferralCodeResponse(user.getId(), user.getReferralCode());
     }
 }
