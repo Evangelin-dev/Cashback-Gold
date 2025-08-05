@@ -1,10 +1,11 @@
 import { createSlice } from '@reduxjs/toolkit';
-import { 
-  sendRegistrationOtp, 
-  verifyOtpAndRegister, 
-  resendOtp, 
+import {
+  sendRegistrationOtp,
+  verifyOtpAndRegister,
+  resendOtp,
   verifyLoginOtp,
-  sendLoginOtp
+  sendLoginOtp,
+  loginAdmin
 } from '../thunks/authThunks';
 import type { AuthState, User } from '../../types/type';
 
@@ -36,14 +37,30 @@ const authSlice = createSlice({
       localStorage.removeItem('currentUser');
       localStorage.removeItem('authToken');
     },
-  
+
     clearAuthError: (state) => {
-        state.error = null;
+      state.error = null;
     }
   },
   extraReducers: (builder) => {
     builder
-    
+
+      .addCase(loginAdmin.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(loginAdmin.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        state.currentUser = action.payload.user;
+        state.token = action.payload.token;
+        localStorage.setItem('currentUser', JSON.stringify(action.payload.user));
+        localStorage.setItem('authToken', action.payload.token);
+      })
+      .addCase(loginAdmin.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
+
       .addCase(sendLoginOtp.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -71,21 +88,21 @@ const authSlice = createSlice({
         state.status = 'failed';
         state.error = action.payload as string;
       })
-    
+
       .addCase(sendRegistrationOtp.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
       .addCase(sendRegistrationOtp.fulfilled, (state) => {
         state.status = 'succeeded';
-      
+
       })
       .addCase(sendRegistrationOtp.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       })
 
-    
+
       .addCase(verifyOtpAndRegister.pending, (state) => {
         state.status = 'loading';
         state.error = null;
@@ -100,14 +117,14 @@ const authSlice = createSlice({
         state.error = action.payload as string;
       })
 
-    
+
       .addCase(resendOtp.pending, (state) => {
         state.status = 'loading';
         state.error = null;
       })
       .addCase(resendOtp.fulfilled, (state) => {
         state.status = 'succeeded';
-      
+
       })
       .addCase(resendOtp.rejected, (state, action) => {
         state.status = 'failed';

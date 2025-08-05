@@ -175,3 +175,28 @@ export interface CartState {
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
+
+export interface KycData {
+  id: number;
+  userId: number;
+  userType: 'USER' | 'PARTNER' | 'B2B' | 'ADMIN'
+  aadharUrl: string | null;
+  gstCertificateUrl: string | null;
+  panCardUrl: string | null;
+  addressProofUrl: string | null;
+  bankStatementUrl: string | null;
+  status: 'PENDING' | 'APPROVED' | 'REJECTED'; 
+  submittedAt: string;
+}
+
+export interface UserProfile {
+  fullName: string;
+  dob: string;
+  gender: string;
+  email: string;
+  mobile: string;
+  city: string;
+  town: string;
+  state: string;
+  country: string;
+}

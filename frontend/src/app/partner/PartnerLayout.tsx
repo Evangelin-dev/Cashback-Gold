@@ -13,7 +13,6 @@ const menuItems = [
   { label: "Commission", icon: "%", path: "/pcommission" },
   { label: "Payout", icon: "💰", path: "/ppayout" },
   { label: "Campaigns", icon: "🎯", path: "/pcampaigns" },
-  { label: "Leaderboard", icon: "🏆", path: "/pleaderboard" },
   { label: "Support", icon: "🛠️", path: "/psupport" },
   { label: "Logout", icon: "🚪", path: "#" }, // Path is '#' for logout to be handled by onClick
 ];

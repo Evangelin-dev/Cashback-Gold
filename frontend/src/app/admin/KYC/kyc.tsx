@@ -5,18 +5,20 @@ import axiosInstance from "../../../utils/axiosInstance";
 type KycStatus = "PENDING" | "APPROVED" | "REJECTED";
 type UserType = "USER" | "B2B" | "PARTNER";
 
+// Updated interface to correctly reflect the API response fields
 interface KycRequest {
     id: number;
     userId: number;
     userType: UserType;
+    status: KycStatus;
+    submittedAt: string;
+    // Common fields for USER and PARTNER
     aadharUrl?: string | null;
-    panUrl?: string | null;
+    panCardUrl?: string | null;
+    // Fields specific to B2B
     gstCertificateUrl?: string | null;
     addressProofUrl?: string | null;
     bankStatementUrl?: string | null;
-    status: KycStatus;
-    submittedAt: string;
-    panCardUrl?: string | null;
 }
 
 type ModalState = { url: string; label: string } | null;
@@ -51,11 +53,11 @@ const KYC = () => {
         try {
             const pageIndex = currentPage[activeTab] - 1;
             const url = `/api/kyc/admin?userType=${activeTab}&page=${pageIndex}&size=${itemsPerPage}`;
-            
+
             const response = await axiosInstance.get(url);
             setRequests(response.data.content);
             setTotalPages(prev => ({ ...prev, [activeTab]: response.data.totalPages }));
-            setTotalElements(prev => ({...prev, [activeTab]: response.data.totalElements }));
+            setTotalElements(prev => ({ ...prev, [activeTab]: response.data.totalElements }));
 
         } catch (err) {
             console.error(`Failed to fetch KYC requests for ${activeTab}:`, err);
@@ -107,15 +109,16 @@ const KYC = () => {
         }
     };
 
+    // [CORRECTED] This function now correctly maps documents based on your API structure.
     const getDocumentsForRequest = (req: KycRequest) => {
         switch (req.userType) {
             case "USER":
+            case "PARTNER": // USER and PARTNER share the same document structure
                 return [
                     { label: "Aadhaar", url: req.aadharUrl },
-                    { label: "PAN", url: req.panUrl }
+                    { label: "PAN Card", url: req.panCardUrl } // Correctly uses panCardUrl
                 ];
-            case "B2B":
-            case "PARTNER":
+            case "B2B": // B2B has its own distinct set of documents
                 return [
                     { label: "GST Cert.", url: req.gstCertificateUrl },
                     { label: "PAN Card", url: req.panCardUrl },
@@ -126,48 +129,70 @@ const KYC = () => {
                 return [];
         }
     };
-    
-    const renderPagination = (type: UserType) => {
-		const totalP = totalPages[type];
-		const current = currentPage[type];
-        const totalE = totalElements[type];
-		
-		if (totalP <= 1) return null;
 
-		return (
-			<div className="flex items-center justify-between mt-4 px-4">
-				<div className="text-xs sm:text-sm text-gray-500">
-					Showing {((current - 1) * itemsPerPage) + 1} to {Math.min(current * itemsPerPage, totalE)} of {totalE} results
-				</div>
-				<div className="flex items-center gap-2">
-					<button onClick={() => handlePageChange(type, current - 1)} disabled={current === 1} className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"><FaChevronLeft className="text-xs" /></button>
-					<span className="text-sm font-medium">{current} / {totalP}</span>
-					<button onClick={() => handlePageChange(type, current + 1)} disabled={current === totalP} className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"><FaChevronRight className="text-xs" /></button>
-				</div>
-			</div>
-		);
-	};
-    
+    const renderPagination = (type: UserType) => {
+        const totalP = totalPages[type];
+        const current = currentPage[type];
+        const totalE = totalElements[type];
+
+        if (totalP <= 1) return null;
+
+        return (
+            <div className="flex items-center justify-between mt-4 px-4">
+                <div className="text-xs sm:text-sm text-gray-500">
+                    Showing {((current - 1) * itemsPerPage) + 1} to {Math.min(current * itemsPerPage, totalE)} of {totalE} results
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => handlePageChange(type, current - 1)} disabled={current === 1} className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"><FaChevronLeft className="text-xs" /></button>
+                    <span className="text-sm font-medium">{current} / {totalP}</span>
+                    <button onClick={() => handlePageChange(type, current + 1)} disabled={current === totalP} className="p-2 rounded-lg border border-gray-300 disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"><FaChevronRight className="text-xs" /></button>
+                </div>
+            </div>
+        );
+    };
+
     const renderTable = () => {
         if (loading) return <div className="text-center py-10">Loading requests...</div>;
         if (error) return <div className="text-center py-10 text-red-500">{error}</div>;
         if (requests.length === 0) return <div className="text-center py-8 text-gray-400 text-sm">No {activeTab} KYC requests found.</div>;
 
+        // [FIX] Define headers with specific widths and text alignment
         const headers = {
-            USER: ["User", "Aadhaar", "PAN", "Status", "Submitted"],
-            B2B: ["B2B Entity", "GST Cert.", "PAN Card", "Address Proof", "Bank Stmt.", "Status", "Submitted"],
-            PARTNER: ["Partner", "GST Cert.", "PAN Card", "Address Proof", "Bank Stmt.", "Status", "Submitted"]
+            USER: [
+                { label: "User", width: "w-[35%]", align: "text-left" },
+                { label: "Aadhaar", width: "w-[15%]", align: "text-center" },
+                { label: "PAN Card", width: "w-[15%]", align: "text-center" },
+                { label: "Status", width: "w-[20%]", align: "text-center" },
+                { label: "Submitted", width: "w-[15%]", align: "text-center" },
+            ],
+            PARTNER: [
+                { label: "Partner", width: "w-[35%]", align: "text-left" },
+                { label: "Aadhaar", width: "w-[15%]", align: "text-center" },
+                { label: "PAN Card", width: "w-[15%]", align: "text-center" },
+                { label: "Status", width: "w-[20%]", align: "text-center" },
+                { label: "Submitted", width: "w-[15%]", align: "text-center" },
+            ],
+            B2B: [
+                { label: "B2B Entity", width: "w-[25%]", align: "text-left" },
+                { label: "GST Cert.", width: "w-[12.5%]", align: "text-center" },
+                { label: "PAN Card", width: "w-[12.5%]", align: "text-center" },
+                { label: "Address Proof", width: "w-[12.5%]", align: "text-center" },
+                { label: "Bank Stmt.", width: "w-[12.5%]", align: "text-center" },
+                { label: "Status", width: "w-[15%]", align: "text-center" },
+                { label: "Submitted", width: "w-[10%]", align: "text-center" },
+            ]
         };
         const currentHeaders = headers[activeTab];
 
         return (
             <div className="overflow-x-auto rounded-lg border border-gray-200">
-                <table className="min-w-full bg-white">
+                {/* [FIX] Add `table-fixed` class to enforce column widths */}
+                <table className="min-w-full bg-white table-fixed">
                     <thead>
                         <tr className="bg-[#fbeaf0] border-b border-gray-200">
                             {currentHeaders.map(header => (
-                                <th key={header} className="px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-left text-sm whitespace-nowrap">
-                                    {header}
+                                <th key={header.label} className={`px-3 py-3 sm:px-6 sm:py-4 text-[#7a1335] font-semibold text-sm whitespace-nowrap ${header.width} ${header.align}`}>
+                                    {header.label}
                                 </th>
                             ))}
                         </tr>
@@ -177,16 +202,19 @@ const KYC = () => {
                             const documents = getDocumentsForRequest(req);
                             return (
                                 <tr key={req.id} className="hover:bg-[#fbeaf0] transition-colors">
-                                    <td className="px-3 py-4 sm:px-6 sm:py-4 flex items-center gap-3">
-                                        <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-[#7a1335] shadow-sm flex-shrink-0">
-                                            {getTabIcon(req.userType)}
-                                        </div>
-                                        <div>
-                                            <div className="font-semibold text-[#7a1335] text-sm">{req.userType} ID: {req.userId}</div>
-                                            <div className="text-xs text-gray-400">Request ID: {req.id}</div>
+                                    {/* [FIX] Remove `flex` from the <td>, add a div inside with flex for proper table cell rendering */}
+                                    <td className="px-3 py-4 sm:px-6 sm:py-4">
+                                        <div className="flex items-center gap-3">
+                                            <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center border-2 border-[#7a1335] shadow-sm flex-shrink-0">
+                                                {getTabIcon(req.userType)}
+                                            </div>
+                                            <div>
+                                                <div className="font-semibold text-[#7a1335] text-sm">{req.userType} ID: {req.userId}</div>
+                                                <div className="text-xs text-gray-400">Request ID: {req.id}</div>
+                                            </div>
                                         </div>
                                     </td>
-                                    
+
                                     {documents.map((doc) => (
                                         <td key={doc.label} className="px-3 py-4 sm:px-6 sm:py-4 text-center">
                                             {doc.url ? (
@@ -220,39 +248,39 @@ const KYC = () => {
             </div>
         )
     };
-    
-	return (
-		<div className="min-h-screen bg-gradient-to-br from-[#fbeaf0] to-white p-2 sm:p-6">
-			{modal && (
-				<div className="fixed inset-0 z-50 top-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
-					<div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 relative animate-fade-in">
-						<button className="absolute top-3 right-4 text-gray-400 text-3xl hover:text-red-500 transition-colors" onClick={() => setModal(null)} aria-label="Close">×</button>
-						<h2 className="text-lg font-bold mb-4 text-[#7a1335] flex items-center gap-2"><FaRegEye /> {modal.label}</h2>
-						<div className="w-full h-[75vh] rounded-lg border bg-gray-100"><iframe src={modal.url} title={modal.label} className="w-full h-full rounded-lg border-none" /></div>
-					</div>
-				</div>
-			)}
 
-			<div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 w-full max-w-full lg:max-w-7xl mx-auto">
-				<div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2">
-					<h1 className="text-xl sm:text-2xl font-bold text-[#7a1335] flex items-center gap-3"><FaIdCard /> KYC Requests</h1>
-					<span className="text-sm text-gray-500">{totalElements[activeTab]} total requests</span>
-				</div>
+    return (
+        <div className="min-h-screen bg-gradient-to-br from-[#fbeaf0] to-white p-2 sm:p-6">
+            {modal && (
+                <div className="fixed inset-0 z-50 top-0 flex items-center justify-center bg-black/50 backdrop-blur-sm p-4">
+                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl p-6 relative animate-fade-in">
+                        <button className="absolute top-3 right-4 text-gray-400 text-3xl hover:text-red-500 transition-colors" onClick={() => setModal(null)} aria-label="Close">×</button>
+                        <h2 className="text-lg font-bold mb-4 text-[#7a1335] flex items-center gap-2"><FaRegEye /> {modal.label}</h2>
+                        <div className="w-full h-[75vh] rounded-lg border bg-gray-100"><iframe src={modal.url} title={modal.label} className="w-full h-full rounded-lg border-none" /></div>
+                    </div>
+                </div>
+            )}
 
-				<div className="flex border-b border-gray-200 mb-6">
-					{(["USER", "B2B", "PARTNER"] as UserType[]).map((tab) => (
-						<button key={tab} onClick={() => setActiveTab(tab)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${ activeTab === tab ? "border-[#7a1335] text-[#7a1335] bg-[#fbeaf0]" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}>
-							{getTabIcon(tab)}
-							{tab.charAt(0) + tab.slice(1).toLowerCase()}
-						</button>
-					))}
-				</div>
-                
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-xl p-4 sm:p-6 w-full max-w-full lg:max-w-7xl mx-auto">
+                <div className="flex flex-col sm:flex-row items-center justify-between mb-6 gap-2">
+                    <h1 className="text-xl sm:text-2xl font-bold text-[#7a1335] flex items-center gap-3"><FaIdCard /> KYC Requests</h1>
+                    <span className="text-sm text-gray-500">{totalElements[activeTab]} total requests</span>
+                </div>
+
+                <div className="flex border-b border-gray-200 mb-6">
+                    {(["USER", "B2B", "PARTNER"] as UserType[]).map((tab) => (
+                        <button key={tab} onClick={() => setActiveTab(tab)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? "border-[#7a1335] text-[#7a1335] bg-[#fbeaf0]" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}>
+                            {getTabIcon(tab)}
+                            {tab.charAt(0) + tab.slice(1).toLowerCase()}
+                        </button>
+                    ))}
+                </div>
+
                 {renderTable()}
-				{renderPagination(activeTab)}
-			</div>
-		</div>
-	);
+                {renderPagination(activeTab)}
+            </div>
+        </div>
+    );
 };
 
 export default KYC;
