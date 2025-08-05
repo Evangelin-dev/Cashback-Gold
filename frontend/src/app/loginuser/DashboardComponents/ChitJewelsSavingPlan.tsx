@@ -57,7 +57,7 @@ useEffect(() => {
       setError(null);
       try {
         // Fetch enrolled chit plans for the user
-        const response = await axiosInstance.get('/api/saving-plans');
+        const response = await axiosInstance.get('/api/user-savings/my-enrollments');
         const enrolledPlans = response.data || [];
         // Map the API response to ProcessedPlan[]
         const processed = enrolledPlans.map((plan: any) => {
