@@ -52,7 +52,16 @@ public class RazorpayService {
 
     public RazorpayPayment savePayment(String orderId, String paymentId, String signature,
                                        BigDecimal amount, String paymentType, Long enrollmentId) {
-        RazorpayPayment payment = RazorpayPayment.builder()
+        String status = "UNKNOWN";
+        try {
+            RazorpayClient client = getClient();
+            com.razorpay.Payment payment = client.payments.fetch(paymentId);
+            status = payment.get("status"); // values like "captured", "failed"
+        } catch (RazorpayException e) {
+            status = "ERROR";
+        }
+
+        RazorpayPayment paymentEntity = RazorpayPayment.builder()
                 .razorpayOrderId(orderId)
                 .razorpayPaymentId(paymentId)
                 .razorpaySignature(signature)
@@ -60,10 +69,12 @@ public class RazorpayService {
                 .paymentType(paymentType)
                 .enrollmentId(enrollmentId)
                 .createdAt(LocalDateTime.now())
+                .status(status.toUpperCase())
                 .build();
 
-        return paymentRepository.save(payment);
+        return paymentRepository.save(paymentEntity);
     }
+
 
 
     public boolean verifySignature(String razorpayOrderId, String razorpayPaymentId, String razorpaySignature) {

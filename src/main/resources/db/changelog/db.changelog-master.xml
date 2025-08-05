@@ -1217,4 +1217,11 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="39" author="azeem">
+        <addColumn tableName="razorpay_payment">
+            <column name="status" type="VARCHAR(50)"/>
+        </addColumn>
+    </changeSet>
+
+
 </databaseChangeLog>

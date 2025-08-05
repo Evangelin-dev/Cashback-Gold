@@ -34,4 +34,7 @@ public class RazorpayPayment {
 
     private Long enrollmentId;
     private LocalDateTime createdAt;
+
+    private String status; // e.g., "captured", "failed", etc.
+
 }
