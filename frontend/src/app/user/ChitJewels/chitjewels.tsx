@@ -104,19 +104,16 @@ const ChitJewelsPlans = () => {
     try {
       // 1. Enroll user in plan
       const enrollRes = await axiosInstance.post('/api/user-savings/enroll', {
-        planName: selectedPlan.name,
-        duration: selectedPlan.duration,
-        amount: parseAmount(selectedPlan.amount),
-        paymentMethod: "Razorpay"
-      });
+  savingPlanId: selectedPlan.id
+});
       const enrollmentId = enrollRes.data.enrollmentId;
       setEnrollmentId(enrollmentId);
 
       // 2. Initiate monthly payment
       const initiateRes = await axiosInstance.post('/api/user-savings/pay-monthly/initiate', {
-        enrollmentId,
-        amount: parseAmount(selectedPlan.monthlyPayment)
-      });
+  enrollmentId,
+  amountPaid: parseAmount(selectedPlan.monthlyPayment)
+});;
       const razorpayOrderId = initiateRes.data.razorpayOrderId;
       const amount = parseAmount(selectedPlan.monthlyPayment);
 
@@ -132,13 +129,12 @@ const ChitJewelsPlans = () => {
           // On payment success, call callback API
           try {
             const paymentCallbackRes = await axiosInstance.post('/api/user-savings/pay-monthly/callback', {
-              enrollmentId,
-              razorpayOrderId,
-              paymentStatus: 'success',
-              amountPaid: amount,
-              razorpayPaymentId: response.razorpay_payment_id,
-              razorpaySignature: response.razorpay_signature
-            });
+  enrollmentId,
+  amountPaid: amount,
+  razorpayOrderId,
+  razorpayPaymentId: response.razorpay_payment_id,
+  razorpaySignature: response.razorpay_signature
+});
             setFinalPaymentResult(paymentCallbackRes.data);
             setShowPaymentSummary(false);
           } catch (err) {

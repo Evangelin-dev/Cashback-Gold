@@ -44,6 +44,8 @@ interface ApiFAQ {
 const parseAmount = (amountStr: string): number => Number(amountStr.replace(/[^0-9.-]+/g, "")) || 0;
 
 const GoldPlantSchemes = () => {
+  // --- NEW STATE FOR POST-PAYMENT POPUP ---
+  const [enrollmentResult, setEnrollmentResult] = useState<any | null>(null);
   // --- EXISTING STATE ---
   const [plans, setPlans] = useState<ProcessedGoldPlan[]>([]);
   const [faqs, setFaqs] = useState<ApiFAQ[]>([]);
@@ -121,29 +123,78 @@ const GoldPlantSchemes = () => {
 
   const closePlanDetails = () => { setSelectedPlan(null); };
 
-  // --- NEW FUNCTION TO HANDLE ORDER SUBMISSION ---
+  // --- NEW FUNCTION TO HANDLE GOLD SCHEME ENROLLMENT & PAYMENT ---
   const handleInvestNow = async () => {
     if (!selectedPlan) return;
-
     setIsSubmitting(true);
     setSubmitError(null);
-
-    const orderPayload = {
-      planType: "SCHEME",
-      planName: selectedPlan.schemeName,
-      duration: selectedPlan.duration,
-      amount: parseAmount(selectedPlan.minInvestment),
-      paymentMethod: "Razorpay"
-    };
-
     try {
-      await axiosInstance.post('/api/orders', orderPayload);
-      alert(`Your order for "${selectedPlan.schemeName}" has been placed successfully!`);
-      closePlanDetails();
-    } catch (err) {
-      console.error("Failed to submit order:", err);
-      setSubmitError("Could not place your order at this time. Please try again.");
-    } finally {
+      // 1. Initiate enrollment
+      const initiateRes = await axiosInstance.post('/user/gold-plant/enroll/initiate', {
+        schemeId: selectedPlan.id,
+        amountInvested: parseAmount(selectedPlan.minInvestment)
+      });
+      const { razorpayOrderId, amount, schemeId } = initiateRes.data;
+
+      // 2. Open Razorpay checkout
+      const options = {
+        key: window.RAZORPAY_KEY_ID,
+        amount: amount * 100, // in paise
+        currency: 'INR',
+        name: 'Gold Plant Scheme',
+        description: selectedPlan.schemeName,
+        order_id: razorpayOrderId,
+        handler: async function (response: any) {
+          // 3. On payment success, call callback API
+          try {
+            const callbackRes = await axiosInstance.post('/user/gold-plant/enroll/callback', {
+              schemeId,
+              amountInvested: amount,
+              razorpayOrderId,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature
+            });
+            setEnrollmentResult(callbackRes.data);
+            closePlanDetails();
+          } catch (err) {
+            setSubmitError('Payment succeeded but enrollment failed. Please contact support.');
+          }
+        },
+        prefill: {
+          name: '',
+          email: '',
+          contact: ''
+        },
+        theme: { color: '#7a1335' },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+          }
+        }
+      };
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => {
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        };
+        document.body.appendChild(script);
+      } else {
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      }
+    } catch (err: any) {
+      let apiError = "Sorry, we couldn't process your payment at this time. Please try again.";
+      if (err?.response) {
+        if (typeof err.response.data === 'string' && err.response.data) {
+          apiError = err.response.data;
+        } else if (err.response.data?.message) {
+          apiError = err.response.data.message;
+        }
+      }
+      setSubmitError(apiError);
       setIsSubmitting(false);
     }
   };
@@ -353,10 +404,8 @@ const GoldPlantSchemes = () => {
                   <div className="bg-blue-50 p-4 rounded-lg"><h4 className="font-semibold text-gray-800 mb-2">Plan Type</h4><p className="text-gray-600">{selectedPlan.featured ? 'Premium' : 'Standard'}</p></div>
                 </div>
                 <div className="mb-6"><h4 className="font-semibold text-gray-800 mb-2">Description</h4><p className="text-gray-600">{selectedPlan.description}</p></div>
-                
                 {/* NEW: Error display for submission */}
                 {submitError && <div className="text-center text-red-600 mb-4 bg-red-100 p-3 rounded-lg">{submitError}</div>}
-
                 <div className="flex gap-4">
                   <button 
                     onClick={handleInvestNow}
@@ -370,8 +419,33 @@ const GoldPlantSchemes = () => {
                     className="flex-1 py-3 px-6 border-2 border-[#7a1335] text-[#7a1335] rounded-lg font-semibold transition-colors hover:bg-[#7a1335] hover:text-white"
                     disabled={isSubmitting}
                   >
-                    Learn More
+                    Cancel
                   </button>
+                </div>
+              </div>
+            </div>
+          </div>
+          <style>{`.animate-fade-in-fast { animation: fadeIn 0.2s ease-out; } @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
+        </Portal>
+      )}
+      {/* --- ENROLLMENT RESULT POPUP --- */}
+      {enrollmentResult && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[2100] animate-fade-in-fast">
+            <div className="bg-white rounded-2xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto relative flex flex-col items-center justify-center p-0">
+              <button onClick={() => setEnrollmentResult(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">×</button>
+              <div className="p-8 w-full flex flex-col items-center">
+                <div className="flex flex-col items-center mb-6">
+                  <h3 className="text-2xl font-bold text-[#7a1335] mb-2 text-center">Enrollment Successful!</h3>
+                  <span className="bg-yellow-100 text-yellow-900 px-3 py-1 rounded-full font-semibold text-xs mb-2">{enrollmentResult.status}</span>
+                </div>
+                <div className="grid grid-cols-1 gap-3 w-full mb-6">
+                  <div className="bg-amber-50 p-3 rounded-lg text-center"><h4 className="font-semibold text-gray-800 mb-1">Scheme Name</h4><p className="text-gray-600">{enrollmentResult.schemeName}</p></div>
+                  <div className="bg-green-50 p-3 rounded-lg text-center"><h4 className="font-semibold text-gray-800 mb-1">Amount Invested</h4><p className="text-gray-600">₹{enrollmentResult.amountInvested}</p></div>
+                  <div className="bg-blue-50 p-3 rounded-lg text-center"><h4 className="font-semibold text-gray-800 mb-1">Start Date</h4><p className="text-gray-600">{enrollmentResult.startDate}</p></div>
+                </div>
+                <div className="flex justify-center w-full">
+                  <button onClick={() => setEnrollmentResult(null)} className="py-2 px-6 rounded bg-[#7a1335] text-white font-semibold transition-transform hover:scale-105">Close</button>
                 </div>
               </div>
             </div>

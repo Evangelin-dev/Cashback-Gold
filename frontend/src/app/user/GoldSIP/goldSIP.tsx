@@ -28,6 +28,14 @@ interface Faq {
   answer: string;
 }
 
+// Razorpay type declaration for window
+declare global {
+  interface Window {
+    Razorpay?: any;
+    RAZORPAY_KEY_ID?: string;
+  }
+}
+
 
 const parseAmount = (amountStr: string): number => Number(amountStr.replace(/[^0-9.-]+/g, "")) || 0;
 
@@ -42,16 +50,25 @@ const GoldSIPPlansPage = () => {
   // --- NEW STATE FOR ORDER SUBMISSION ---
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [enrollmentResult, setEnrollmentResult] = useState<any | null>(null);
 
   // --- DATA FETCHING (Unchanged) ---
   useEffect(() => {
     const fetchPlans = async () => {
       try {
-        const response = await axiosInstance.get<SIPPlanFromApi[]>('/api/cashback-gold-schemes');
+        const response = await axiosInstance.get<any[]>('/api/cashback-gold-schemes');
         const activePlans = response.data.filter(plan => plan.status === 'ACTIVE');
         const mockReturns = ["8-12%", "10-14%", "12-16%", "14-18%"];
         const processedPlans = activePlans.map((plan, index) => ({
-          ...plan,
+          id: plan.id,
+          name: plan.name,
+          tenure: plan.duration, // map duration -> tenure
+          monthlyAmount: plan.minInvest, // map minInvest -> monthlyAmount
+          description: plan.description,
+          status: plan.status === 'ACTIVE' ? 'ACTIVE' : 'INACTIVE' as 'ACTIVE' | 'INACTIVE',
+          keyPoint1: plan.keyPoint1,
+          keyPoint2: plan.keyPoint2,
+          keyPoint3: plan.keyPoint3,
           returns: mockReturns[index % mockReturns.length],
           popular: index === 0,
           features: [plan.keyPoint1, plan.keyPoint2, plan.keyPoint3].filter(Boolean),
@@ -73,29 +90,83 @@ const GoldSIPPlansPage = () => {
     setSubmitError(null); // Clear previous errors when opening the modal
   };
 
-  // --- NEW FUNCTION TO PLACE THE ORDER ---
-  const handlePlaceOrder = async () => {
+  // --- NEW FUNCTION TO HANDLE FULL PAYMENT FLOW LIKE CHITJEWELS ---
+  const handleMakePayment = async () => {
     if (!selectedPlan) return;
-
     setIsSubmitting(true);
     setSubmitError(null);
-
-    const orderPayload = {
-      planType: "SIP",
-      planName: selectedPlan.name,
-      duration: selectedPlan.tenure,
-      amount: parseAmount(selectedPlan.monthlyAmount),
-      paymentMethod: "Razorpay"
-    };
-
     try {
-      await axiosInstance.post('/api/cashback-gold-user/enroll', orderPayload);
-      alert(`Your order for "${selectedPlan.name}" has been placed successfully!`);
-      setShowModal(false); // Close the modal on success
-    } catch (err) {
-      console.error("Failed to place order:", err);
-      setSubmitError("Failed to place the order. Please try again later.");
-    } finally {
+      // 1. Enroll user in scheme
+      const enrollRes = await axiosInstance.post('/api/cashback-gold-user/enroll', {
+        schemeId: selectedPlan.id,
+        initialAmount: parseAmount(selectedPlan.monthlyAmount)
+      });
+      const enrollmentId = enrollRes.data.id;
+      // 2. Initiate payment
+      const initiateRes = await axiosInstance.post('/api/cashback-gold-user/pay/initiate', {
+        enrollmentId,
+        amountPaid: parseAmount(selectedPlan.monthlyAmount)
+      });
+      const { razorpayOrderId, amount } = initiateRes.data;
+      // 3. Open Razorpay checkout
+      const options = {
+        key: window.RAZORPAY_KEY_ID,
+        amount: amount * 100, // in paise
+        currency: 'INR',
+        name: 'Gold SIP',
+        description: selectedPlan.name,
+        order_id: razorpayOrderId,
+        handler: async function (response: any) {
+          // 4. On payment success, call callback API
+          try {
+            const callbackRes = await axiosInstance.post('/api/cashback-gold-user/pay/callback', {
+              enrollmentId,
+              amountPaid: amount,
+              razorpayOrderId,
+              razorpayPaymentId: response.razorpay_payment_id,
+              razorpaySignature: response.razorpay_signature
+            });
+            setEnrollmentResult(callbackRes.data);
+            setShowModal(false);
+          } catch (err) {
+            setSubmitError('Payment succeeded but enrollment failed. Please contact support.');
+          }
+        },
+        prefill: {
+          name: '',
+          email: '',
+          contact: ''
+        },
+        theme: { color: '#b45309' },
+        modal: {
+          ondismiss: function () {
+            setIsSubmitting(false);
+          }
+        }
+      };
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => {
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        };
+        document.body.appendChild(script);
+      } else {
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      }
+    } catch (err: any) {
+      let apiError = "Sorry, we couldn't process your payment at this time. Please try again.";
+      if (err?.response) {
+        if (typeof err.response.data === 'string' && err.response.data) {
+          apiError = err.response.data;
+        } else if (err.response.data?.message) {
+          apiError = err.response.data.message;
+        }
+      }
+      setSubmitError(apiError);
       setIsSubmitting(false);
     }
   };
@@ -315,18 +386,47 @@ const GoldSIPPlansPage = () => {
               </div>
               {submitError && <div className="text-center text-red-600 mb-2 bg-red-50 p-2 rounded-lg text-xs">{submitError}</div>}
               <div className="space-y-2">
-                <button onClick={handlePlaceOrder} className="w-full bg-yellow-700 text-white py-2 rounded-lg font-semibold hover:bg-yellow-800 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-xs" disabled={isSubmitting}>
+                <button onClick={handleMakePayment} className="w-full bg-yellow-700 text-white py-2 rounded-lg font-semibold hover:bg-yellow-800 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-xs" disabled={isSubmitting}>
                   {isSubmitting ? 'Processing...' : 'Start Cashback Gold Now'}
                 </button>
-               
               </div>
             </div>
           </div>
         </div>
       </Portal>
     )}
+    {/* --- ENROLLMENT RESULT POPUP --- */}
+    {enrollmentResult && (
+      <Portal>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 z-[2100] animate-fade-in-fast">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto relative flex flex-col items-center justify-center p-0">
+            <button onClick={() => setEnrollmentResult(null)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">×</button>
+            <div className="p-8 w-full flex flex-col items-center">
+              <div className="flex flex-col items-center mb-6">
+                <h3 className="text-2xl font-bold text-[#b45309] mb-2 text-center">Enrollment & Payment Successful!</h3>
+                <span className="bg-yellow-100 text-yellow-900 px-3 py-1 rounded-full font-semibold text-xs mb-2">{enrollmentResult.status}</span>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full mb-6">
+                <div className="flex flex-col gap-3">
+                  <div className="bg-amber-50 p-3 rounded-lg text-center"><h4 className="font-semibold text-gray-800 mb-1">Scheme Name</h4><p className="text-gray-600">{enrollmentResult.scheme?.name}</p></div>
+                  <div className="bg-green-50 p-3 rounded-lg text-center"><h4 className="font-semibold text-gray-800 mb-1">Amount Paid</h4><p className="text-gray-600">₹{enrollmentResult.totalAmountPaid}</p></div>
+                </div>
+                <div className="flex flex-col gap-3">
+                  <div className="bg-blue-50 p-3 rounded-lg text-center"><h4 className="font-semibold text-gray-800 mb-1">Gold Accumulated</h4><p className="text-gray-600">{enrollmentResult.goldAccumulated?.toFixed(4)}g</p></div>
+                  <div className="bg-yellow-50 p-3 rounded-lg text-center"><h4 className="font-semibold text-gray-800 mb-1">Start Date</h4><p className="text-gray-600">{enrollmentResult.createdAt?.slice(0,10)}</p></div>
+                </div>
+              </div>
+              <div className="flex justify-center w-full">
+                <button onClick={() => setEnrollmentResult(null)} className="py-2 px-6 rounded bg-yellow-700 text-white font-semibold transition-transform hover:scale-105">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <style>{`.animate-fade-in-fast { animation: fadeIn 0.2s ease-out; } @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
+      </Portal>
+    )}
   </div>
-);
+  )
 };
 
 // --- FAQ SECTION (Unchanged) ---

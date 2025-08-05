@@ -6,8 +6,8 @@ import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path
 interface SPIPlan {
   id: number;
   name: string;
-  tenure: string;
-  monthlyAmount: string;
+  duration: string;
+  minInvest: string;
   description: string;
   status: 'ACTIVE' | 'CLOSED';
   keyPoint1: string;
@@ -18,8 +18,8 @@ interface SPIPlan {
 // 3. Updated empty plan object to match the new type
 const emptyPlan: Omit<SPIPlan, 'id'> = {
   name: "",
-  tenure: "",
-  monthlyAmount: "",
+  duration: "",
+  minInvest: "",
   description: "",
   status: "ACTIVE",
   keyPoint1: "",
@@ -146,7 +146,7 @@ const SIPPlan = () => {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.name || !formData.tenure || !formData.monthlyAmount || !formData.description || !formData.keyPoint1) {
+    if (!formData.name || !formData.duration || !formData.minInvest || !formData.description || !formData.keyPoint1) {
       setShowError(true);
       return;
     }
@@ -186,7 +186,7 @@ const SIPPlan = () => {
                 <thead>
                   <tr>
                     <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Plan Name</th>
-                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Tenure</th>
+                    <th className="px-2 sm:px-4 py-2 text-[#7a1335]">duration</th>
                     <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Monthly Amount</th>
                     <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Description</th>
                     <th className="px-2 sm:px-4 py-2 text-[#7a1335]">Status</th>
@@ -198,8 +198,8 @@ const SIPPlan = () => {
                   {paginatedPlans.map((plan) => (
                     <tr key={plan.id} className="border-b last:border-b-0">
                       <td className="px-4 py-3 align-top">{plan.name}</td>
-                      <td className="px-4 py-3 align-top">{plan.tenure}</td>
-                      <td className="px-4 py-3 align-top">{plan.monthlyAmount}</td>
+                      <td className="px-4 py-3 align-top">{plan.duration}</td>
+                      <td className="px-4 py-3 align-top">{plan.minInvest}</td>
                       <td className="px-4 py-3 text-gray-600 align-top"><div
                         className="text-sm text-gray-900 max-w-[150px] truncate"
                         title={plan.description}
@@ -261,12 +261,12 @@ const SIPPlan = () => {
                   <input type="text" name="name" value={formData.name} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" required />
                 </div>
                 <div>
-                  <label className="block text-sm mb-1 font-medium text-gray-700">Tenure</label>
-                  <input type="text" name="tenure" value={formData.tenure} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" required />
+                  <label className="block text-sm mb-1 font-medium text-gray-700">duration</label>
+                  <input type="text" name="duration" value={formData.duration} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" required />
                 </div>
                 <div>
                   <label className="block text-sm mb-1 font-medium text-gray-700">Monthly Amount</label>
-                  <input type="text" name="monthlyAmount" value={formData.monthlyAmount} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" required />
+                  <input type="text" name="minInvest" value={formData.minInvest} onChange={handleFormChange} className="w-full p-2 border border-gray-300 rounded-md" required />
                 </div>
                 <div>
                   <label className="block text-sm mb-1 font-medium text-gray-700">Description</label>
