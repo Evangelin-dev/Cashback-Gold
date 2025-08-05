@@ -61,7 +61,7 @@ export const sendRegistrationOtp = createAsyncThunk<ApiResponse, RegistrationDat
   'auth/sendRegistrationOtp',
   async (userData, { rejectWithValue }) => {
     try {
-    
+
       let url = `${API_BASE_URL}/register`;
       if (userData.referralCode) {
         url += `?ref=${userData.referralCode}`;
@@ -98,7 +98,7 @@ export const verifyOtpAndRegister = createAsyncThunk<LoginResponse, Verification
   'auth/verifyOtpAndRegister',
   async (verificationData, { rejectWithValue }) => {
     try {
-    
+
       const payload: any = {
         identifier: verificationData.email,
         otp: verificationData.otp,
@@ -146,3 +146,21 @@ export const resendOtp = createAsyncThunk<ApiResponse, ResendOtpData>(
     }
   }
 );
+
+export const loginAdmin = createAsyncThunk<LoginResponse, LoginCredentials>(
+  'auth/loginAdmin',
+  async (credentials, { rejectWithValue }) => {
+    try {
+      const response = await axios.post<LoginResponse>(`${API_BASE_URL}/login`, credentials);
+
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(getErrorMessage(error));
+    }
+  }
+);
+
+export interface LoginCredentials {
+  email: string;
+  password: string;
+}

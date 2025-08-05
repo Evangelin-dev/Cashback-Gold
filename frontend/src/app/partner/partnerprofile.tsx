@@ -2,29 +2,45 @@ import React, { useState, useEffect, useCallback } from "react";
 import axiosInstance from "../../utils/axiosInstance"; // Ensure this path is correct
 import { FaUser, FaIdCard, FaUniversity, FaCheckCircle, FaHourglassHalf, FaTimesCircle, FaUpload, FaSpinner, FaFilePdf, FaSave, FaTrash } from "react-icons/fa";
 import { X } from "lucide-react";
-import { useSelector } from "react-redux";
-import { RootState } from "../../store";
 
 // --- Type Definitions ---
 type KycStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED';
 type NotificationType = 'success' | 'error';
 
-interface ProfileData { name: string; email: string; countryCode: string; phone: string; }
-// Updated to reflect the array structure from the API
+// Expanded ProfileData to include all user details from the API
+interface ProfileData {
+  fullName: string;
+  email: string;
+  mobile: string;
+  dob: string;
+  gender: string;
+  city: string;
+  town: string;
+  state: string;
+  country: string;
+}
+
 interface BankDetail { id: number; bank: string; account: string; ifsc: string; upiId: string; }
 interface KycData { status: KycStatus; aadharOrGstUrl?: string; panUrl?: string; rejectionReason?: string; }
 interface NotificationState { show: boolean; message: string; type: NotificationType; }
 
 // --- Initial State ---
-const initialProfile: ProfileData = { name: "", email: "", countryCode: "+91", phone: "" };
-// Bank details now start as a single object for the form fields
+const initialProfile: ProfileData = {
+  fullName: "",
+  email: "",
+  mobile: "",
+  dob: "",
+  gender: "",
+  city: "",
+  town: "",
+  state: "",
+  country: "",
+};
 const initialBankDetailsForm = { bank: "", account: "", ifsc: "", upiId: "" };
 
 const PartnerProfile = () => {
   const [profile, setProfile]               = useState<ProfileData>(initialProfile);
-  // State to hold the array of bank accounts from the API
   const [savedBankAccounts, setSavedBankAccounts] = useState<BankDetail[]>([]);
-  // State for the form input fields
   const [bankDetailsForm, setBankDetailsForm] = useState(initialBankDetailsForm);
   const [kycData, setKycData]               = useState<KycData>({ status: 'NONE' });
 
@@ -37,8 +53,6 @@ const PartnerProfile = () => {
   const [submitting, setSubmitting]           = useState({ kyc: false, bank: false, delete: false });
   const [notification, setNotification]     = useState<NotificationState>({ show: false, message: '', type: 'success' });
 
-  const { currentUser } = useSelector((state: RootState) => state.auth);
-  
   // --- Notification Handler ---
   const showNotification = (message: string, type: NotificationType) => {
     setNotification({ show: true, message, type });
@@ -50,7 +64,7 @@ const PartnerProfile = () => {
     setLoading(true);
     try {
       const [profileRes, kycRes, bankRes] = await Promise.all([
-        axiosInstance.get('/api/partner/profile').catch(() => ({ data: null })),
+        axiosInstance.get('/user/profile').catch(() => ({ data: null })),
         axiosInstance.get('/api/kyc/partner/kyc').catch(() => ({ data: { status: 'NONE' } })),
         axiosInstance.get<BankDetail[]>('/api/bank-accounts').catch(() => ({ data: [] })),
       ]);
@@ -61,11 +75,9 @@ const PartnerProfile = () => {
       const accounts = bankRes.data || [];
       setSavedBankAccounts(accounts);
       if (accounts.length > 0) {
-        // Populate the form with the first (and likely only) account details
         const primaryAccount = accounts[0];
         setBankDetailsForm({ bank: primaryAccount.bank, account: primaryAccount.account, ifsc: primaryAccount.ifsc, upiId: primaryAccount.upiId || "" });
       } else {
-        // If no accounts, reset the form
         setBankDetailsForm(initialBankDetailsForm);
       }
 
@@ -77,6 +89,18 @@ const PartnerProfile = () => {
   }, []);
 
   useEffect(() => { fetchData(); }, [fetchData]);
+
+  // --- Helper Functions ---
+  const formatDate = (dateString: string | undefined): string => {
+      if (!dateString) return 'Not Provided';
+      return new Date(dateString).toLocaleDateString('en-US', {
+          year: 'numeric', month: 'long', day: 'numeric',
+      });
+  };
+
+  const formatAddress = (p: ProfileData): string => {
+      return [p.town, p.city, p.state, p.country].filter(Boolean).join(', ');
+  }
 
   // --- Form Handlers ---
   const handleBankChange = (e: React.ChangeEvent<HTMLInputElement>) => setBankDetailsForm(prev => ({ ...prev, [e.target.name]: e.target.value }));
@@ -96,7 +120,7 @@ const PartnerProfile = () => {
     try {
       await axiosInstance.post('/api/bank-accounts', payload);
       showNotification("Bank details saved successfully!", 'success');
-      fetchData(); // Refresh data to get the new account and lock the fields
+      fetchData();
     } catch (err) {
       showNotification("Failed to save bank details.", 'error');
     } finally {
@@ -107,12 +131,11 @@ const PartnerProfile = () => {
   const handleBankDelete = async () => {
       const accountToDelete = savedBankAccounts[0];
       if (!accountToDelete) return;
-
       setSubmitting(p => ({ ...p, delete: true }));
       try {
           await axiosInstance.delete(`/api/bank-accounts/${accountToDelete.id}`);
           showNotification("Bank details deleted successfully.", 'success');
-          fetchData(); // Refresh data to clear the form and enable fields
+          fetchData();
       } catch (err) {
           showNotification("Failed to delete bank details.", 'error');
       } finally {
@@ -129,7 +152,6 @@ const PartnerProfile = () => {
     const formData = new FormData();
     formData.append('aadharOrGst', aadharFile);
     formData.append('pan', panFile);
-
     try {
       await axiosInstance.post('/api/kyc/partner', formData);
       showNotification("KYC documents submitted for review!", 'success');
@@ -143,6 +165,7 @@ const PartnerProfile = () => {
 
   // --- Render Logic ---
   const hasSavedBankDetails = savedBankAccounts.length > 0;
+  
   const renderKycContent = () => {
     const { status, aadharOrGstUrl, panUrl, rejectionReason } = kycData;
     const statusInfoMap = {
@@ -197,14 +220,12 @@ const PartnerProfile = () => {
           <div className="lg:col-span-2 space-y-8">
             <Card title="My Profile" icon={<FaUser />}>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <InputField label="Name" name="name" value={currentUser?.fullName || ''} disabled />
-                <InputField label="Email" name="email" value={currentUser?.email || ''} type="email" disabled />
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Mobile Number</label>
-                  <div className="flex">
-                    <input type="text" name="phone" value={currentUser?.mobile || ''} disabled className="flex-1 w-full px-3 py-2 border border-gray-300 rounded-r-md bg-gray-100 cursor-not-allowed" />
-                  </div>
-                </div>
+                <InputField label="Full Name" name="fullName" value={profile.fullName} disabled />
+                <InputField label="Email Address" name="email" value={profile.email} type="email" disabled />
+                <InputField label="Mobile Number" name="mobile" value={profile.mobile} disabled />
+                <InputField label="Gender" name="gender" value={profile.gender} disabled />
+                <InputField label="Date of Birth" name="dob" value={formatDate(profile.dob)} disabled />
+                <InputField label="Address" name="address" value={formatAddress(profile)} disabled className="md:col-span-2" />
               </div>
             </Card>
 
@@ -246,8 +267,8 @@ const Card: React.FC<{ title: string; icon: React.ReactNode; children: React.Rea
   </div>
 );
 
-const InputField: React.FC<{ label: string; name: string; value: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string; placeholder?: string; disabled?: boolean }> = ({ label, name, value, onChange, type = 'text', placeholder, disabled = false }) => (
-  <div>
+const InputField: React.FC<{ label: string; name: string; value: string; onChange?: (e: React.ChangeEvent<HTMLInputElement>) => void; type?: string; placeholder?: string; disabled?: boolean; className?: string }> = ({ label, name, value, onChange, type = 'text', placeholder, disabled = false, className = '' }) => (
+  <div className={className}>
     <label className="block text-sm font-medium text-gray-700 mb-1">{label}</label>
     <input
       type={type}

@@ -62,7 +62,6 @@ import PartnerPopup from "./src/app/partner/PartnerPopup";
 import PartnerCampaigns from "./src/app/partner/partnercampaigns";
 import PartnerCommission from "./src/app/partner/partnercommission";
 import PartnerDashboard from "./src/app/partner/partnerdashboard";
-import PartnerLeaderboard from "./src/app/partner/partnerleaderboard";
 import PartnerMarketing from "./src/app/partner/partnermarketing";
 import PartnerNotification from "./src/app/partner/partnernotification";
 import PartnerPayout from "./src/app/partner/partnerpayout";
@@ -79,12 +78,27 @@ import GoldSIPPlans from "./src/app/user/GoldSIP/goldSIP.tsx";
 import GoldPlantSchemes from "./src/app/user/GoldSchemes/goldschemes.tsx";
 import SignupPopup from "./src/app/user/SignupPopup";
 import UserLayout from "./src/app/user/UserLayout";
+import AdminLogin from "./src/app/admin/AdminLogin";
+import { useDispatch, useSelector } from "react-redux";
+import { AppDispatch, RootState } from "./src/store.ts";
+import { useEffect } from "react";
+import { fetchCart } from "./src/app/features/thunks/cartThunks.ts";
 
 
 const AppRoutes: React.FC = () => {
+const dispatch = useDispatch<AppDispatch>();
+ const { currentUser } = useSelector((state: RootState) => state.auth);
+
+  useEffect(() => {
+    if (currentUser) {
+      dispatch(fetchCart());
+    }
+  }, [currentUser, dispatch]);
+
   return (
     <Routes>
       {/* Admin routes */}
+      <Route path="/admin/login" element={<AdminLogin />} />
       <Route element={<AdminProtectedRoute />}>
         <Route element={<AdminLayout />}>
           <Route path="/admin" element={<AdminDashboard />} />
@@ -142,7 +156,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/pcommission" element={<PartnerCommission />} />
         <Route path="/ppayout" element={<PartnerPayout />} />
         <Route path="/pcampaigns" element={<PartnerCampaigns />} />
-        <Route path="/pleaderboard" element={<PartnerLeaderboard />} />
         <Route path="/psupport" element={<PartnerSupport />} />
         <Route path="/pprofile" element={<PartnerProfile />} />
         <Route path="/pnotifications" element={<PartnerNotification />} />

@@ -3,7 +3,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppDispatch, RootState } from "../../store";
-import { clearAuthError } from "../features/slices/authSlice";
+import { clearAuthError, logoutUser } from "../features/slices/authSlice";
 import {
   resendOtp,
   sendLoginOtp,
@@ -67,21 +67,16 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   }, [searchParams]);
 
   useEffect(() => {
-    if (currentUser && status === 'succeeded') {
-      if (mode === 'login') {
-        if (currentUser.role === 'ADMIN') {
-          navigate("/admin");
-        } else if (currentUser.role === 'USER') {
-          navigate("/user");
-        } else if (currentUser.role === 'PARTNER') {
-          navigate("/pdashboard");
-        } else if (currentUser.role === 'B2B') {
-          navigate("/bdashboard");
-        }
+    if (currentUser && status === 'succeeded' && mode === 'login') {
+      if (currentUser.role === 'USER') {
+        navigate("/user");
         onClose();
+      } else {
+        setValidationError(`Access denied. Please use the ${currentUser.role.toLowerCase()} login page.`);
+        dispatch(logoutUser());
       }
     }
-  }, [currentUser, status, navigate, onClose, mode]);
+  }, [currentUser, status, navigate, onClose, mode, dispatch]);
 
   useEffect(() => {
     if (open) {

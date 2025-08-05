@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from "react-router-dom";
 import { AppDispatch, RootState } from "../../store"; // Make sure this path is correct
-import { clearAuthError } from "../features/slices/authSlice"; // Make sure this path is correct
+import { clearAuthError, logoutUser } from "../features/slices/authSlice"; // Make sure this path is correct
 import {
   resendOtp,
   sendLoginOtp,
@@ -51,14 +51,16 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
 
 
   useEffect(() => {
-    if (status === 'succeeded' && currentUser) {
+    if (status === 'succeeded' && currentUser && mode === 'login') {
       if (currentUser.role === 'PARTNER') {
         navigate("/pdashboard", { replace: true });
+        onClose();
+      } else {
+        setValidationError("Access denied. This login is for Partners only.");
+        dispatch(logoutUser());
       }
-      handleClose();
     }
-  }, [status, currentUser, navigate, onClose]);
-
+  }, [status, currentUser, navigate, onClose, mode, dispatch]);
 
 
 
@@ -246,12 +248,12 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Email ID <span className="text-[#991313]">*</span></label>
                 <input type="email" placeholder="Email address" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313]" required />
               </div>
-              
+
               <div className="flex-1 min-w-[120px] text-left w-full">
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Phone <span className="text-[#991313]">*</span></label>
                 <PhoneInput className="phone-input-container" placeholder="Enter phone" value={fullPhoneNumber} onChange={setFullPhoneNumber} defaultCountry="IN" required />
               </div>
-             
+
               {/* City & Town - same row */}
               <div className="flex gap-2 w-full">
                 <div className="flex-1 min-w-[80px] text-left">
