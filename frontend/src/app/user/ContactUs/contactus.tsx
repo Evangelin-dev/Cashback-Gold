@@ -63,7 +63,7 @@ const ContactUsPage = () => {
               <span className="font-semibold">Start a chat session below:</span>
             </p>
             <a
-              href="https://wa.me/918190059995"
+              href="https://wa.me/918190029992"
               target="_blank"
               rel="noopener noreferrer"
               className="px-8 py-3 rounded-lg bg-[#7a1335] text-white font-bold text-lg shadow hover:bg-[#991616] transition-colors flex items-center gap-3"

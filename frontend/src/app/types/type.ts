@@ -159,6 +159,8 @@ export interface Product {
   details: string;
   itemType: string | null;
   priceBreakups: PriceBreakup[];
+  totalPrice?: number;
+  totalGram?: number;
 }
 
 export interface CartItem {
@@ -199,4 +201,37 @@ export interface UserProfile {
   town: string;
   state: string;
   country: string;
+}
+
+// src/types/type.ts
+
+// Assuming a WishlistItem has a structure similar to an ornament/product
+export interface WishlistItem {
+  ornamentId: number;
+  name: string;
+  mainImage: string;
+  category: string;
+  itemType: string;
+  purity: string;
+  totalPrice: number;
+}
+
+// This now EXACTLY matches the paginated response from your API
+export interface PaginatedWishlistResponse {
+    items: WishlistItem[];
+    page: number;
+    size: number;
+    totalElements: number;
+    totalPages: number;
+}
+
+// This is the shape of the Wishlist state inside your Redux store
+export interface WishlistState {
+  items: WishlistItem[];
+  status: 'idle' | 'loading' | 'succeeded' | 'failed'; // For UI state
+  error: string | null; // For UI state
+  count: number;
+  currentPage: number;
+  totalPages: number;
+  isLastPage: boolean;
 }

@@ -1,40 +1,35 @@
+import { Loader2, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
-import { Trash2, ShoppingBag, X, Loader2, Minus, Plus } from 'lucide-react';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
-// --- REDUX IMPORTS ---
-import { useSelector, useDispatch } from 'react-redux';
-import { RootState, AppDispatch } from '../../../store';
-import { fetchCart, removeFromCart, clearCart, updateCartItemQuantity, checkoutCart } from '../../features/thunks/cartThunks'; // Assuming you create these thunks
+import { AppDispatch, RootState } from '../../../store';
+import { clearCart, fetchCart, removeFromCart, updateCartItemQuantity, checkoutCart } from '../../features/thunks/cartThunks';
 import Portal from '../../user/Portal';
+import { Product } from '../../types/type'; // Assuming your CartItem's ornament is of type Product
 
 const Cart = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
-  // --- GLOBAL STATE FROM REDUX ---
   const { currentUser } = useSelector((state: RootState) => state.auth);
-  // Get all cart data directly from the Redux store
   const { items: cartItems, status: cartStatus, error: cartError } = useSelector((state: RootState) => state.cart);
 
-  // --- LOCAL UI STATE (This does NOT change!) ---
   const [isUpdating, setIsUpdating] = useState<number | 'all' | 'checkout' | null>(null);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState<{ type: 'remove' | 'clear', itemId?: number } | null>(null);
 
-  // Redirect if not logged in
   useEffect(() => {
-    if (!currentUser) navigate('/SignupPopup');
+    if (!currentUser) {
+      navigate('/SignupPopup');
+    }
   }, [currentUser, navigate]);
 
-  // --- DATA FETCHING (Now handled by Redux) ---
   useEffect(() => {
-    // If the user is logged in but the cart hasn't been fetched yet, dispatch the action.
     if (currentUser && cartStatus === 'idle') {
       dispatch(fetchCart());
     }
   }, [currentUser, cartStatus, dispatch]);
 
-  // --- HANDLER FUNCTIONS (Now dispatching Redux actions) ---
   const handleRemoveItem = (cartItemId: number) => {
     setActionToConfirm({ type: 'remove', itemId: cartItemId });
     setShowConfirmPopup(true);
@@ -49,7 +44,6 @@ const Cart = () => {
     if (!actionToConfirm) return;
     const { type, itemId } = actionToConfirm;
 
-    // Use `.unwrap()` to handle promise states for local UI updates
     if (type === 'remove' && itemId) {
       setIsUpdating(itemId);
       try {
@@ -64,7 +58,6 @@ const Cart = () => {
       } catch (err) { alert("Failed to clear the cart."); }
     }
 
-    // Reset local UI state
     setIsUpdating(null);
     setShowConfirmPopup(false);
     setActionToConfirm(null);
@@ -82,7 +75,6 @@ const Cart = () => {
     try {
       await dispatch(checkoutCart()).unwrap();
       alert("Checkout successful! Your order has been placed.");
-      // navigate('/order-confirmation');
     } catch (err) {
       console.error("Checkout failed:", err);
       alert("Checkout failed. Please try again.");
@@ -91,25 +83,32 @@ const Cart = () => {
     }
   };
 
-  // --- DYNAMIC CALCULATIONS (No change needed) ---
-  const subtotal = cartItems.reduce((sum, item) => sum + item.ornament.price * item.quantity, 0);
+  // --- CORRECTED PRICE CALCULATION LOGIC ---
+  const calculateItemPrice = (ornament: Product): number => {
+    if (Array.isArray(ornament.priceBreakups) && ornament.priceBreakups.length > 0) {
+      return ornament.priceBreakups.reduce((sum, pb) => sum + (pb.finalValue || 0), 0);
+    }
+    return ornament.totalPrice || 0; // Fallback
+  };
+
+  const subtotal = cartItems.reduce((sum, item) => {
+    const itemPrice = calculateItemPrice(item.ornament);
+    return sum + itemPrice * item.quantity;
+  }, 0);
   const tax = subtotal * 0.03;
   const total = subtotal + tax;
 
-  // --- UI RENDER LOGIC ---
   if (cartStatus === 'loading') return <div className="flex min-h-[80vh] items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-[#7a1436]" /></div>;
   if (cartError) return <div className="flex min-h-[80vh] items-center justify-center bg-slate-50 p-6"><div className="text-center text-red-600"><p className="mb-2 text-xl font-semibold">Error</p><p>{cartError}</p></div></div>;
   
-  // ... The rest of your JSX remains almost identical ...
-  // The only change is in the quantity handler
   return (
-      <>
-      <div className="min-h-screen bg-slate-50 ">
+    <>
+      <div className="min-h-screen bg-slate-50 py-8">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-3xl font-bold text-[#7a1436] sm:text-4xl mt-2">Your Shopping Cart</h1>
             {cartItems.length > 0 && (
-              <button onClick={handleClearCart} disabled={isUpdating === 'all'} className="flex mt-10 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 disabled:cursor-not-allowed">
+              <button onClick={handleClearCart} disabled={isUpdating === 'all'} className="flex mt-2 sm:mt-0 items-center gap-2 rounded-lg px-4 py-2 text-sm font-medium text-gray-500 transition-colors hover:bg-gray-100 hover:text-red-600 disabled:cursor-not-allowed">
                 {isUpdating === 'all' ? <Loader2 className="h-4 w-4 animate-spin" /> : <X className="h-4 w-4" />} Clear All
               </button>
             )}
@@ -120,28 +119,24 @@ const Cart = () => {
               <ShoppingBag className="mx-auto h-16 w-16 text-gray-300" />
               <h2 className="mt-6 text-xl font-semibold text-gray-800 sm:text-2xl">Your cart is empty</h2>
               <p className="mt-2 text-gray-500">Looks like you haven't added any ornaments yet.</p>
-              <button onClick={() => navigate('/lbuyornaments')} className="mt-6 rounded-lg bg-[#7a1436] px-6 py-3 font-semibold text-white transition-transform hover:scale-105">Start Shopping</button>
+              <button onClick={() => navigate('/buyornaments')} className="mt-6 rounded-lg bg-[#7a1436] px-6 py-3 font-semibold text-white transition-transform hover:scale-105">Start Shopping</button>
             </div>
           ) : (
             <div className="grid grid-cols-1 gap-8 lg:grid-cols-3 lg:items-start">
               <div className="space-y-4 lg:col-span-2">
-                {cartItems.map((item) => (
+                {[...cartItems].reverse().map((item) => (
                   <div key={item.id} className="flex flex-col gap-4 rounded-2xl bg-white p-4 shadow-sm transition-shadow hover:shadow-md sm:flex-row sm:items-center">
                     <img src={item.ornament.mainImage} alt={item.ornament.name} className="h-28 w-28 flex-shrink-0 self-center rounded-lg bg-gray-100 object-cover sm:h-24 sm:w-24" />
                     <div className="flex-grow">
                       <h3 className="font-bold text-gray-800">{item.ornament.name}</h3>
                       <p className="text-sm text-gray-500">{item.ornament.category}</p>
-                      <p className="mt-1 text-base font-semibold text-[#7a1436]">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.ornament.price)}</p>
+                      <p className="mt-1 text-base font-semibold text-[#7a1436]">
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(calculateItemPrice(item.ornament))}
+                      </p>
                     </div>
-                    <div className="flex w-full items-center justify-between self-stretch sm:w-auto sm:flex-col sm:items-end">
-                      <div className="flex items-center gap-2">
-                        <button onClick={() => handleUpdateQuantity(item.id, item.quantity - 1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" disabled={isUpdating === item.id}>
-                          <Minus className="h-4 w-4" />
-                        </button>
-                        <span className="w-8 text-center font-medium">{item.quantity}</span>
-                        <button onClick={() => handleUpdateQuantity(item.id, item.quantity + 1)} className="flex h-8 w-8 items-center justify-center rounded-full bg-gray-100 text-gray-600 hover:bg-gray-200" disabled={isUpdating === item.id}>
-                          <Plus className="h-4 w-4" />
-                        </button>
+                    <div className="flex w-full items-center justify-between self-stretch sm:w-auto sm:flex-col sm:items-end sm:gap-4">
+                      <div className="font-semibold text-gray-700 text-sm">
+                        Qty: {item.quantity}
                       </div>
                       <button onClick={() => handleRemoveItem(item.id)} disabled={isUpdating === item.id} className="flex items-center gap-1.5 rounded-lg p-2 text-xs font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed">
                         {isUpdating === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Remove

@@ -47,7 +47,6 @@ const Dashboard: React.FC = () => {
     { id: 'CashBackGold Scheme ', label: 'CashBackGold Scheme ', icon: Coins },
     { id: 'Gold Plant Scheme ', label: 'Gold Plant Scheme ', icon: Sprout },
     { id: 'Wishlist', label: 'Wishlist', icon: Heart },
-    { id: 'Notification', label: 'Notification', icon: Bell },
     { id: 'My Bank Accounts', label: 'My Bank Accounts', icon: Building2 },
   ];
 
@@ -75,7 +74,6 @@ const Dashboard: React.FC = () => {
       case 'Gold Plant Scheme ': return <LGoldPlantScheme/>;
       case 'Wishlist': return <Wishlist/>;  
       case 'Cart': return <Cart/>;
-      case 'Notification': return <LNotification/>;
       case 'My Bank Accounts': return <BankUPIManager/>;
       default: return <LMyDashboard/>;
     }
