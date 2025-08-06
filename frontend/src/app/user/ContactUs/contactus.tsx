@@ -127,7 +127,7 @@ const ContactUsPage = () => {
               className="px-8 py-3 rounded-lg bg-[#7a1335] text-white font-bold text-lg shadow hover:bg-[#991616] transition-colors flex items-center gap-3"
             >
               <i className="fa fa-phone-square"></i>
-              +91 81900 59995
+              +91 81900 29992
             </a>
             <a
               href="/contactus"
@@ -257,7 +257,7 @@ const ContactUsPage = () => {
                   />
                 </span>
                 <div className="font-bold text-xl mb-2 mt-2 text-black text-center">Contact Us</div>
-                <div className="text-base text-[#222] text-center">+91 81900 59995</div>
+                <div className="text-base text-[#222] text-center">+91 81900 29992</div>
               </div>
               {/* Follow Us */}
               <div

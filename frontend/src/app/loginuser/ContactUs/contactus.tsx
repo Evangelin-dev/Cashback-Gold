@@ -120,7 +120,7 @@ const LContactUsPage = () => {
               className="px-8 py-3 rounded-lg bg-[#7a1335] text-white font-bold text-lg shadow hover:bg-[#991616] transition-colors flex items-center gap-3"
             >
               <i className="fa fa-phone-square"></i>
-              +91 81900 59995
+              +91 81900 29992
             </a>
             <a
               href="/contactus"
@@ -189,7 +189,7 @@ const LContactUsPage = () => {
                   <Phone className="w-7 h-7 text-[#7a1335]" />
                 </span>
                 <div className="font-bold text-base mb-1 mt-1 text-black text-center">Contact Us</div>
-                <div className="text-xs text-[#222] text-center">+91 81900 59995</div>
+                <div className="text-xs text-[#222] text-center">+91 81900 29992</div>
               </div>
               {/* Follow Us */}
               <div ref={followFade.ref} className={`flex-1 flex flex-col items-center justify-center px-2 transition-all duration-700 ${followFade.fadeClass}`}>
