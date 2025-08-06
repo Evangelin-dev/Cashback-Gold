@@ -16,4 +16,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Optional<User> findByEmailOrMobile(String email, String mobile);
     long countByRoleIgnoreCase(String role);
     long countByRole(String role);
+
+    long countByReferredBy(Long referredBy);
+    long countByReferredByAndStatus(Long referredBy, String status);
 }
