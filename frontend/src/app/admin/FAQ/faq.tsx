@@ -37,6 +37,7 @@ const ManageFaq: React.FC = () => {
       const typeParam = filterType === 'All' ? '' : `&type=${filterType}`;
       const url = `/api/faqs?${typeParam}&page=${currentPage}&size=${pageSize}`;
       const response = await axiosInstance.get(url);
+      console.log(response ,'response');
       setFaqs(response.data.content);
       setTotalPages(response.data.totalPages);
       setTotalElements(response.data.totalElements);

@@ -74,7 +74,6 @@ const JewelryProductPage = () => {
       setSimilarProducts([]);
       try {
         const productResponse = await axiosInstance.get<Product>(`/admin/ornaments/${id}`);
-        console.log(productResponse.data, 'productResponse.data');
         const mainProduct = productResponse.data;
 
         setProduct(mainProduct);
