@@ -114,6 +114,8 @@ public class SecurityConfig {
                                 .requestMatchers("/api/cashback-gold-user/**").hasAnyAuthority("USER")
                                 .requestMatchers("/partner").hasAnyAuthority("PARTNER")
                                 .requestMatchers("/user/**").hasAnyAuthority("USER", "PARTNER")
+                                .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()   // public
+                                .requestMatchers("/admin/contacts/**").hasAuthority("ADMIN")    // admin-only
                                 // All other requests require authentication
                                 .anyRequest().authenticated()
                 )

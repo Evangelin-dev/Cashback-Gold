@@ -33,4 +33,26 @@ public class EmailService {
             throw new RuntimeException("Failed to send OTP email", e);
         }
     }
+
+    public void sendContactMessageEmail(String fromEmail, String name, String phone, String messageText) {
+        try {
+            MimeMessage message = mailSender.createMimeMessage();
+            MimeMessageHelper helper = new MimeMessageHelper(message, true);
+
+            helper.setFrom(from); // app email
+            helper.setTo(from); // admin/support email
+            helper.setSubject("New Contact Us Message - Cashback Gold");
+
+            String content = "<p><b>Name:</b> " + name + "</p>"
+                    + "<p><b>Email:</b> " + fromEmail + "</p>"
+                    + "<p><b>Phone:</b> " + phone + "</p>"
+                    + "<p><b>Message:</b><br/>" + messageText + "</p>";
+
+            helper.setText(content, true);
+            mailSender.send(message);
+        } catch (MessagingException e) {
+            throw new RuntimeException("Failed to send contact message email", e);
+        }
+    }
+
 }

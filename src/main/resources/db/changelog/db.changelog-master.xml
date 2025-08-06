@@ -1246,6 +1246,42 @@
         </createTable>
     </changeSet>
 
+    <changeSet id="41" author="azeem">
+        <createTable tableName="contact_messages">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="first_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="last_name" type="VARCHAR(120)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="email" type="VARCHAR(180)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="phone" type="VARCHAR(32)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="message" type="TEXT"/>
+            <column name="status" type="VARCHAR(24)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_at" type="TIMESTAMPTZ" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <createIndex tableName="contact_messages" indexName="idx_contact_email">
+            <column name="email"/>
+        </createIndex>
+        <createIndex tableName="contact_messages" indexName="idx_contact_phone">
+            <column name="phone"/>
+        </createIndex>
+        <createIndex tableName="contact_messages" indexName="idx_contact_status">
+            <column name="status"/>
+        </createIndex>
+    </changeSet>
 
 
 </databaseChangeLog>
