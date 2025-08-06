@@ -4,6 +4,7 @@ import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from "react-router-dom";
 import { RootState } from '../../../../store';
 import axiosInstance from '../../../../utils/axiosInstance';
+import Portal from '../../Portal';
 
 // --- Interfaces to match your API response ---
 
@@ -40,6 +41,14 @@ interface Product {
   totalPrice?: number;
 }
 
+// Razorpay type declaration for window
+declare global {
+  interface Window {
+    Razorpay?: any;
+    RAZORPAY_KEY_ID?: string;
+  }
+}
+
 const JewelryProductPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -54,9 +63,17 @@ const JewelryProductPage = () => {
   const [isLiked, setIsLiked] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
 
+
   // --- NEW STATE for Cart Functionality ---
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // --- Razorpay Payment State ---
+  const [isPaying, setIsPaying] = useState(false);
+  const [paymentError, setPaymentError] = useState<string | null>(null);
+  const [paymentResult, setPaymentResult] = useState<any | null>(null);
+  const [showPaymentSummary, setShowPaymentSummary] = useState(false);
+  const [orderId, setOrderId] = useState<number | null>(null);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -95,10 +112,12 @@ const JewelryProductPage = () => {
     fetchProductData();
   }, [id]);
 
+
   // --- NEW HANDLER for Add to Cart ---
   const handleAddToCart = async () => {
-    if ( !currentUser ){
+    if (!currentUser) {
       navigate("/SignupPopup");
+      return;
     }
     if (!product) return;
     setIsAddingToCart(true);
@@ -111,6 +130,146 @@ const JewelryProductPage = () => {
       alert("There was an issue adding this item to your cart. Please try again.");
     } finally {
       setIsAddingToCart(false);
+    }
+  };
+
+  // --- Razorpay Payment Integration ---
+  const handleBuyNow = () => {
+    if (!currentUser) {
+      navigate("/SignupPopup");
+      return;
+    }
+    setShowPaymentSummary(true);
+    setPaymentError(null);
+  };
+
+  // Main payment flow: enroll, initiate, open Razorpay, callback
+  const handleMakePayment = async () => {
+    if (!product) return;
+    setIsPaying(true);
+    setPaymentError(null);
+    try {
+      // 1. Initiate payment (no enrollment step)
+      const totalPrice = (() => {
+        let t = typeof product.totalPrice === 'number' ? product.totalPrice : NaN;
+        if (isNaN(t) && Array.isArray(product.priceBreakups)) {
+          t = product.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
+        }
+        if (!Number.isFinite(t)) t = 0;
+        return t * quantity;
+      })();
+      let initiateRes;
+      try {
+        initiateRes = await axiosInstance.post('/api/orders/checkout/initiate', {
+          ornamentId: product.id,
+          quantity,
+          amountPaid: totalPrice,
+        });
+      } catch (apiErr: any) {
+        console.error('Payment initiation error:', apiErr);
+        let apiErrorMsg = 'Sorry, we could not initiate payment. Please check your network or contact support.';
+        if (apiErr?.response) {
+          if (typeof apiErr.response.data === 'string' && apiErr.response.data) {
+            apiErrorMsg = apiErr.response.data;
+          } else if (apiErr.response.data?.message) {
+            apiErrorMsg = apiErr.response.data.message;
+          }
+        } else if (apiErr?.message) {
+          apiErrorMsg = apiErr.message;
+        }
+        setPaymentError(apiErrorMsg);
+        setIsPaying(false);
+        return;
+      }
+      const orderIdFromApi = initiateRes.data.orderId || initiateRes.data.id;
+      setOrderId(orderIdFromApi);
+
+      // 2. Open Razorpay checkout using API response fields
+      const options = {
+        key: initiateRes.data.key,
+        amount: Math.round(initiateRes.data.amount * 100), // Razorpay expects paise
+        currency: initiateRes.data.currency,
+        name: 'Greenheap Gold',
+        description: product.name,
+        order_id: initiateRes.data.orderId,
+        handler: async function (response: any) {
+          try {
+            // 3. Callback to backend (match chitjewels and DB fields exactly)
+            const callbackPayload = {
+              razorpay_order_id: initiateRes.data.orderId,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              amount: initiateRes.data.amount,
+              payment_type: 'RAZORPAY',
+              enrollment_id: orderIdFromApi,
+            };
+            const token = localStorage.getItem('authToken');
+            console.log('Sending callback payload to backend:', callbackPayload);
+            console.log('Auth token for callback:', token);
+            // Optionally, show currentUser for debugging
+            console.log('Current user:', currentUser);
+            const callbackRes = await axiosInstance.post('/api/orders/ornaments/checkout/callback', callbackPayload);
+            setPaymentResult(callbackRes.data);
+            setShowPaymentSummary(false);
+          } catch (err) {
+            console.error('Payment callback error:', err);
+            let callbackErrorMsg = "Payment succeeded but callback failed. Please contact support.";
+            if (typeof err === 'object' && err !== null && 'response' in err) {
+              const errorResponse = (err as any).response;
+              if (typeof errorResponse?.data === 'string' && errorResponse.data) {
+                callbackErrorMsg = errorResponse.data;
+              } else if (errorResponse?.data?.message) {
+                callbackErrorMsg = errorResponse.data.message;
+              }
+            } else if (typeof err === 'string') {
+              callbackErrorMsg = err;
+            } else if (err && typeof err === 'object' && 'message' in err) {
+              callbackErrorMsg = (err as any).message;
+            }
+            setPaymentError(callbackErrorMsg);
+          }
+          setIsPaying(false);
+        },
+        prefill: {
+          name: currentUser?.email || '',
+          email: currentUser?.email || '',
+          contact: currentUser?.mobile || '',
+        },
+        theme: { color: '#7a1335' },
+        modal: {
+          ondismiss: function () {
+            setIsPaying(false);
+          }
+        }
+      };
+      // Load Razorpay script if not present
+      if (!window.Razorpay) {
+        const script = document.createElement('script');
+        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+        script.async = true;
+        script.onload = () => {
+          const rzp = new window.Razorpay(options);
+          rzp.open();
+        };
+        document.body.appendChild(script);
+      } else {
+        const rzp = new window.Razorpay(options);
+        rzp.open();
+      }
+    } catch (err: any) {
+      console.error('Payment flow error:', err);
+      let apiError = "Sorry, we couldn't process your payment at this time. Please try again.";
+      if (err?.response) {
+        if (typeof err.response.data === 'string' && err.response.data) {
+          apiError = err.response.data;
+        } else if (err.response.data?.message) {
+          apiError = err.response.data.message;
+        }
+      } else if (err?.message) {
+        apiError = err.message;
+      }
+      setPaymentError(apiError);
+      setIsPaying(false);
     }
   };
 
@@ -188,8 +347,75 @@ const JewelryProductPage = () => {
                     <ShoppingCart className="h-5 w-5" />
                     <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
                   </button>
-                  <button className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#7a1335] py-4 px-6 font-bold text-white shadow-md transition-all duration-300 ease-in-out hover:bg-[#6b1130] hover:shadow-xl hover:-translate-y-0.5"><Zap className="h-5 w-5" /><span>Buy Now</span></button>
+                  <button
+                    onClick={handleBuyNow}
+                    disabled={isPaying}
+                    className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#7a1335] py-4 px-6 font-bold text-white shadow-md transition-all duration-300 ease-in-out hover:bg-[#6b1130] hover:shadow-xl hover:-translate-y-0.5 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    <Zap className="h-5 w-5" />
+                    <span>{isPaying ? 'Processing...' : 'Buy Now'}</span>
+                  </button>
                 </div>
+      {/* Payment Summary Popup */}
+      {showPaymentSummary && product && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-4 max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-fade-in text-xs">
+              <button onClick={() => setShowPaymentSummary(false)} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl" disabled={isPaying}>×</button>
+              <div className="text-center mb-4">
+                <h3 className="font-bold text-gray-900 mb-1 text-xs">Payment Summary</h3>
+                <div className="font-bold text-[#7a1335] mb-1 text-xs">{product.name}</div>
+                <div className="text-gray-600 mb-2 text-xs">Quantity: {quantity}</div>
+                <div className="text-gray-600 mb-2 text-xs">Total Amount: {(() => {
+                  let t = typeof product.totalPrice === 'number' ? product.totalPrice : NaN;
+                  if (isNaN(t) && Array.isArray(product.priceBreakups)) {
+                    t = product.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
+                  }
+                  if (!Number.isFinite(t)) t = 0;
+                  return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(t * quantity);
+                })()}</div>
+                <div className="mt-2 text-xs text-gray-700">Payment Method: <span className="font-semibold">Razorpay</span></div>
+              </div>
+              {paymentError && <div className="text-center text-red-600 mb-2 bg-red-50 p-2 rounded-lg text-xs">{paymentError}</div>}
+              <div className="flex space-x-2">
+                <button onClick={() => setShowPaymentSummary(false)} className="flex-1 py-2 px-2 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors text-xs" disabled={isPaying}>Back</button>
+                <button
+                  onClick={handleMakePayment}
+                  className="flex-1 py-2 px-2 bg-[#7a1335] text-white rounded-lg font-semibold hover:bg-[#991313] transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed text-xs"
+                  disabled={isPaying}
+                >
+                  {isPaying ? 'Processing...' : 'Make Payment'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* Final Payment Result Popup */}
+      {paymentResult && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1000] p-4 backdrop-blur-sm">
+            <div className="bg-white rounded-2xl p-4 max-w-md w-full max-h-[90vh] overflow-y-auto relative animate-fade-in text-xs">
+              <button onClick={() => { setPaymentResult(null); }} className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 text-2xl">×</button>
+              <div className="text-center mb-4">
+                <h3 className="font-bold text-[#7a1335] mb-2 text-base">Payment Successful!</h3>
+                <div className="font-bold text-gray-900 mb-1 text-xs">{paymentResult.productName || paymentResult.planName || product?.name}</div>
+                <div className="text-gray-600 mb-2 text-xs">Order ID: {paymentResult.orderId || orderId}</div>
+                <div className="text-gray-600 mb-2 text-xs">Status: {paymentResult.status || 'Success'}</div>
+                <div className="text-gray-600 mb-2 text-xs">Total Amount Paid: <span className="font-bold">₹{paymentResult.totalAmountPaid || paymentResult.amountPaid || ''}</span></div>
+                {/* Add more details as needed */}
+              </div>
+              <div className="flex justify-center">
+                <button onClick={() => { setPaymentResult(null); }} className="py-2 px-6 rounded bg-[#7a1335] text-white font-semibold transition-transform hover:scale-105">Close</button>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* Fade-in animation style */}
+      <style>{`.animate-fade-in { animation: fadeIn 0.3s ease-out; } @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
               </div>
             </div>
           </div>

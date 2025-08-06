@@ -72,7 +72,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
         navigate("/user");
         onClose();
       } else {
-        setValidationError(`Access denied. Please use the ${currentUser.role.toLowerCase()} login page.`);
+        setValidationError("Login failed. Please check your credentials or contact support.");
         dispatch(logoutUser());
       }
     }
