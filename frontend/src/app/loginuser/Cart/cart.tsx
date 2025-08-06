@@ -104,7 +104,7 @@ const Cart = () => {
   // The only change is in the quantity handler
   return (
       <>
-      <div className="min-h-screen bg-slate-50 py-12 pt-28 md:pt-32">
+      <div className="min-h-screen bg-slate-50 ">
         <div className="mx-auto max-w-6xl px-4">
           <div className="mb-8 flex flex-col items-start gap-4 sm:flex-row sm:items-center sm:justify-between">
             <h1 className="text-3xl font-bold text-[#7a1436] sm:text-4xl mt-2">Your Shopping Cart</h1>
