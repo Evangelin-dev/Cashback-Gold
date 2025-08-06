@@ -1283,5 +1283,39 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="42" author="azeem">
+        <createTable tableName="wishlist_items">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_wishlist_user"
+                             references="users(id)"/>
+            </column>
+
+            <column name="ornament_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_wishlist_ornament"
+                             references="ornaments(id)"/>
+            </column>
+
+            <column name="created_at" type="TIMESTAMP WITH TIME ZONE" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- A user can wish-list an ornament only once -->
+        <addUniqueConstraint tableName="wishlist_items"
+                             columnNames="user_id, ornament_id"
+                             constraintName="uk_wishlist_user_ornament"/>
+
+        <createIndex indexName="idx_wishlist_user" tableName="wishlist_items">
+            <column name="user_id"/>
+        </createIndex>
+        <createIndex indexName="idx_wishlist_ornament" tableName="wishlist_items">
+            <column name="ornament_id"/>
+        </createIndex>
+    </changeSet>
+
 
 </databaseChangeLog>

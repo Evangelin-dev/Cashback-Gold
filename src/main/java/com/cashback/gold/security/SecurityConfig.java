@@ -116,6 +116,8 @@ public class SecurityConfig {
                                 .requestMatchers("/user/**").hasAnyAuthority("USER", "PARTNER")
                                 .requestMatchers(HttpMethod.POST, "/api/contact").permitAll()   // public
                                 .requestMatchers("/admin/contacts/**").hasAuthority("ADMIN")    // admin-only
+                                .requestMatchers("/api/wishlist/**").hasAnyAuthority("USER")
+
                                 // All other requests require authentication
                                 .anyRequest().authenticated()
                 )
