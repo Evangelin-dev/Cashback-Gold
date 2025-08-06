@@ -6,6 +6,7 @@ import Carousel from "../components/custom/Carousel";
 import style from "./style.module.css";
 import axiosInstance from "../../utils/axiosInstance";
 
+
 // Helper hook for scroll animation
 function useScrollFadeIn(direction: "left" | "right" | "up" | "down" = "up", duration = 700, delay = 0) {
   const dom = useRef<HTMLDivElement | null>(null);
@@ -64,6 +65,11 @@ function useScrollFadeIn(direction: "left" | "right" | "up" | "down" = "up", dur
   return dom;
 }
 
+interface Flyer {
+  id: number;
+  url: string;
+  type: 'GOLD_PLANT' | 'SIP_PLAN' | 'SAVING_PLAN';
+}
 
 
 const LUserHome = () => {
@@ -74,7 +80,9 @@ const LUserHome = () => {
   const [apiSilverPrice, setApiSilverPrice] = useState<string | null>(null);
   const [rateLoading, setRateLoading] = useState(true);
   const [rateError, setRateError] = useState<string | null>(null);
-
+  const [schemeFlyers, setSchemeFlyers] = useState<Record<string, Flyer | undefined>>({});
+  const [flyersLoading, setFlyersLoading] = useState(true);
+  const [flyersError, setFlyersError] = useState<string | null>(null);
   // Fetch rates logic (copied from AdminDashboard)
   const fetchRates = useCallback(async () => {
     setRateLoading(true);
@@ -94,6 +102,40 @@ const LUserHome = () => {
   useEffect(() => {
     fetchRates();
   }, [fetchRates]);
+
+  const fetchFlyers = useCallback(async () => {
+    setFlyersLoading(true);
+    setFlyersError(null);
+    try {
+      const types: Flyer['type'][] = ['GOLD_PLANT', 'SIP_PLAN', 'SAVING_PLAN'];
+      const requests = types.map(type => axiosInstance.get<Flyer[]>(`/api/flyers?type=${type}`));
+
+      const responses = await Promise.all(requests);
+
+      const flyersData: Record<string, Flyer | undefined> = {};
+      responses.forEach((response, index) => {
+        const type = types[index];
+        // Take the first flyer if the array is not empty
+        if (response.data && response.data.length > 0) {
+          flyersData[type] = response.data[0];
+        }
+      });
+      setSchemeFlyers(flyersData);
+
+    } catch (err) {
+      console.error("Failed to fetch flyers:", err);
+      setFlyersError("Could not load schemes.");
+    } finally {
+      setFlyersLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchRates();
+    fetchFlyers(); // Fetch flyers on component mount
+  }, [fetchRates, fetchFlyers]);
+
+
 
   useEffect(() => {
     const checkScreenSize = () => {
@@ -121,6 +163,12 @@ const LUserHome = () => {
   const whyRef = useScrollFadeIn("left", 700, 0);
   const convertRef = useScrollFadeIn("right", 700, 0);
   const faqRef = useScrollFadeIn("up", 700, 0);
+
+  const schemeDetails = [
+    { type: 'SAVING_PLAN', title: 'Saving Scheme', link: '/chit' },
+    { type: 'SIP_PLAN', title: 'CashBack Gold', link: '/goldsip' },
+    { type: 'GOLD_PLANT', title: 'Gold Plant', link: '/schemes' },
+  ];
 
   return (
     <div >
@@ -215,6 +263,7 @@ const LUserHome = () => {
           </div>
         </div>
       </div>
+
       <section
         className={`mb-4 mt-6 ${style.home_scheme_section} w-full flex flex-col items-center`}
         ref={bannerRef}
@@ -227,35 +276,39 @@ const LUserHome = () => {
         <div
           className="w-full flex flex-col md:flex-row justify-center items-stretch gap-4 mt-3 max-w-[1000px] mx-auto"
         >
-          {schemes.map((scheme) => {
-            let buttonLabel = "Buy scheme";
-            const titleLower = scheme.title.toLowerCase();
-            if (titleLower.includes("chit")) buttonLabel = "Saving Scheme";
-            else if (titleLower.includes("sip")) buttonLabel = "CashBack Gold";
-            else if (titleLower.includes("gold")) buttonLabel = "Gold Plant";
-            return (
-              <div
-                key={scheme.id}
-                className="bg-white flex items-center justify-center relative rounded-[14px] max-w-[260px] min-w-[140px] h-[320px] overflow-hidden shadow-lg border-4 border-[#bf7e1a]"
-              >
-                <img
-                  src={scheme.image}
-                  alt={scheme.title}
-                  className="w-full h-full object-contain"
-                />
-                <button
-                  className="absolute left-2 bottom-2 bg-[#8a2342] text-white border-none rounded-[20px] px-5 py-2 font-medium text-xs flex items-center gap-2 shadow-sm cursor-pointer transition-colors"
-                  onClick={() => navigate(scheme.link)}
+          {flyersLoading ? (
+            <p className="text-center text-gray-500">Loading schemes...</p>
+          ) : flyersError ? (
+            <p className="text-center text-red-500">{flyersError}</p>
+          ) : (
+            schemeDetails.map((scheme) => {
+              const flyer = schemeFlyers[scheme.type];
+              if (!flyer) return null; // Don't render if flyer is not available
+
+              return (
+                <div
+                  key={flyer.id}
+                  className="bg-white flex items-center justify-center relative rounded-[14px] max-w-[260px] min-w-[140px] h-[320px] overflow-hidden shadow-lg border-4 border-[#bf7e1a]"
                 >
-                  {buttonLabel}
-                  <ArrowRight size={18} strokeWidth={2} />
-                </button>
-              </div>
-            );
-          })}
+                  <img
+                    src={flyer.url}
+                    alt={scheme.title}
+                    className="w-full h-full object-cover" // Changed to object-cover for better fitting
+                  />
+                  <button
+                    className="absolute left-2 bottom-2 bg-[#8a2342] text-white border-none rounded-[20px] px-5 py-2 font-medium text-xs flex items-center gap-2 shadow-sm cursor-pointer transition-colors"
+                    onClick={() => navigate(scheme.link)}
+                  >
+                    {scheme.title}
+                    <ArrowRight size={18} strokeWidth={2} />
+                  </button>
+                </div>
+              );
+            })
+          )}
         </div>
       </section>
-      
+
 
       {/* Discover Our Jewel Collection Banner */}
       <div
@@ -333,7 +386,7 @@ const LUserHome = () => {
           </div>
           {/* Right side content */}
           <div className="flex-2 min-w-[160px] w-full md:w-auto">
-<div className="text-center font-bold text-[18px] text-[#bf7e1a] mb-[8px] font-inherit tracking-[0.5px] leading-[1.2]">
+            <div className="text-center font-bold text-[18px] text-[#bf7e1a] mb-[8px] font-inherit tracking-[0.5px] leading-[1.2]">
               Why Choose <span className="text-[#bf7e1a]">Digital Gold</span>?
             </div>
             <div className="flex flex-row gap-2 justify-start flex-wrap">
@@ -412,7 +465,7 @@ const LUserHome = () => {
               onMouseOver={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.04)"; }}
               onMouseOut={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
             >
-              Buy   99.9% Gold 
+              Buy   99.9% Gold
               <ArrowRight size={16} />
             </button>
             <div className="mt-2 text-[#bfa21a] font-medium text-[11px] flex items-center gap-1">
@@ -445,56 +498,56 @@ const LUserHome = () => {
           </div>
         </div>
       </section>
-       <section className="py-12 bg-white text-center">
-             <div className="mb-6">
-               <div className="flex justify-center items-center gap-2">
-                 <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
-                 <h2 className="text-2xl font-semibold">Our Trusted Partners</h2>
-                 <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
-               </div>
-             </div>
-             
-             {/* Desktop View - Normal Layout */}
-             <div className="hidden md:block">
-               <div className="mt-8 flex justify-center flex-wrap gap-[128px] px-4">
-                 {partners.map((partner, index) => (
-                   <img 
-                     key={index}
-                     src={partner.src} 
-                     alt={partner.alt} 
-                     className="h-20 object-contain hover:scale-105 transition-transform duration-300" 
-                   />
-                 ))}
-               </div>
-             </div>
-       
-             {/* Mobile View - Marquee Slider */}
-             <div className="md:hidden mt-8 overflow-hidden">
-               <div className="flex animate-marquee whitespace-nowrap">
-                 {/* First set of partners */}
-                 {partners.map((partner, index) => (
-                   <div key={index} className="flex-shrink-0 mx-8">
-                     <img 
-                       src={partner.src} 
-                       alt={partner.alt} 
-                       className="h-16 object-contain" 
-                     />
-                   </div>
-                 ))}
-                 {/* Duplicate set for seamless loop */}
-                 {partners.map((partner, index) => (
-                   <div key={`duplicate-${index}`} className="flex-shrink-0 mx-8">
-                     <img 
-                       src={partner.src} 
-                       alt={partner.alt} 
-                       className="h-16 object-contain" 
-                     />
-                   </div>
-                 ))}
-               </div>
-             </div>
-       
-             <style >{`
+      <section className="py-12 bg-white text-center">
+        <div className="mb-6">
+          <div className="flex justify-center items-center gap-2">
+            <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
+            <h2 className="text-2xl font-semibold">Our Trusted Partners</h2>
+            <div className="w-10 h-1 bg-yellow-400 rounded-full"></div>
+          </div>
+        </div>
+
+        {/* Desktop View - Normal Layout */}
+        <div className="hidden md:block">
+          <div className="mt-8 flex justify-center flex-wrap gap-[128px] px-4">
+            {partners.map((partner, index) => (
+              <img
+                key={index}
+                src={partner.src}
+                alt={partner.alt}
+                className="h-20 object-contain hover:scale-105 transition-transform duration-300"
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile View - Marquee Slider */}
+        <div className="md:hidden mt-8 overflow-hidden">
+          <div className="flex animate-marquee whitespace-nowrap">
+            {/* First set of partners */}
+            {partners.map((partner, index) => (
+              <div key={index} className="flex-shrink-0 mx-8">
+                <img
+                  src={partner.src}
+                  alt={partner.alt}
+                  className="h-16 object-contain"
+                />
+              </div>
+            ))}
+            {/* Duplicate set for seamless loop */}
+            {partners.map((partner, index) => (
+              <div key={`duplicate-${index}`} className="flex-shrink-0 mx-8">
+                <img
+                  src={partner.src}
+                  alt={partner.alt}
+                  className="h-16 object-contain"
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <style >{`
                @keyframes marquee {
                  0% {
                    transform: translateX(0%);
@@ -513,7 +566,7 @@ const LUserHome = () => {
                  animation-play-state: paused;
                }
              `}</style>
-           </section>
+      </section>
     </div>
   );
 };
@@ -700,40 +753,67 @@ function ClientFeedbackCarousel() {
   );
 }
 
-// Add this component at the bottom of the file (outside UserHome)
-const faqData = [
-  {
-    question: "What is digital gold and how does it work?",
-    answer:
-      "Digital gold is an online investment product that allows you to buy, sell, and store gold virtually. Each unit you buy is backed by real physical gold stored securely by the provider.",
-  },
-  {
-    question: "Can I convert my digital gold to physical gold?",
-    answer:
-      "Yes, you can redeem your digital gold for physical gold coins or bars and have them delivered to your doorstep.",
-  },
-  {
-    question: "Is my digital gold safe and insured?",
-    answer:
-      "Yes, your digital gold is stored in secure vaults and is fully insured by the provider.",
-  },
-  {
-    question: "How do I sell my digital gold?",
-    answer:
-      "You can sell your digital gold instantly online at the current market price and receive the amount directly in your account.",
-  },
-];
+// Make sure this path is correct
+
+// --- Type Definitions for the API data ---
+interface FaqItem {
+  id: number;
+  question: string;
+  answer: string;
+}
+
+interface FaqApiResponse {
+  content: FaqItem[];
+}
 
 function FAQList() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+
+  // --- State for API data, loading, and errors ---
+  const [faqData, setFaqData] = useState<FaqItem[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchFaqs = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const response = await axiosInstance.get<FaqApiResponse>('/api/faqs?type=HOME&page=0&size=5');
+        setFaqData(response.data.content || []);
+      } catch (err) {
+        console.error("Failed to fetch FAQs:", err);
+        setError("Could not load frequently asked questions.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFaqs();
+  }, []); // Empty dependency array means this runs once on mount
+
   const toggle = (idx: number) => {
     setOpenIndex(openIndex === idx ? null : idx);
   };
-  // Split FAQ data into rows of 2
+
+  if (loading) {
+    return <div style={{ color: "white", textAlign: "center" }}>Loading FAQs...</div>;
+  }
+
+  if (error) {
+    return <div style={{ color: "white", textAlign: "center" }}>{error}</div>;
+  }
+
+  if (faqData.length === 0) {
+    return <div style={{ color: "white", textAlign: "center" }}>No questions found.</div>;
+  }
+
+  // --- UI Logic (unchanged) ---
   const rows = [];
   for (let i = 0; i < faqData.length; i += 2) {
     rows.push(faqData.slice(i, i + 2));
   }
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
       {rows.map((row, rowIdx) => (
@@ -750,7 +830,7 @@ function FAQList() {
             const realIdx = rowIdx * 2 + idx;
             return (
               <div
-                key={realIdx}
+                key={faq.id} // Use the unique ID from the API
                 style={{
                   background: "#fff",
                   borderRadius: 8,
@@ -768,14 +848,14 @@ function FAQList() {
                 onClick={() => toggle(realIdx)}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                  <div style={{ color: "#991313", fontWeight: 700, fontSize: 12, display: "flex", alignItems: "center", gap: 4 }}>
+                  <div style={{ color: "#991313", fontWeight: 700, fontSize: 14, display: "flex", alignItems: "center", gap: 4 }}>
                     <RotateCcw size={14} color="#991313" />
                     {faq.question}
                   </div>
                   <span
                     style={{
                       color: "#bf7e1a",
-                      fontSize: 18,
+                      fontSize: 16,
                       marginLeft: 8,
                       transition: "transform 0.2s",
                       transform: openIndex === realIdx ? "rotate(90deg)" : "rotate(0deg)",
@@ -791,7 +871,7 @@ function FAQList() {
                   <div
                     style={{
                       color: "#444",
-                      fontSize: 10,
+                      fontSize: 18,
                       fontWeight: 400,
                       marginTop: 8,
                       lineHeight: 1.4,

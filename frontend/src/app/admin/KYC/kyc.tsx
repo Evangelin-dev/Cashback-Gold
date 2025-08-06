@@ -268,7 +268,7 @@ const KYC = () => {
                 </div>
 
                 <div className="flex border-b border-gray-200 mb-6">
-                    {(["USER", "B2B", "PARTNER"] as UserType[]).map((tab) => (
+                    {(["USER", "PARTNER"] as UserType[]).map((tab) => (
                         <button key={tab} onClick={() => setActiveTab(tab)} className={`flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 transition-colors ${activeTab === tab ? "border-[#7a1335] text-[#7a1335] bg-[#fbeaf0]" : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"}`}>
                             {getTabIcon(tab)}
                             {tab.charAt(0) + tab.slice(1).toLowerCase()}
