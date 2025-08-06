@@ -9,7 +9,7 @@ import { logoutUser } from "../../features/slices/authSlice";
 
 export const MENU = [
 	{ name: "Home", link: "/" },
-	{ name: "About Us", link: "/aboutus" },
+	{ name: "About Us", link: "/about-us" },
 	{ name: "Buy Ornaments", link: "buyornaments" },
 	{ name: "Contact Us", link: "/contactus" },
 ];

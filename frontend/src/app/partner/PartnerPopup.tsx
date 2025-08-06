@@ -1,15 +1,15 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from "react-router-dom";
-import { AppDispatch, RootState } from "../../store"; // Make sure this path is correct
-import { clearAuthError, logoutUser } from "../features/slices/authSlice"; // Make sure this path is correct
+import { AppDispatch, RootState } from "../../store";
+import { clearAuthError, logoutUser } from "../features/slices/authSlice";
 import {
   resendOtp,
   sendLoginOtp,
   sendRegistrationOtp,
   verifyLoginOtp,
   verifyOtpAndRegister
-} from "../features/thunks/authThunks"; // Make sure this path is correct
+} from "../features/thunks/authThunks";
 
 import parsePhoneNumber from 'libphonenumber-js';
 import PhoneInput, { isValidPhoneNumber } from 'react-phone-number-input';
@@ -61,8 +61,6 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
       }
     }
   }, [status, currentUser, navigate, onClose, mode, dispatch]);
-
-
 
   useEffect(() => {
     if (open) {
@@ -172,7 +170,7 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
         alert("Partner registration successful! Please log in.");
         switchMode("login");
       } catch (rejectedValue) {
-        setValidationError(rejectedValue as string);
+      
       }
     }
   };
@@ -182,7 +180,6 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
     if (identifier) dispatch(resendOtp({ email: identifier }));
   };
 
-  // The 'X' button should just call onClose. The parent component is responsible for its state.
   const handleClose = () => {
     onClose();
     navigate("/");
@@ -195,7 +192,7 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
 
 
   return (
-    <div className="fixed inset-0 bg-opacity-40 z-[9999] flex items-center justify-center">
+    <div className="fixed inset-0 bg-[rgba(0,0,0,0.38)] bg-opacity-40 z-[9999] flex items-center justify-center">
       <div className="bg-white rounded-2xl max-w-[400px] w-[96vw] p-4 pt-3 shadow-xl relative text-center max-h-[90vh] overflow-y-auto animate-popup-fade-in">
         <div className="flex flex-col items-center justify-center mb-1">
           <img src="/logo.png" alt="Logo" className="h-7 mb-1" />
@@ -204,35 +201,53 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
           <button className={`px-3 py-1 rounded-md font-bold text-xs transition-all border-2 ${mode === 'login' ? 'bg-[#991313] text-white border-[#991313]' : 'bg-white text-[#991313] border-[#991313]'}`} onClick={() => switchMode('login')} disabled={isLoading}>Partner Login</button>
           <button className={`px-3 py-1 rounded-md font-bold text-xs transition-all border-2 ${mode === 'signup' ? 'bg-[#991313] text-white border-[#991313]' : 'bg-white text-[#991313] border-[#991313]'}`} onClick={() => switchMode('signup')} disabled={isLoading}>Partner Sign Up</button>
         </div>
-        <h2 className="font-extrabold text-base mb-1 text-[#991313]">{mode === 'login' ? 'Welcome Back, Partner!' : 'Create your Partner Account'}</h2>
+        <h2 className="font-extrabold text-base mb-1 text-[#991313]">{mode === 'login' ? (step === 'form' ? 'Welcome Back, Partner!' : 'Verify OTP') : (step === 'form' ? 'Create your Partner Account' : 'Verify Email')}</h2>
         <div className="border-b-2 border-[#991313] w-9 mx-auto mb-2 opacity-70" />
         {(authError || validationError) && (
           <div className="text-[#991313] font-semibold mb-1.5 p-1.5 bg-[#f9e9c7] rounded text-xs">{authError || validationError}</div>
         )}
+        
         {mode === 'login' && step === 'form' && (
           <form onSubmit={handleSendLoginOtp} autoComplete="off">
             <div className="text-left mb-2">
-              <label className="font-bold text-[#222] text-xs mb-0.5 block">Email <span className="text-[#991313]">*</span></label>
-              {/*
+              <label className="font-bold text-[#222] text-xs mb-0.5 block">
+                Email or Phone Number <span className="text-[#991313]">*</span>
+              </label>
               <div className="flex items-center">
-                {!isLoginInputEmail && (<select value={loginCountryCode} onChange={e => setLoginCountryCode(e.target.value)} className="border border-[#f0e3d1] border-r-0 rounded-l-lg bg-[#f9f7f6] px-3 py-2 text-xs text-[#991313] outline-none"><option value="+91">+91 (India)</option></select>)}
-              */}
-              <input type="email" placeholder="Enter email" value={loginIdentifier} onChange={e => setLoginIdentifier(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs font-medium text-[#991313] outline-none shadow-sm" required />
-              {/*</div>*/}
+                {!isLoginInputEmail && (
+                  <select 
+                    value={loginCountryCode} 
+                    onChange={e => setLoginCountryCode(e.target.value)} 
+                    className="border border-[#f0e3d1] border-r-0 rounded-l-lg bg-[#f9f7f6] px-3 py-2 text-xs text-[#991313] outline-none shadow-sm h-[34px]"
+                  >
+                    <option value="+91">IN +91</option>
+                    <option value="+1">US +1</option>
+                    <option value="+44">UK +44</option>
+                    <option value="+61">AU +61</option>
+                  </select>
+                )}
+                <input 
+                  type={isLoginInputEmail ? 'email' : 'tel'} 
+                  placeholder={isLoginInputEmail ? "Enter email" : "Enter phone number"} 
+                  value={loginIdentifier} 
+                  onChange={e => setLoginIdentifier(e.target.value)} 
+                  className={`border border-[#f0e3d1] bg-[#f9f7f6] px-3 py-2 w-full text-xs font-medium text-[#991313] outline-none shadow-sm ${isLoginInputEmail ? 'rounded-lg' : 'rounded-r-lg rounded-l-none'}`} 
+                  required 
+                />
+              </div>
             </div>
             <button type="submit" disabled={isLoading} className="w-full bg-[#991313] text-white rounded-lg py-2 font-bold text-xs mt-1 transition-all disabled:opacity-70 disabled:cursor-not-allowed">{isLoading ? 'Sending OTP...' : 'Get OTP'}</button>
           </form>
         )}
 
+
         {mode === 'signup' && step === 'form' && (
           <form onSubmit={handleSignupSubmit} autoComplete="off" noValidate>
             <div className="flex flex-wrap gap-2 w-full">
-              {/* Name - single row */}
               <div className="flex-1 min-w-[120px] text-left w-full">
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Name <span className="text-[#991313]">*</span></label>
                 <input type="text" placeholder="Full name" value={name} onChange={e => setName(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313]" required />
               </div>
-              {/* Gender & D.O.B - same row */}
               <div className="flex gap-2 w-full">
                 <div className="flex-1 min-w-[80px] text-left">
                   <label className="font-bold text-[#222] text-xs mb-0.5 block">Gender <span className="text-[#991313]">*</span></label>
@@ -243,7 +258,6 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
                   <input type="date" value={signupDOB} onChange={e => setSignupDOB(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
                 </div>
               </div>
-              {/* Email - single row */}
               <div className="flex-1 min-w-[120px] text-left w-full">
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Email ID <span className="text-[#991313]">*</span></label>
                 <input type="email" placeholder="Email address" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313]" required />
@@ -251,10 +265,9 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
 
               <div className="flex-1 min-w-[120px] text-left w-full">
                 <label className="font-bold text-[#222] text-xs mb-0.5 block">Phone <span className="text-[#991313]">*</span></label>
-                <PhoneInput className="phone-input-container" placeholder="Enter phone" value={fullPhoneNumber} onChange={setFullPhoneNumber} defaultCountry="IN" required />
+                <PhoneInput className="phone-input-container-partner" placeholder="Enter phone" value={fullPhoneNumber} onChange={setFullPhoneNumber} defaultCountry="IN" required />
               </div>
 
-              {/* City & Town - same row */}
               <div className="flex gap-2 w-full">
                 <div className="flex-1 min-w-[80px] text-left">
                   <label className="font-bold text-[#222] text-xs mb-0.5 block">City <span className="text-[#991313]">*</span></label>
@@ -265,7 +278,6 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
                   <input type="text" placeholder="Town/Area" value={signupTown} onChange={e => setSignupTown(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
                 </div>
               </div>
-              {/* State & Country - same row */}
               <div className="flex gap-2 w-full">
                 <div className="flex-1 min-w-[80px] text-left">
                   <label className="font-bold text-[#222] text-xs mb-0.5 block">State <span className="text-[#991313]">*</span></label>
@@ -276,7 +288,6 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
                   <input type="text" placeholder="Country" value={signupCountry} onChange={e => setSignupCountry(e.target.value)} className="border border-[#f0e3d1] rounded-lg bg-[#f9f7f6] px-3 py-2 w-full text-xs text-[#991313] outline-none" required />
                 </div>
               </div>
-              {/* Password & Confirm Password - same row */}
               <div className="flex gap-2 w-full">
                 <div className="flex-1 min-w-[80px] text-left">
                   <label className="font-bold text-[#222] text-xs mb-0.5 block">Password <span className="text-[#991313]">*</span></label>
@@ -294,8 +305,8 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
 
         {step === 'otp' && (
           <div>
-            <div className="font-bold text-[#991313] text-base mb-2">OTP sent to <span className="text-[#222]">{otpTargetIdentifier}</span></div>
-            <div className="text-[#444] text-xs mb-3">Please enter the <b>6-digit OTP</b>.</div>
+            <div className="font-bold text-[#991313] text-sm mb-1">OTP sent to <span className="text-[#222]">{otpTargetIdentifier}</span></div>
+            <div className="text-[#444] text-xs mb-3">Please enter the <b>6-digit OTP</b> sent to your {mode === 'login' && !isLoginInputEmail ? 'phone' : 'email'}.</div>
             <div className="flex justify-center gap-2 mb-3">
               {otp.map((digit, idx) => (
                 <input
@@ -321,6 +332,16 @@ const PartnerPopup: React.FC<PartnerPopupProps> = ({ open, onClose }) => {
         <button onClick={handleClose} className="absolute top-2 right-3 bg-none border-none text-2xl text-[#991313] cursor-pointer font-bold" aria-label="Close" disabled={isLoading}>×</button>
         <style>{`
           @keyframes popup-fade-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+          .phone-input-container-partner .PhoneInputInput, .phone-input-container-partner .PhoneInputCountrySelect {
+            border: 1px solid #f0e3d1;
+            background: #f9f7f6;
+            padding: 8px 12px;
+            font-size: 12px;
+            color: #991313;
+            outline: none;
+            border-radius: 8px;
+          }
+          .phone-input-container-partner .PhoneInputCountry { margin-right: 5px; }
         `}</style>
       </div>
     </div>
