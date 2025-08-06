@@ -149,7 +149,7 @@ const Footer = () => {
                   style={{ width: 22, height: 22, marginRight: 8 }}
                 />
                 <span>
-                  +91 81900 59995
+                  +91 81900 29992
                 </span>
               </div>
             </div>
@@ -276,7 +276,7 @@ const Footer = () => {
       </div>
       {/* WhatsApp Floating Button */}
       <a
-        href="https://wa.me/918190059995"
+        href="https://wa.me/918190029992"
         target="_blank"
         rel="noopener noreferrer"
         style={{

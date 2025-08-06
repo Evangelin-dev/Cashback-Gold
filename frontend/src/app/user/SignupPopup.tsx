@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState } from "react";
-// Import useSearchParams to read URL query parameters
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { AppDispatch, RootState } from "../../store";
@@ -24,7 +23,6 @@ interface SignupPopupProps {
 const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
-  // Hook to access URL search parameters
   const [searchParams] = useSearchParams();
 
   const { status, error: authError, currentUser } = useSelector((state: RootState) => state.auth);
@@ -48,21 +46,17 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const [signupPassword, setSignupPassword] = useState("");
   const [signupConfirmPassword, setSignupConfirmPassword] = useState("");
   const [signupEmail, setSignupEmail] = useState("");
-  
-  // State to store the referral code from the URL
+
   const [referralCode, setReferralCode] = useState<string | null>(null);
 
   const [validationError, setValidationError] = useState<string | null>(null);
 
   const isLoginInputEmail = loginIdentifier.includes('@');
 
-  // NEW: useEffect to read the referral code from the URL
   useEffect(() => {
     const refCode = searchParams.get('ref');
     if (refCode) {
       setReferralCode(refCode);
-      // Optional: You might want to default to the signup form if a ref code is present
-      // setMode('signup'); 
     }
   }, [searchParams]);
 
@@ -175,7 +169,6 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       return;
     }
 
-    // UPDATED: Pass the referralCode to the thunk
     dispatch(sendRegistrationOtp({
       fullName: name,
       gender: signupGender,
@@ -189,7 +182,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
       country: signupCountry,
       password: signupPassword,
       role: 'USER',
-      referralCode: referralCode, // Pass the code from state
+      referralCode: referralCode,
     })).then(result => {
       if (sendRegistrationOtp.fulfilled.match(result)) {
         setStep("otp");
@@ -215,7 +208,6 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
         return;
       }
       try {
-        // UPDATED: Pass the referralCode to the verification thunk
         await dispatch(verifyOtpAndRegister({
           email: signupEmail,
           otp: fullOtp,
@@ -230,20 +222,18 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
           country: signupCountry,
           password: signupPassword,
           role: 'USER',
-          referralCode: referralCode, // Pass the code from state
+          referralCode: referralCode,
         })).unwrap();
 
         alert("Registration successful! Please log in.");
         switchMode("login");
 
       } catch (rejectedValue) {
-        setValidationError(rejectedValue as string);
       }
     }
   };
 
   const handleResendOtp = () => {
-    // This logic remains the same, assuming resend doesn't need the referral code.
     const identifier = mode === 'login' ? loginIdentifier : signupEmail;
     if (identifier) {
       dispatch(resendOtp({ email: identifier }));
@@ -252,6 +242,8 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
 
   const handleClose = () => {
     onClose();
+  
+    switchMode("login");
     navigate("/");
   };
 
@@ -261,7 +253,6 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
   const otpTargetIdentifier = mode === 'login' ? loginIdentifier : signupEmail;
 
   return (
-    // ... JSX remains the same, no changes needed here ...
     <div style={{ position: "fixed", inset: 0, background: "rgba(0,0,0,0.38)", zIndex: 9999, display: "flex", alignItems: "center", justifyContent: "center" }}>
       <div style={{ background: "#fff", borderRadius: 24, maxWidth: 400, width: "96vw", padding: "18px 10px 10px 10px", boxShadow: "0 4px 16px #00000022", position: "relative", textAlign: "center", animation: "popup-fade-in 0.25s cubic-bezier(.4,0,.2,1)", maxHeight: "90vh", overflowY: "auto" }}>
         <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", marginBottom: 4 }}>
@@ -282,50 +273,66 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
           <form style={{ marginTop: 0 }} onSubmit={handleSendLoginOtp} autoComplete="off">
             <div style={{ textAlign: "left", marginBottom: 8 }}>
               <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>
-                Email <span style={{ color: "#991313" }}>*</span>
+                Email or Phone Number <span style={{ color: "#991313" }}>*</span>
               </label>
-              {/*
+
               <div style={{ display: "flex", alignItems: "center" }}>
                 {!isLoginInputEmail && (
-                  <select value={loginCountryCode} onChange={e => setLoginCountryCode(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRight: 'none', borderRadius: '10px 0 0 10px', background: "#f9f7f6", padding: "10px 12px", fontSize: 15, color: "#991313", outline: "none", boxShadow: "0 1px 4px #f9e9c7" }}>
-                    ...country options...
+                  <select
+                    value={loginCountryCode}
+                    onChange={e => setLoginCountryCode(e.target.value)}
+                    style={{
+                      border: "1.5px solid #f0e3d1",
+                      borderRight: 'none',
+                      borderRadius: '10px 0 0 10px',
+                      background: "#f9f7f6",
+                      padding: "7px 10px",
+                      fontSize: 13,
+                      fontWeight: 500,
+                      color: "#991313",
+                      outline: "none",
+                      boxShadow: "0 1px 4px #f9e9c7"
+                    }}
+                  >
+                    <option value="+91">IN +91</option>
+                    <option value="+1">US +1</option>
+                    <option value="+44">UK +44</option>
+                    <option value="+61">AU +61</option>
                   </select>
                 )}
-              */}
-              <input
-                type="email"
-                placeholder="Enter email"
-                value={loginIdentifier}
-                onChange={e => setLoginIdentifier(e.target.value)}
-                style={{
-                  border: "1.5px solid #f0e3d1",
-                  borderRadius: '10px',
-                  background: "#f9f7f6",
-                  padding: "7px 10px",
-                  width: "100%",
-                  fontSize: 13,
-                  fontWeight: 500,
-                  color: "#991313",
-                  outline: "none",
-                  boxShadow: "0 1px 4px #f9e9c7"
-                }}
-                required
-              />
-              {/*</div>*/}
+                <input
+                  type={isLoginInputEmail ? 'email' : 'tel'}
+                  placeholder={isLoginInputEmail ? "Enter email" : "Enter phone number"}
+                  value={loginIdentifier}
+                  onChange={e => setLoginIdentifier(e.target.value)}
+                  style={{
+                    border: "1.5px solid #f0e3d1",
+                    borderRadius: isLoginInputEmail ? '10px' : '0 10px 10px 0',
+                    background: "#f9f7f6",
+                    padding: "7px 10px",
+                    width: "100%",
+                    fontSize: 13,
+                    fontWeight: 500,
+                    color: "#991313",
+                    outline: "none",
+                    boxShadow: "0 1px 4px #f9e9c7"
+                  }}
+                  required
+                />
+              </div>
             </div>
             <button type="submit" disabled={isLoading} style={{ width: "100%", background: "#991313", color: "#fff", border: "none", borderRadius: 8, padding: "8px 0", fontWeight: 700, fontSize: 14, marginTop: 4, cursor: isLoading ? "not-allowed" : "pointer", opacity: isLoading ? 0.7 : 1 }}>{isLoading ? "Sending OTP..." : "Get OTP"}</button>
           </form>
         )}
 
+
         {mode === "signup" && step === "form" && (
           <form style={{ marginTop: 0, width: "100%" }} onSubmit={handleSignupSubmit} autoComplete="off" noValidate>
             <div className="signup-fields-row" style={{ display: "flex", flexWrap: "wrap", gap: 8, width: "100%" }}>
-              {/* Name - single row */}
               <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
                 <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Name <span style={{ color: "#991313" }}>*</span></label>
                 <input type="text" placeholder="Enter your name" value={name} onChange={e => setName(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 8, background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} required />
               </div>
-              {/* Phone input using react-phone-number-input */}
               <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
                 <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Phone <span style={{ color: "#991313" }}>*</span></label>
                 <div className="phone-input-container">
@@ -338,13 +345,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
                     required
                   />
                 </div>
-                {validationError === "Please enter a valid phone number." && (
-                  <div style={{ color: "#991313", fontWeight: 600, marginTop: 2, fontSize: 12 }}>
-                    Please enter a valid phone number.
-                  </div>
-                )}
               </div>
-              {/* Gender & D.O.B - same row */}
               <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                 <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
                   <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>Gender <span style={{ color: '#991313' }}>*</span></label>
@@ -355,12 +356,10 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
                   <input type="date" value={signupDOB} onChange={e => setSignupDOB(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
                 </div>
               </div>
-              {/* Email - single row */}
               <div style={{ flex: "1 1 100%", minWidth: 120, textAlign: "left" }}>
                 <label style={{ fontWeight: 700, color: "#222", fontSize: 12, marginBottom: 2, display: "block" }}>Email ID <span style={{ color: "#991313" }}>*</span></label>
                 <input type="email" placeholder="Enter your email" value={signupEmail} onChange={e => setSignupEmail(e.target.value)} style={{ border: "1.5px solid #f0e3d1", borderRadius: 8, background: "#f9f7f6", padding: "7px 10px", width: "100%", fontSize: 13, fontWeight: 500, color: "#991313", outline: "none" }} required />
               </div>
-              {/* City & Town - same row */}
               <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                 <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
                   <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>City <span style={{ color: '#991313' }}>*</span></label>
@@ -371,7 +370,6 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
                   <input type="text" placeholder="Enter your town" value={signupTown} onChange={e => setSignupTown(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
                 </div>
               </div>
-              {/* State & Country - same row */}
               <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                 <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
                   <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>State <span style={{ color: '#991313' }}>*</span></label>
@@ -382,7 +380,6 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
                   <input type="text" placeholder="Enter your country" value={signupCountry} onChange={e => setSignupCountry(e.target.value)} style={{ border: '1.5px solid #f0e3d1', borderRadius: 8, background: '#f9f7f6', padding: '7px 10px', width: '100%', fontSize: 13, fontWeight: 500, color: '#991313', outline: 'none' }} required />
                 </div>
               </div>
-              {/* Password & Confirm Password - same row */}
               <div style={{ display: 'flex', gap: 8, width: '100%' }}>
                 <div style={{ flex: 1, minWidth: 80, textAlign: 'left' }}>
                   <label style={{ fontWeight: 700, color: '#222', fontSize: 12, marginBottom: 2, display: 'block' }}>Password <span style={{ color: '#991313' }}>*</span></label>
@@ -405,7 +402,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
         {step === "otp" && (
           <div>
             <div style={{ fontWeight: 700, fontSize: 14, color: "#991313", marginBottom: 6 }}>OTP sent to <span style={{ color: "#222" }}>{otpTargetIdentifier}</span></div>
-            <div style={{ color: "#444", fontSize: 11, marginBottom: 10 }}>Please enter the <b>6-digit OTP</b> sent to your email.</div>
+            <div style={{ color: "#444", fontSize: 11, marginBottom: 10 }}>Please enter the <b>6-digit OTP</b> sent to your {mode === 'login' && !isLoginInputEmail ? 'phone' : 'email'}.</div>
             <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 10 }}>
               {[0, 1, 2, 3, 4, 5].map(idx => (<input key={idx} ref={el => { otpRefs.current[idx] = el as HTMLInputElement | null; }} type="text" inputMode="numeric" maxLength={1} value={otp[idx]} onChange={e => handleOtpChange(idx, e.target.value)} onKeyDown={e => handleOtpKeyDown(idx, e)} style={{ width: 28, height: 28, fontSize: 16, textAlign: "center", border: "2px solid #991313", borderRadius: 7, outline: "none", background: "#f9f7f6", fontWeight: 700, color: "#991313" }} autoFocus={idx === 0} disabled={isLoading} />))}
             </div>
@@ -415,24 +412,22 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
         )}
 
         <button onClick={handleClose} style={{ position: "absolute", top: 8, right: 10, background: "none", border: "none", fontSize: 18, color: "#991313", cursor: "pointer", fontWeight: 700 }} aria-label="Close" disabled={isLoading}>×</button>
-            <style>{`
+        <style>{`
                 @keyframes popup-fade-in { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: 1); } }
                 .phone-input-container .PhoneInputInput, .phone-input-container .PhoneInputCountrySelect {
                     border: 1.5px solid #f0e3d1;
                     background: #f9f7f6;
+                    padding: 7px 10px;
+                    font-size: 13px;
+                    font-weight: 500;
                     color: #991313;
                     outline: none;
-                    box-shadow: 0 1px 4px #f9e9c7;
-                    transition: border 0.2s, background 0.2s;
                 }
                 .phone-input-container .PhoneInputInput {
-                    padding: 10px 14px;
-                    font-size: 15px;
-                    font-weight: 500;
-                    border-radius: 10px;
+                    border-radius: 8px;
                 }
                 .phone-input-container .PhoneInputCountry {
-                    margin: 0 5px;
+                    margin-right: 5px;
                 }
                 .phone-input-container--focus .PhoneInputInput, .phone-input-container--focus .PhoneInputCountrySelect,
                 .phone-input-container:focus-within .PhoneInputInput, .phone-input-container:focus-within .PhoneInputCountrySelect {
@@ -440,8 +435,12 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
                     background: #fffbe8 !important;
                 }
                 .signup-fields-row { flex-wrap: wrap; }
-                @media (max-width: 900px) { .signup-fields-row { flex-direction: column !important; gap: 8px !important; } }
-                @media (max-width: 600px) { .signup-fields-row > div { min-width: 100% !important; } }
+                /* Styles for multi-column form layout */
+                @media (min-width: 400px) { 
+                  .signup-fields-row > div:not(:first-child):not(:nth-child(2)) { /* Target all but first two (name, phone)*/
+                    flex-basis: calc(50% - 4px); /* 2 columns with gap */
+                  }
+                }
             `}</style>
       </div>
     </div>

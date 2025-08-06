@@ -164,7 +164,7 @@ const PartnerSupport = () => {
           </form>
 
           {showSuccessPopup && (
-            <div className="fixed flex justify-center top-2 z-50 -translate-x-1/2 animate-fade-in-down">
+            <div className="fixed hidden md:flex justify-center top-5 md:right-12 z-50 right-0 -translate-x-1/2 animate-fade-in-down">
               <div className="bg-white border-2 border-green-500 rounded-lg shadow-2xl px-8 py-4 text-center">
                 <div className="text-green-700 font-bold text-base">
                   Ticket submitted successfully!

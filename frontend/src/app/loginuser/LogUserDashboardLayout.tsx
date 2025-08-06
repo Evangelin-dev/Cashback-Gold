@@ -7,12 +7,17 @@ import {
   Gem,
   Heart,
   Home,
+  LogOut,
+  Menu, // Hamburger Icon
   Sprout,
   User,
-  Users
+  Users,
+  X // Close Icon
 } from 'lucide-react';
-import { useState } from 'react';
+import React, { useState } from 'react';
+import { useDispatch } from 'react-redux';
 import { useNavigate } from "react-router-dom";
+import { logoutUser } from '../features/slices/authSlice'; // Ensure this path is correct
 import Cart from './Cart/cart';
 import LChitJewelsSavingPlan from './DashboardComponents/ChitJewelsSavingPlan';
 import LDigitalGoldSIPPlan from './DashboardComponents/DigitalGoldSIPPlan';
@@ -25,9 +30,14 @@ import LNomineeies from './DashboardComponents/Nominee';
 import LNotification from './DashboardComponents/Notification';
 import Wishlist from './Wishlist/wishlist';
 
-const Dashboard = () => {
+const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('My Dashboard');
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
+  
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+
   const menuItems = [
     { id: 'My Dashboard', label: 'My Dashboard', icon: Home },
     { id: 'My Profile', label: 'My Profile', icon: User },
@@ -37,132 +47,136 @@ const Dashboard = () => {
     { id: 'CashBackGold Scheme ', label: 'CashBackGold Scheme ', icon: Coins },
     { id: 'Gold Plant Scheme ', label: 'Gold Plant Scheme ', icon: Sprout },
     { id: 'Wishlist', label: 'Wishlist', icon: Heart },
-    { id: 'Notification', label: 'Notification', icon: Bell },
     { id: 'My Bank Accounts', label: 'My Bank Accounts', icon: Building2 },
   ];
 
-  const renderDashboard = () => (
-    <LMyDashboard/>
-  );
+  const handleLogout = () => {
+    dispatch(logoutUser());
+    navigate('/');
+    setShowLogoutConfirm(false);
+  };
 
-  const renderProfile = () => (
-    <LMyProfile/>
-  );
-
-  const renderKYC = () => (
-    <LKYC/>
-  );
-
-  const renderNominee = () => (
-    <LNomineeies/>
-  );
-
-  const renderSavingPlan = () => (
-    <LChitJewelsSavingPlan/>
-  );
-
-  const renderDigitalGold = () => (
-    <LDigitalGoldSIPPlan/>
-  );
-
-  const renderGoldPlant = () => (
-    <LGoldPlantScheme/>
-  );
-
-  const renderNotification = () => (
-    <LNotification/>
-  );
-
-  const renderBankAccounts = () => (
-    <BankUPIManager/>
-  );
-
-  const renderWishlist = () => (
-    <Wishlist/>  
-  );
-  const renderCart = () => (
-    <Cart/>  
-  );
+  const handleMenuClick = (id: string) => {
+    setActiveTab(id);
+    if (isMobileMenuOpen) {
+      setIsMobileMenuOpen(false);
+    }
+  }
 
   const renderContent = () => {
     switch (activeTab) {
-      case 'My Dashboard':
-        return renderDashboard();
-      case 'My Profile':
-        return renderProfile();
-      case 'KYC':
-        return renderKYC();
-      case 'Nominee':
-        return renderNominee();
-      case 'Saving Scheme ':
-        return renderSavingPlan();
-      case 'CashBackGold Scheme ':
-        return renderDigitalGold();
-      case 'Gold Plant Scheme ':
-        return renderGoldPlant();
-      case 'Wishlist':
-        return renderWishlist();  
-      case 'Cart':
-        return renderCart();
-      case 'Notification':
-        return renderNotification();
-      case 'My Bank Accounts':
-        return renderBankAccounts();
-      default:
-        return renderDashboard();
+      case 'My Dashboard': return <LMyDashboard/>;
+      case 'My Profile': return <LMyProfile/>;
+      case 'KYC': return <LKYC/>;
+      case 'Nominee': return <LNomineeies/>;
+      case 'Saving Scheme ': return <LChitJewelsSavingPlan/>;
+      case 'CashBackGold Scheme ': return <LDigitalGoldSIPPlan/>;
+      case 'Gold Plant Scheme ': return <LGoldPlantScheme/>;
+      case 'Wishlist': return <Wishlist/>;  
+      case 'Cart': return <Cart/>;
+      case 'My Bank Accounts': return <BankUPIManager/>;
+      default: return <LMyDashboard/>;
     }
   };
 
   return (
-    <div className="flex h-screen bg-gray-50 pt-0.5">
-      <div className="w-16 sm:w-64 bg-[#f8f6fa] shadow-lg h-screen flex flex-col justify-between rounded-none p-0 m-0">
-        {/* Top label - hidden on mobile */}
+    <div className="flex h-screen bg-gray-100">
+      {/* Overlay for mobile menu */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 z-20 bg-black bg-opacity-50 sm:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        ></div>
+      )}
+
+      {/* Sidebar */}
+      <aside 
+        className={`fixed inset-y-0 left-0 z-30 w-64 bg-[#f8f6fa] shadow-lg flex flex-col transform transition-transform duration-300 ease-in-out sm:static sm:translate-x-0
+          ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}`
+        }
+      >
         <div className="h-16 flex items-center justify-center bg-[#7a1335]">
-          <span className="text-white font-bold text-base tracking-wide hidden sm:inline">User Dashboard</span>
+          <span className="text-white font-bold text-base tracking-wide">User Dashboard</span>
         </div>
-        {/* Sidebar menu */}
-        <nav className="flex-1 flex flex-col gap-3 py-6 px-1 sm:px-4">
+        
+        <nav className="flex-1 flex flex-col gap-2 py-4 px-3 overflow-y-auto">
           {menuItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
-                className={`w-full flex items-center justify-center sm:justify-start px-0 sm:px-0 py-0 sm:py-0 rounded-lg text-left text-sm transition-colors duration-150
-                  group
+                onClick={() => handleMenuClick(item.id)}
+                className={`flex items-center w-full rounded-lg text-left text-sm transition-colors duration-150 group h-[52px] px-2
+                  ${isActive
+                    ? 'bg-[#f7c873] text-[#7a1335] font-semibold shadow-sm'
+                    : 'bg-white text-[#585858] hover:bg-[#f7c873]/20'}
                 `}
-                style={{ background: 'none', boxShadow: 'none', border: 'none' }}
               >
-                <div
-                  className={`flex items-center w-full rounded-xl
-                    ${isActive
-                      ? 'bg-[#f7c873] text-[#7a1335] shadow-md'
-                      : 'bg-white text-[#7a1335] hover:bg-[#f7c873]/30'}
-                  `}
-                  style={{ minHeight: '56px', padding: '0 0.5rem', boxShadow: isActive ? '0 2px 8px 0 rgba(0,0,0,0.04)' : undefined, border: isActive ? '1.5px solid #f7c873' : '1.5px solid transparent' }}
-                >
-                  <span className="flex items-center justify-center w-12 h-12">
-                    <Icon className="w-5 h-5 mx-auto" />
-                  </span>
-                  {/* Label: hidden on mobile, shown on sm+ */}
-                  <span className="hidden sm:block flex-1 text-base font-medium" style={{ minWidth: '120px' }}>{item.label}</span>
-                  {/* Chevron: hidden on mobile, shown on sm+ */}
-                  {isActive && <ChevronRight className="hidden sm:inline w-3 h-3 ml-2" />}
-                </div>
+                <span className={`flex items-center justify-center w-10 h-10 rounded-md ${isActive ? 'text-[#7a1335]' : 'text-[#7a1335]'}`}>
+                  <Icon className="w-5 h-5" />
+                </span>
+                <span className="flex-1 ml-3">{item.label}</span>
+                {isActive && <ChevronRight className="w-4 h-4" />}
               </button>
             );
           })}
         </nav>
-        <div className="py-2 text-center text-[10px] text-gray-400 border-t border-gray-100 select-none m-0 hidden sm:block">
-          &copy; {new Date().getFullYear()} Greenheap
+        
+        {/* Logout Button */}
+        <div className="px-3 py-3 border-t border-gray-200">
+          <button
+            onClick={() => setShowLogoutConfirm(true)}
+            className="flex items-center w-full rounded-lg text-left text-sm transition-colors duration-150 group h-[52px] px-2 bg-white text-red-600 hover:bg-red-50"
+          >
+            <span className="flex items-center justify-center w-10 h-10 rounded-md text-red-500">
+              <LogOut className="w-5 h-5" />
+            </span>
+            <span className="flex-1 ml-3 font-semibold">Logout</span>
+          </button>
         </div>
-      </div>
-      <div className="flex-1 overflow-auto">
-        <div className="p-3 text-sm">
+      </aside>
+
+      {/* Main Content */}
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Top Header for Mobile */}
+        <header className="sm:hidden h-16 bg-white shadow-md flex items-center justify-between px-4">
+          <button onClick={() => setIsMobileMenuOpen(true)}>
+            <Menu className="w-6 h-6 text-gray-700" />
+          </button>
+          <h1 className="text-lg font-bold text-[#7a1335]">{activeTab}</h1>
+          <div className="w-6"></div> {/* Spacer */}
+        </header>
+
+        {/* Scrollable Content Area */}
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           {renderContent()}
-        </div>
+        </main>
       </div>
+
+      {/* Logout Confirmation Modal */}
+      {showLogoutConfirm && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+          <div className="bg-white rounded-lg shadow-xl p-6 w-80 text-center">
+            <h2 className="text-xl font-bold mb-4">Confirm Logout</h2>
+            <p className="text-gray-600 mb-6">Are you sure you want to log out?</p>
+            <div className="flex justify-center gap-4">
+              <button
+                onClick={() => setShowLogoutConfirm(false)}
+                className="px-6 py-2 rounded-lg bg-gray-200 text-gray-800 hover:bg-gray-300 font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleLogout}
+                className="px-6 py-2 rounded-lg bg-red-600 text-white hover:bg-red-700 font-semibold"
+              >
+                Logout
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

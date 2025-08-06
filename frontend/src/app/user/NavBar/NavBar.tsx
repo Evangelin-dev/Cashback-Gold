@@ -9,7 +9,7 @@ import { logoutUser } from "../../features/slices/authSlice";
 
 export const MENU = [
 	{ name: "Home", link: "/" },
-	{ name: "About Us", link: "/aboutus" },
+	{ name: "About Us", link: "/about-us" },
 	{ name: "Buy Ornaments", link: "buyornaments" },
 	{ name: "Contact Us", link: "/contactus" },
 ];
@@ -26,7 +26,6 @@ const NavBar = () => {
 
 	const cartItems = useSelector((state: RootState) => state.cart.items);
 	const cartLength = cartItems.length;
-	console.log(cartLength,'aa')
 
 	const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -80,7 +79,7 @@ const NavBar = () => {
 				<div className="flex items-center gap-2 md:gap-5 flex-1 min-w-0">
 					<span className="flex items-center gap-1 text-white min-w-0">
 						<Phone className="w-4 h-4 md:w-5 md:h-5 mr-1" />
-						<span className="font-semibold text-xs md:text-sm truncate">+91 81900 59995</span>
+						<span className="font-semibold text-xs md:text-sm truncate">+91 81900 29992</span>
 					</span>
 					{!isMobile && (
 						<span className="flex items-center gap-2 border-l border-white pl-3 min-w-0 text-white">
@@ -179,26 +178,28 @@ const NavBar = () => {
 					{/* Right-side Actions & Mobile Menu Toggle */}
 					<div className="flex items-center gap-2 md:gap-3 ml-auto">
 						{/* Become a partner button always visible */}
-						<a
-							href="/PartnerPopup"
-							className="bg-[#7a1335] text-white rounded px-2 py-1 font-semibold text-xs whitespace-nowrap cursor-pointer transition-colors duration-200 hover:bg-[#8a2342]"
-						>
-							Become a partner / Login
-						</a>
+						{!currentUser && (
+							<a
+								href="/PartnerPopup"
+								className="bg-[#7a1335] text-white rounded px-2 py-1 font-semibold text-xs whitespace-nowrap cursor-pointer transition-colors duration-200 hover:bg-[#8a2342]"
+							>
+								Become a partner / Login
+							</a>
+						)}
 						{currentUser && (
-							<div className="relative">
+							<div className="relative me-2 flex justify-center items-center">
 								<button
 									className=""
 									onClick={() => navigate("/cart")}
 									aria-label="Cart"
 								>
-									<CiShoppingCart size={18} />
+									<CiShoppingCart size={28} />
 								</button>
-								
-									<span className="absolute z-10 -top-3 -right-1 text-[10px] min-w-[16px] h-[16px] px-1 bg-red-600 text-white rounded-full flex items-center justify-center shadow-md">
-										{cartLength}
-									</span>
-								
+
+								<span className="absolute z-10 -top-1.5 -right-1 text-[10px] min-w-[16px] h-[16px] px-1 bg-red-600 text-white rounded-full flex items-center justify-center shadow-md">
+									{cartLength}
+								</span>
+
 							</div>
 						)}
 						{currentUser ? (
@@ -297,8 +298,10 @@ const NavBar = () => {
 								))}
 							</ul>
 							<div className="mt-4 flex flex-col gap-3 border-t pt-4">
-								{/* Mobile Action Buttons */}
-								<a href="/PartnerPopup" className="w-full rounded-lg bg-[#7a1335] px-4 py-3 text-center font-medium text-white">Become a partner / Login</a>
+								{!currentUser && (
+									<a href="/PartnerPopup" className="w-full rounded-lg bg-[#7a1335] px-4 py-3 text-center font-medium text-white">Become a partner / Login</a>
+
+								)}
 								{currentUser ? (
 									<>
 										<Link to="/user" onClick={() => setIsMobileMenuOpen(false)} className="w-full rounded-lg bg-gray-100 px-4 py-3 text-center font-bold text-[#6a0822]">My Account</Link>
