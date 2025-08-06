@@ -66,5 +66,12 @@ public interface CommissionRepository extends JpaRepository<Commission, Long>, J
                                               @Param("from") LocalDateTime from,
                                               @Param("to")   LocalDateTime to);
 
+    @Query("""
+        select coalesce(sum(c.commissionAmount), 0)
+        from Commission c
+        where c.status = :status
+    """)
+    BigDecimal sumByStatus(@Param("status") String status);
+
 }
 

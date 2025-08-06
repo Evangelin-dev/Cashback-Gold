@@ -19,4 +19,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     long countByReferredBy(Long referredBy);
     long countByReferredByAndStatus(Long referredBy, String status);
+
 }
