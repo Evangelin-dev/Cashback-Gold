@@ -32,7 +32,6 @@ const menuItems = [
   { label: "Manage User's", icon: Users, path: '/manageusers' },
   { label: 'Commission', icon: Percent, path: '/commission' },
   { label: 'Payout Request', icon: Wallet, path: '/payoutrequest' },
-  { label: 'Gold Orders', icon: Coins, path: '/goldorders' },
   { label: 'Order History', icon: Clock, path: '/orderhistory' },
   { label: 'KYC', icon: ClipboardList, path: '/kyc' },
   { label: 'Saving Scheme ', icon: BadgeDollarSign, path: '/savingplan' },
@@ -269,87 +268,6 @@ const AdminPanel: React.FC = () => {
               ☰
             </button>
             <h1 className="text-xl font-semibold">Admin Panel</h1>
-          </div>
-          <div className="relative">
-            <button
-              ref={notificationBtnRef}
-              onClick={() => setShowNotificationPage(true)}
-              className="relative bg-white/10 hover:bg-white/20 p-2 rounded-full transition-colors"
-            >
-
-              🔔
-              <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs w-5 h-5 rounded-full flex items-center justify-center animate-pulse">
-                8
-              </span>
-            </button>
-            <div
-              ref={notificationRef}
-              className={`absolute right-0 mt-2 w-96 max-w-[calc(100vw-2rem)] max-h-[500px] overflow-hidden rounded-lg bg-white shadow-lg transform transition-all origin-top z-50 ${notificationVisible ? 'opacity-100 visible scale-100' : 'opacity-0 invisible scale-95'
-                }`}
-            >
-              <div className="bg-[#8B1538] text-white p-4 flex justify-between">
-                <h3 className="font-semibold">Notifications</h3>
-                <button
-                  onClick={() => setNotificationVisible(false)}
-                  className="hover:bg-white/10 p-1 rounded"
-                >
-                  ✕
-                </button>
-              </div>
-              <div className="flex gap-2 p-4 border-b text-sm text-gray-600 flex-wrap">
-                <button className="border px-3 py-1 rounded border-gray-300 bg-white text-gray-600 hover:bg-gray-50">All</button>
-                <button className="border px-3 py-1 rounded border-gray-300 bg-white text-gray-600 hover:bg-gray-50">Partners</button>
-                <button className="border px-3 py-1 rounded border-gray-300 bg-white text-gray-600 hover:bg-gray-50">Users</button>
-                <span className="ml-auto text-xs text-gray-400 whitespace-nowrap">Sort: Date Recent</span>
-              </div>
-              <div className="p-4 border-b">
-                <input
-                  type="text"
-                  className="w-full border rounded px-3 py-2 text-sm mb-2 focus:outline-none focus:ring-2 focus:ring-[#8B1538]"
-                  placeholder="Type notification message..."
-                />
-                <div className="flex justify-between items-center text-sm gap-2">
-                  <select className="border px-2 py-1 rounded focus:outline-none focus:ring-2 focus:ring-[#8B1538]">
-                    <option>All</option>
-                    <option>Partners</option>
-                    <option>Users</option>
-                  </select>
-                  <button className="bg-[#8B1538] text-white px-4 py-1 rounded hover:bg-[#7A1230] transition-colors">
-                    Send
-                  </button>
-                </div>
-              </div>
-              <div className="max-h-60 overflow-y-auto">
-                {[
-                  ['Gold price updated.', 'success', '2024-06-01'],
-                  ['Commission payout processed.', 'info', '2024-05-30'],
-                  ['Welcome to GreenHeap!', 'info', '2024-05-29'],
-                  ['Partner payout released.', 'warning', '2024-05-28'],
-                  ['Your KYC is approved.', 'info', '2024-05-27'],
-                  ['System maintenance scheduled.', 'success', '2024-05-26'],
-                  ['New offer for partners.', 'warning', '2024-05-25'],
-                  ['Gold price dropped.', 'success', '2024-05-24']
-                ].map(([message, type, date], idx) => (
-                  <div key={idx} className="flex gap-3 items-start p-4 border-b text-sm hover:bg-gray-50 transition-colors">
-                    <div
-                      className={`mt-1 w-2 h-2 rounded-full flex-shrink-0 ${type === 'success'
-                        ? 'bg-green-500'
-                        : type === 'warning'
-                          ? 'bg-yellow-500'
-                          : 'bg-blue-500'
-                        }`}
-                    ></div>
-                    <div className="flex-1">
-                      <div>{message}</div>
-                      <button className="text-[#8B1538] text-xs underline hover:no-underline">
-                        Reply
-                      </button>
-                    </div>
-                    <div className="text-xs text-gray-400 ml-auto whitespace-nowrap">{date}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         </header>
 

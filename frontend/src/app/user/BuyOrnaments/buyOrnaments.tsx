@@ -1,8 +1,8 @@
-import { Award, Check, Crown, Eye, Filter, Heart, Loader, ShoppingCart, Sparkles } from 'lucide-react';
+import { Award, Check, Crown, Eye, Filter, Loader, ShoppingCart, Sparkles } from 'lucide-react';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from "react-router-dom";
-import { CATEGORY_TREE } from '../../../../constants';
+import { CATEGORY_TREE, products } from '../../../../constants';
 import { AppDispatch } from '../../../store';
 import axiosInstance from '../../../utils/axiosInstance';
 import { addToCart } from '../../features/thunks/cartThunks';
@@ -19,7 +19,6 @@ const BuyOrnamentsPage = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hoveredCard, setHoveredCard] = useState<number | null>(null);
-  const [likedItems, setLikedItems] = useState<Set<number>>(new Set());
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [dropdownMain, setDropdownMain] = useState<string>("All");
   const [dropdownSub, setDropdownSub] = useState<string>("");
@@ -47,13 +46,13 @@ const BuyOrnamentsPage = () => {
     try {
       const response = await axiosInstance.get<Product[]>(`/admin/ornaments?page=${pageToFetch}&size=${itemsPerPage}`);
       const newProducts = response.data || [];
-
+      console.log(newProducts, 'products in lan')
       setAllProducts(prev => pageToFetch === 0 ? newProducts : [...prev, ...newProducts]);
 
       if (newProducts.length < itemsPerPage) {
         setHasMore(false);
       }
-      
+
       setCurrentPage(pageToFetch + 1);
 
     } catch (err) {
@@ -88,10 +87,10 @@ const BuyOrnamentsPage = () => {
         product.itemType?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
-    
+
     return productsToFilter;
   }, [allProducts, dropdownMain, dropdownSub, dropdownItem, searchTerm]);
-  
+
   const handleAddToCart = async (product: Product, e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation();
     setIsAddingToCart(product.id);
@@ -112,22 +111,13 @@ const BuyOrnamentsPage = () => {
       setIsAddingToCart(null);
     }
   };
-  
-const getProductWeight = (product: Product) => {
-  if (!Array.isArray(product.priceBreakups)) return 'N/A';
-  const goldComponent = product.priceBreakups.find((pb: any) => pb.component && pb.component.toLowerCase().includes('gold'));
-  return goldComponent && goldComponent.netWeight != null ? `${goldComponent.netWeight}g` : 'N/A';
-};
-  
-  const toggleLike = (productId: number, e: React.MouseEvent<HTMLButtonElement>) => {
-    e.stopPropagation();
-    setLikedItems(prev => {
-        const newSet = new Set(prev);
-        if (newSet.has(productId)) newSet.delete(productId);
-        else newSet.add(productId);
-        return newSet;
-    });
+
+  const getProductWeight = (product: Product) => {
+    // Corrected to use totalGram directly as it's more reliable.
+    return product.totalGram != null ? `${product.totalGram}g` : 'N/A';
   };
+
+
 
   const getSubCategories = () => CATEGORY_TREE.find(cat => cat.name === dropdownMain)?.children || [];
   const getItems = () => (getSubCategories() as any[]).find(s => s.name === dropdownSub)?.items || [];
@@ -220,7 +210,7 @@ const getProductWeight = (product: Product) => {
           };
         }, [heroIndex, heroSlides.length]);
         return (
-          <div className="bg-[#7a1335] min-h-[50vh] flex items-center justify-center relative overflow-hidden pt-6 px-2 select-none" ref={heroRef} style={{cursor:'grab'}}>
+          <div className="bg-[#7a1335] min-h-[50vh] flex items-center justify-center relative overflow-hidden pt-6 px-2 select-none" ref={heroRef} style={{ cursor: 'grab' }}>
             {/* Left Arrow */}
             <button
               type="button"
@@ -229,7 +219,7 @@ const getProductWeight = (product: Product) => {
               disabled={heroIndex === 0}
               aria-label="Previous slide"
             >
-              <svg width="22" height="22" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+              <svg width="22" height="22" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg>
             </button>
             {/* Slide Content */}
             <div className="text-center z-20 max-w-[700px] px-2.5 transition-all duration-500" key={heroIndex}>
@@ -253,7 +243,7 @@ const getProductWeight = (product: Product) => {
               disabled={heroIndex === heroSlides.length - 1}
               aria-label="Next slide"
             >
-              <svg width="22" height="22" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+              <svg width="22" height="22" fill="none" stroke="#fff" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
             </button>
             {/* Dots */}
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 z-20">
@@ -263,7 +253,7 @@ const getProductWeight = (product: Product) => {
                   className={`w-2.5 h-2.5 rounded-full border border-white/40 ${heroIndex === idx ? 'bg-white' : 'bg-white/30'}`}
                   onClick={() => setHeroIndex(idx)}
                   aria-label={`Go to slide ${idx + 1}`}
-                  style={{transition:'background 0.2s'}}
+                  style={{ transition: 'background 0.2s' }}
                 />
               ))}
             </div>
@@ -272,10 +262,9 @@ const getProductWeight = (product: Product) => {
       })()}
 
 
-      {/* Sticky Filter/Search Bar - below navbar (assume navbar is h-12, so top-12) */}
-      <div className="bg-white py-4 px-2 border-b border-[#f0f0f3] sticky top-12 z-30">
+      {/* Sticky Filter/Search Bar */}
+      <div className="bg-white py-4 px-2 border-b border-[#f0f0f3] sticky top-22 z-30">
         <div className="max-w-[900px] mx-auto flex items-center justify-between gap-3 flex-wrap">
-          {/* Category Dropdown */}
           <div className="min-w-[140px] relative">
             <button
               className="font-semibold text-xs text-[#7a1335] bg-none border border-[#eee] rounded-md px-3 py-1.5 cursor-pointer w-full text-left"
@@ -328,7 +317,6 @@ const getProductWeight = (product: Product) => {
               </div>
             )}
           </div>
-          {/* Search Input */}
           <div className="flex-1 flex items-center justify-center min-w-[120px]">
             <input
               type="text"
@@ -338,7 +326,6 @@ const getProductWeight = (product: Product) => {
               className="w-full max-w-[200px] px-2.5 py-1.5 rounded-md border border-[#eee] text-xs outline-none"
             />
           </div>
-          {/* Search Button */}
           <div>
             <button className="bg-[#7a1335] text-white border-none rounded-md px-3.5 py-1.5 font-medium text-xs cursor-pointer flex items-center gap-1.5">
               <Filter size={14} /> Search
@@ -347,10 +334,9 @@ const getProductWeight = (product: Product) => {
         </div>
       </div>
 
-      {/* Category Carousel/Slider below Search Bar with drag-to-scroll */}
+      {/* Category Carousel */}
       <div className="w-full bg-white py-3 px-2 border-b border-[#f0f0f3]">
         <div className="max-w-[900px] mx-auto relative flex items-center">
-          {/* Left Arrow */}
           <button
             type="button"
             className="absolute left-0 z-10 bg-white shadow rounded-full w-7 h-7 flex items-center justify-center top-1/2 -translate-y-1/2 border border-[#eee] disabled:opacity-40"
@@ -360,51 +346,15 @@ const getProductWeight = (product: Product) => {
             }}
             aria-label="Scroll left"
           >
-            <svg width="18" height="18" fill="none" stroke="#7a1335" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7"/></svg>
+            <svg width="18" height="18" fill="none" stroke="#7a1335" strokeWidth="2" viewBox="0 0 24 24"><path d="M15 19l-7-7 7-7" /></svg>
           </button>
-          {/* Carousel with drag events */}
           <div
             id="category-carousel"
             className="flex gap-3 overflow-x-auto px-8 w-full scroll-smooth hide-scrollbar select-none"
             style={{ WebkitOverflowScrolling: 'touch', cursor: 'grab' }}
-            onMouseDown={e => {
-              const el = e.currentTarget;
-              el.style.cursor = 'grabbing';
-              let startX = e.pageX - el.offsetLeft;
-              let scrollLeft = el.scrollLeft;
-              const onMouseMove = (ev: MouseEvent) => {
-                const x = ev.pageX - el.offsetLeft;
-                el.scrollLeft = scrollLeft - (x - startX);
-              };
-              const onMouseUp = () => {
-                el.style.cursor = 'grab';
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-              };
-              window.addEventListener('mousemove', onMouseMove);
-              window.addEventListener('mouseup', onMouseUp);
-            }}
-            onTouchStart={e => {
-              const el = e.currentTarget;
-              const touch = e.touches[0];
-              let startX = touch.pageX - el.offsetLeft;
-              let scrollLeft = el.scrollLeft;
-              const onTouchMove = (ev: TouchEvent) => {
-                const moveTouch = ev.touches[0];
-                const x = moveTouch.pageX - el.offsetLeft;
-                el.scrollLeft = scrollLeft - (x - startX);
-              };
-              const onTouchEnd = () => {
-                window.removeEventListener('touchmove', onTouchMove);
-                window.removeEventListener('touchend', onTouchEnd);
-              };
-              window.addEventListener('touchmove', onTouchMove);
-              window.addEventListener('touchend', onTouchEnd);
-            }}
           >
-            {/* Online jewelry images for categories (fixed URLs) */}
             {[
-              { img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80', label: 'Rakhi Special'},
+              { img: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?auto=format&fit=crop&w=200&q=80', label: 'Rakhi Special' },
               { img: 'https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=200&q=80', label: 'Pendants' },
               { img: 'https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=200&q=80', label: 'Personalised' },
               { img: 'https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=200&q=80', label: 'Silver Rakhi', },
@@ -412,17 +362,15 @@ const getProductWeight = (product: Product) => {
               { img: 'https://images.unsplash.com/photo-1519864600265-abb23847ef2c?auto=format&fit=crop&w=200&q=80', label: 'Rings' },
               { img: 'https://images.unsplash.com/photo-1522312346375-d1a52e2b99b3?auto=format&fit=crop&w=200&q=80', label: 'Bracelets' },
               { img: 'https://images.unsplash.com/photo-1515378791036-0648a3ef77b2?auto=format&fit=crop&w=200&q=80', label: 'Anklets' },
-            ].map((cat, idx) => (
+            ].map((cat) => (
               <div key={cat.label} className="flex flex-col items-center min-w-[90px] max-w-[100px] mx-1">
                 <div className="relative w-[70px] h-[70px] rounded-2xl overflow-hidden bg-[#f9f7f6] flex items-center justify-center mb-1 shadow border border-[#f0e9e0]">
                   <img src={cat.img} alt={cat.label} className="w-full h-full object-cover" />
-        
                 </div>
                 <div className="text-xs font-medium text-[#7a1335] text-center mt-0.5 whitespace-nowrap">{cat.label}</div>
               </div>
             ))}
           </div>
-          {/* Right Arrow */}
           <button
             type="button"
             className="absolute right-0 z-10 bg-white shadow rounded-full w-7 h-7 flex items-center justify-center top-1/2 -translate-y-1/2 border border-[#eee] disabled:opacity-40"
@@ -432,13 +380,10 @@ const getProductWeight = (product: Product) => {
             }}
             aria-label="Scroll right"
           >
-            <svg width="18" height="18" fill="none" stroke="#7a1335" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7"/></svg>
+            <svg width="18" height="18" fill="none" stroke="#7a1335" strokeWidth="2" viewBox="0 0 24 24"><path d="M9 5l7 7-7 7" /></svg>
           </button>
         </div>
-        <style>{`
-          .hide-scrollbar::-webkit-scrollbar { display: none; }
-          .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        `}</style>
+        <style>{`.hide-scrollbar::-webkit-scrollbar { display: none; } .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }`}</style>
       </div>
 
       <div style={{ padding: '20px 8px', maxWidth: '900px', margin: '0 auto' }}>
@@ -446,7 +391,7 @@ const getProductWeight = (product: Product) => {
           <h2 style={{ fontSize: '1.2rem', fontWeight: 700, color: '#7a1335', marginBottom: 14, textAlign: 'center' }}>
             Featured Ornaments
           </h2>
-          
+
           {loading && (
             <div style={{ textAlign: 'center', padding: '80px 0' }}>
               <Loader size={40} className="animate-spin" style={{ color: '#7a1335', margin: '0 auto' }} />
@@ -467,12 +412,6 @@ const getProductWeight = (product: Product) => {
                     className={`bg-white rounded-xl overflow-hidden border border-[#f7f8fc] flex flex-col relative cursor-pointer transition-all duration-400 w-full max-w-[340px] mx-auto ${hoveredCard === idx ? 'shadow-2xl -translate-y-1.5' : 'shadow-sm translate-y-0'}`}
                     onClick={() => navigate(`/buyornaments/${product.id}`)}
                   >
-                    <button
-                      onClick={(e) => toggleLike(product.id, e)}
-                      className={`absolute top-2.5 right-2.5 w-7 h-7 ${likedItems.has(product.id) ? 'bg-[#7a1335]' : 'bg-white/90'} border-none rounded-full flex items-center justify-center cursor-pointer z-10 transition-all duration-300 backdrop-blur shadow-md`}
-                    >
-                      <Heart size={14} fill={likedItems.has(product.id) ? '#ffffff' : 'none'} color={likedItems.has(product.id) ? '#ffffff' : '#7a1335'} />
-                    </button>
                     <div className="relative pt-4 px-2 pb-2 bg-[#fafbfc] text-center">
                       <CustomImage
                         src={product.mainImage}
@@ -497,16 +436,10 @@ const getProductWeight = (product: Product) => {
                       </div>
                       <div className="mt-auto">
                         <div className="text-center mb-3.5">
-                          <div className="text-[1.1rem] font-bold text-[#7a1335] tracking-tight">
-                            {(() => {
-                              let totalPrice = NaN;
-                              if (Array.isArray(product.priceBreakups)) {
-                                totalPrice = product.priceBreakups.reduce((sum: number, pb: any) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
-                              }
-                              if (!Number.isFinite(totalPrice)) totalPrice = 0;
-                              return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 2 }).format(totalPrice);
-                            })()}
+                          <div className="text-center text-lg font-semibold text-[#7a1335] tracking-tight mt-2">
+                            {product.totalPrice ? `₹${product.totalPrice.toLocaleString('en-IN')}` : 'N/A'}
                           </div>
+
                           <div className="text-[0.7rem] text-[#64748b] mt-0.5">Inclusive of all taxes</div>
                         </div>
                         <div className="flex gap-1.5">
@@ -564,7 +497,7 @@ const getProductWeight = (product: Product) => {
       </div>
       {/* Info Section */}
       <div className="bg-[#7a1335] py-10 px-2 text-center relative overflow-hidden">
-        <div className="absolute inset-0 opacity-30" style={{backgroundImage: `url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")`}} />
+        <div className="absolute inset-0 opacity-30" style={{ backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='0.03'%3E%3Ccircle cx='30' cy='30' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")` }} />
         <div className="max-w-[700px] mx-auto relative z-10">
           <div className="inline-flex items-center bg-white/10 backdrop-blur px-3 py-1.5 rounded-full mb-4 border border-white/20">
             <Crown size={14} color="#ffffff" className="mr-1" />

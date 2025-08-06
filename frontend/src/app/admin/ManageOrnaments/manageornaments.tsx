@@ -334,7 +334,7 @@ const ManageOrnaments: React.FC = () => {
               <input type="number" name="gramPrice" placeholder="Gram Price (from API) *" value={loadingGoldPrice ? "" : (form.gramPrice || '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" required />
               {goldPriceError && <div className="text-red-500 text-xs mb-2">{goldPriceError}</div>}
               {/* Total Price calculated field */}
-              <input type="number" name="totalPrice" placeholder="Total Price (auto-calculated)" value={form.totalPrice || (form.totalGram && form.gramPrice ? (parseFloat(form.totalGram) * parseFloat(form.gramPrice)).toFixed(2) : '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" />
+              <input type="number" name="totalPrice" placeholder="Total Price (auto-calculated)"   className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" />
 
               {/* Making Charge Percent field */}
               <input

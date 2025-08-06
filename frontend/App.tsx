@@ -10,7 +10,6 @@ import SavingPlan from "./src/app/admin/ChitJewelsSavingPlan/savingplan";
 import Commission from "./src/app/admin/Commission/commission";
 import SPIPPlan from "./src/app/admin/DigitalGoldSPIPlan/sipplan";
 import FAQManagement from "./src/app/admin/FAQ/faq";
-import GoldOrders from "./src/app/admin/GoldOrderManage/goldorder";
 import PlantScheme from "./src/app/admin/GoldPlantScheme/plantscheme";
 import KYC from "./src/app/admin/KYC/kyc";
 import ManageOrnaments from "./src/app/admin/ManageOrnaments/manageornaments";
@@ -28,7 +27,7 @@ import Login from "./src/app/b2b/login/Login";
 import Logout from "./src/app/b2b/logout/Logout";
 import B2BManageOrnaments from "./src/app/b2b/manageornaments/manageornaments.tsx";
 import MarketingResources from "./src/app/b2b/marketingresources/MarketingResources";
-import Notifications from "./src/app/b2b/notifications/Notifications";
+// import Notifications from "./src/app/b2b/notifications/Notifications";
 import OrderHistory from "./src/app/b2b/orderhistory/OrderHistory";
 import Profile from "./src/app/b2b/profile/Profile";
 import SipManagement from "./src/app/b2b/sipmanagement/SipManagement";
@@ -116,7 +115,6 @@ const dispatch = useDispatch<AppDispatch>();
           <Route path="/manageornaments" element={<ManageOrnaments />} />
           <Route path="/manageusers" element={<ManageUsers />} />
           <Route path="/campaigns" element={<AdminCampaigns />} />
-          <Route path="/goldorders" element={<GoldOrders />} />
           <Route path="/orderhistory" element={<AOrderHistory />} />
           <Route path="/faq" element={<FAQManagement />} />
           <Route path="/support-ticket" element={<SupportTicket />} />
@@ -140,7 +138,7 @@ const dispatch = useDispatch<AppDispatch>();
         <Route path="bmarketing-resources" element={<MarketingResources />} />
         <Route path="bsupport" element={<Support />} />
         <Route path="bprofile" element={<Profile />} />
-        <Route path="bnotifications" element={<Notifications />} />
+        {/* <Route path="bnotifications" element={<Notifications />} /> */}
         <Route path="logout" element={<Logout />} />
       </Route>
       </Route>

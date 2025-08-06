@@ -1,12 +1,14 @@
 import { Award, Heart, Loader, Minus, Plus, Share2, Shield, ShoppingCart, Sparkles, Zap } from 'lucide-react';
 import { useEffect, useState } from "react";
-import { useSelector } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from "react-router-dom";
-import { RootState } from '../../../../store';
+import { AppDispatch, RootState } from '../../../../store';
 import axiosInstance from '../../../../utils/axiosInstance';
+import { addToCart } from '../../../features/thunks/cartThunks';
+// --- IMPORT WISHLIST THUNKS ---
+import { addToWishlist, checkIfInWishlist, removeFromWishlist } from '../../../features/thunks/wishlistThunks';
 
 // --- Interfaces to match your API response ---
-
 interface PriceBreakup {
   component: string;
   netWeight: number | null;
@@ -43,20 +45,21 @@ interface Product {
 const JewelryProductPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const dispatch = useDispatch<AppDispatch>();
   const { currentUser } = useSelector((state: RootState) => state.auth);
 
-  // --- EXISTING STATE ---
   const [product, setProduct] = useState<Product | null>(null);
   const [similarProducts, setSimilarProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [selectedImage, setSelectedImage] = useState(0);
-  const [isLiked, setIsLiked] = useState(false);
   const [activeTab, setActiveTab] = useState('details');
-
-  // --- NEW STATE for Cart Functionality ---
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
+
+  // --- NEW WISHLIST STATES ---
+  const [isWishlisted, setIsWishlisted] = useState(false);
+  const [isLiking, setIsLiking] = useState(false); // For loading state of the heart icon
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -71,10 +74,25 @@ const JewelryProductPage = () => {
       setSimilarProducts([]);
       try {
         const productResponse = await axiosInstance.get<Product>(`/admin/ornaments/${id}`);
+        console.log(productResponse.data, 'productResponse.data');
         const mainProduct = productResponse.data;
+
         setProduct(mainProduct);
         setSelectedImage(0);
-        setQuantity(1); // Reset quantity when product changes
+        setQuantity(1);
+
+        // --- NEW: Check wishlist status on load ---
+        if (currentUser) {
+          try {
+            const isInWishlist = await dispatch(checkIfInWishlist({ ornamentId: mainProduct.id })).unwrap();
+            setIsWishlisted(isInWishlist);
+          } catch (wishlistError) {
+            console.error("Failed to check wishlist status:", wishlistError);
+            setIsWishlisted(false); // Default to not liked on error
+          }
+        } else {
+          setIsWishlisted(false); // Not logged in, so not liked
+        }
 
         if (mainProduct?.itemType) {
           try {
@@ -93,25 +111,57 @@ const JewelryProductPage = () => {
       }
     };
     fetchProductData();
-  }, [id]);
+  }, [id, currentUser, dispatch]);
 
-  // --- NEW HANDLER for Add to Cart ---
   const handleAddToCart = async () => {
-    if ( !currentUser ){
+    if (!currentUser) {
       navigate("/SignupPopup");
+      return;
     }
     if (!product) return;
     setIsAddingToCart(true);
     try {
-      const url = `/api/cart/add?ornamentId=${product.id}&qty=${quantity}`;
-      await axiosInstance.post(url);
+      await dispatch(addToCart({ ornamentId: product.id, quantity: quantity })).unwrap();
       alert(`${quantity} x "${product.name}" added to your cart successfully!`);
     } catch (err) {
       console.error("Failed to add to cart:", err);
-      alert("There was an issue adding this item to your cart. Please try again.");
+      const errorMessage = (err as any)?.message || "There was an issue adding this item to your cart.";
+      alert(errorMessage);
     } finally {
       setIsAddingToCart(false);
     }
+  };
+
+  // --- NEW: Function to handle adding/removing from wishlist ---
+  const handleToggleWishlist = async () => {
+    if (!currentUser) {
+      navigate("/SignupPopup");
+      return;
+    }
+    if (!product) return;
+
+    setIsLiking(true);
+    try {
+      if (isWishlisted) {
+        await dispatch(removeFromWishlist({ ornamentId: product.id })).unwrap();
+        setIsWishlisted(false);
+      } else {
+        await dispatch(addToWishlist({ ornamentId: product.id })).unwrap();
+        setIsWishlisted(true);
+      }
+    } catch (err) {
+      console.error("Failed to update wishlist:", err);
+      alert("Failed to update wishlist. Please try again.");
+    } finally {
+      setIsLiking(false);
+    }
+  };
+
+  const calculateFinalPrice = (prod: Product): number => {
+    if (!Array.isArray(prod.priceBreakups) || prod.priceBreakups.length === 0) {
+      return prod.totalPrice || 0;
+    }
+    return prod.priceBreakups.reduce((sum, pb) => sum + (pb.finalValue || 0), 0);
   };
 
   if (loading) {
@@ -124,14 +174,15 @@ const JewelryProductPage = () => {
   }
 
   if (error || !product) {
-    return ( <div className="min-h-screen flex items-center justify-center text-xl text-red-500"><div>{error || "Product not found."}</div></div> );
+    return (<div className="min-h-screen flex items-center justify-center text-xl text-red-500"><div>{error || "Product not found."}</div></div>);
   }
 
   const productImages = [product.mainImage, ...product.subImages].filter(Boolean);
   const keyFeatures = [product.description1, product.description2, product.description3].filter(Boolean);
+  const finalPrice = calculateFinalPrice(product);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 pt-16">
+    <div className="min-h-screen mt-3 bg-gradient-to-br from-rose-50 via-white to-purple-50 pt-16">
       <div className="relative overflow-hidden">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGcgZmlsbD0ibm9uZSIgZmlsbC1ydWxlPSJldmVub2RkIj4KPGcgZmlsbD0iIzdhMTMzNSIgZmlsbC1vcGFjaXR5PSIwLjAzIj4KPGNpcmNsZSBjeD0iMzAiIGN5PSIzMCIgcj0iNCIvPgo8L2c+CjwvZz4KPC9zdmc+')] opacity-50"></div>
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-6 relative z-10">
@@ -141,7 +192,6 @@ const JewelryProductPage = () => {
               <span className="hover:text-[#7a1335] cursor-pointer" onClick={() => navigate('/buyornaments')}>Jewelry</span><span>/</span>
               <span className="font-medium text-[#7a1335]">{product.name}</span>
             </div>
-            <div className="flex items-center space-x-2"><span className="text-xs bg-[#7a1335] text-white px-2 py-1 rounded-full">PREMIUM</span><span className="text-xs bg-green-500 text-white px-2 py-1 rounded-full animate-pulse">IN STOCK</span></div>
           </div>
 
           <div className="grid lg:grid-cols-12 gap-6 mb-8">
@@ -149,7 +199,20 @@ const JewelryProductPage = () => {
               <div className="relative group">
                 <div className="aspect-square bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-2xl overflow-hidden shadow-2xl">
                   <img src={productImages[selectedImage]} alt={product.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
-                  <div className="absolute top-3 right-3 flex flex-col space-y-2"><button onClick={() => setIsLiked(!isLiked)} className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:scale-110 transition-all duration-300"><Heart className={`w-4 h-4 ${isLiked ? 'text-red-500 fill-red-500' : 'text-[#7a1335]'}`} /></button><button className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:scale-110 transition-all duration-300"><Share2 className="w-4 h-4 text-[#7a1335]" /></button></div>
+                  <div className="absolute top-3 right-3 flex flex-col space-y-2">
+                    <button
+                      onClick={handleToggleWishlist}
+                      disabled={isLiking}
+                      className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:scale-110 transition-all duration-300 disabled:cursor-not-allowed"
+                    >
+                      {isLiking ? (
+                        <Loader className="w-4 h-4 animate-spin text-[#7a1335]" />
+                      ) : (
+                        <Heart className={`w-4 h-4 transition-colors ${isWishlisted ? 'text-red-500 fill-red-500' : 'text-[#7a1335]'}`} />
+                      )}
+                    </button>
+                    <button className="p-2 bg-white/90 backdrop-blur-sm rounded-full shadow-lg hover:scale-110 transition-all duration-300"><Share2 className="w-4 h-4 text-[#7a1335]" /></button>
+                  </div>
                 </div>
                 <div className="flex space-x-2 mt-3 overflow-x-auto pb-2">{productImages.map((img, i) => (<button key={i} onClick={() => setSelectedImage(i)} className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden transition-all duration-300 ${selectedImage === i ? 'ring-2 ring-[#7a1335] scale-110 shadow-lg' : 'hover:scale-105 opacity-70 hover:opacity-100'}`}><img src={img} alt={`thumb-${i}`} className="w-full h-full object-cover" /></button>))}</div>
               </div>
@@ -159,20 +222,14 @@ const JewelryProductPage = () => {
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-white/20">
                 <h1 className="text-2xl font-bold text-[#7a1335] mb-2">{product.name}</h1>
                 <div className="flex items-center space-x-3">
-                  <span className="text-3xl font-bold text-[#7a1335]">
-                    {(() => {
-                      let totalPrice = typeof product.totalPrice === 'number' ? product.totalPrice : NaN;
-                      if (isNaN(totalPrice) && Array.isArray(product.priceBreakups)) {
-                        totalPrice = product.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
-                      }
-                      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice);
-                    })()}
-                  </span>
+                  <div className="text-center text-3xl font-semibold text-[#7a1335] tracking-tight mt-2">
+                    {product.totalPrice ? `₹${product.totalPrice.toLocaleString('en-IN')}` : 'N/A'}
+                  </div>
+
                 </div>
               </div>
-              <div className="grid grid-cols-2 gap-3">{[ { icon: Award, label: "Material", value: product.material }, { icon: Shield, label: "Purity", value: product.purity }, { icon: Sparkles, label: "Quality", value: product.quality }, { icon: Zap, label: "Warranty", value: product.warranty }].map((item, index) => (<div key={index} className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 group"><div className="flex items-center space-x-2"><item.icon className="w-4 h-4 text-[#7a1335] group-hover:scale-110 transition-transform" /><div><div className="text-xs text-[#7a1335]/70">{item.label}</div><div className="font-semibold text-[#7a1335] text-sm">{item.value}</div></div></div></div>))}</div>
+              <div className="grid grid-cols-2 gap-3">{[{ icon: Award, label: "Material", value: product.material }, { icon: Shield, label: "Purity", value: product.purity }, { icon: Sparkles, label: "Quality", value: product.quality }, { icon: Zap, label: "Warranty", value: product.warranty }].map((item, index) => (<div key={index} className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 group"><div className="flex items-center space-x-2"><item.icon className="w-4 h-4 text-[#7a1335] group-hover:scale-110 transition-transform" /><div><div className="text-xs text-[#7a1335]/70">{item.label}</div><div className="font-semibold text-[#7a1335] text-sm">{item.value}</div></div></div></div>))}</div>
 
-              {/* --- NEW QUANTITY SELECTOR & UPDATED BUTTONS --- */}
               <div className="pt-4 space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-bold text-[#7a1335]">Quantity</span>
@@ -184,7 +241,7 @@ const JewelryProductPage = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <button onClick={handleAddToCart} disabled={isAddingToCart} className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-[#7a1335] bg-transparent py-4 px-6 font-bold text-[#7a1335] transition-all duration-300 ease-in-out hover:bg-[#7a1335] hover:text-black hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
+                  <button onClick={handleAddToCart} disabled={isAddingToCart} className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-[#7a1335] bg-transparent py-4 px-6 font-bold text-[#7a1335] transition-all duration-300 ease-in-out hover:bg-[#7a1335] hover:text-white hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
                     <ShoppingCart className="h-5 w-5" />
                     <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
                   </button>
@@ -197,7 +254,7 @@ const JewelryProductPage = () => {
           <div className="bg-white/80 backdrop-blur-sm rounded-2xl shadow-xl border border-white/20 mb-12">
             <div className="flex border-b border-[#7a1335]/20">{['details', 'pricing'].map((tab) => (<button key={tab} onClick={() => setActiveTab(tab)} className={`px-6 py-3 font-medium text-sm transition-all duration-300 ${activeTab === tab ? 'text-[#7a1335] border-b-2 border-[#7a1335] bg-[#7a1335]/5' : 'text-[#7a1335]/70 hover:text-[#7a1335] hover:bg-[#7a1335]/5'}`}>{tab.charAt(0).toUpperCase() + tab.slice(1)}</button>))}</div>
             <div className="p-6">
-              {activeTab === 'details' && ( <div className="grid md:grid-cols-2 gap-6"> <div> <h3 className="font-bold text-[#7a1335] mb-3">{product.description}</h3> <div className="space-y-2">{keyFeatures.map((point, idx) => (<div key={idx} className="flex items-start space-x-2 group"><div className="w-2 h-2 bg-[#7a1335] rounded-full mt-2 flex-shrink-0 group-hover:scale-125 transition-transform"></div><span className="text-sm text-[#7a1335]/80">{point}</span></div>))}</div></div><div className="bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-xl p-4"><h4 className="font-semibold text-[#7a1335] mb-2">Care Instructions</h4><ul className="text-sm text-[#7a1335]/80 space-y-1"><li>• Store in provided jewelry box</li><li>• Clean with soft cloth regularly</li><li>• Avoid exposure to chemicals</li><li>• Professional cleaning recommended</li></ul></div></div>)}
+              {activeTab === 'details' && (<div className="grid md:grid-cols-2 gap-6"> <div> <h3 className="font-bold text-[#7a1335] mb-3">{product.description}</h3> <div className="space-y-2">{keyFeatures.map((point, idx) => (<div key={idx} className="flex items-start space-x-2 group"><div className="w-2 h-2 bg-[#7a1335] rounded-full mt-2 flex-shrink-0 group-hover:scale-125 transition-transform"></div><span className="text-sm text-[#7a1335]/80">{point}</span></div>))}</div></div><div className="bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-xl p-4"><h4 className="font-semibold text-[#7a1335] mb-2">Care Instructions</h4><ul className="text-sm text-[#7a1335]/80 space-y-1"><li>• Store in provided jewelry box</li><li>• Clean with soft cloth regularly</li><li>• Avoid exposure to chemicals</li><li>• Professional cleaning recommended</li></ul></div></div>)}
               {activeTab === 'pricing' && (
                 <div className="bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-xl p-4">
                   <h3 className="font-bold text-[#7a1335] mb-4">Price Breakdown</h3>
@@ -226,13 +283,7 @@ const JewelryProductPage = () => {
                     </table>
                     <div className="mt-4 pt-4 border-t border-[#7a1335]/20 text-right">
                       <div className="text-xl font-bold text-[#7a1335]">
-                        Total: {(() => {
-                          let totalPrice = typeof product.totalPrice === 'number' ? product.totalPrice : NaN;
-                          if (isNaN(totalPrice) && Array.isArray(product.priceBreakups)) {
-                            totalPrice = product.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
-                          }
-                          return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice);
-                        })()}
+                        Total:   {product.totalPrice ? `₹${product.totalPrice.toLocaleString('en-IN')}` : 'N/A'}
                       </div>
                     </div>
                   </div>
@@ -240,30 +291,24 @@ const JewelryProductPage = () => {
               )}
             </div>
           </div>
-          
+
           {similarProducts.length > 0 && (
             <section className="mb-12">
               <h2 className="text-3xl font-bold text-[#7a1335] mb-8">Similar Products You May Like</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {similarProducts?.map((p) => {
-                  let totalPrice = typeof p.totalPrice === 'number' ? p.totalPrice : NaN;
-                  if (isNaN(totalPrice) && Array.isArray(p.priceBreakups)) {
-                    totalPrice = p.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
-                  }
-                  if (!Number.isFinite(totalPrice)) totalPrice = 0;
-                  return (
-                    <div key={p.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer" onClick={() => navigate(`/buyornaments/${p.id}`)}>
-                      <div className="aspect-square overflow-hidden">
-                        <img src={p.mainImage} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      </div>
-                      <div className="p-4">
-                        <h4 className="font-semibold text-gray-800 mb-1 truncate">{p.name}</h4>
-                        <p className="text-lg font-bold text-[#7a1335] mb-2">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice)}</p>
-                        <button className="w-full bg-[#7a1335]/10 text-[#7a1335] py-2 px-3 rounded-lg text-sm font-medium hover:bg-[#7a1335] hover:text-white transition-all duration-300">View Details</button>
-                      </div>
+                {similarProducts?.map((p) => (
+                  <div key={p.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer" onClick={() => navigate(`/buyornaments/${p.id}`)}>
+                    <div className="aspect-square overflow-hidden">
+                      <img src={p.mainImage} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
-                  );
-                })}
+                    <div className="p-4">
+                      <h4 className="font-semibold text-gray-800 mb-1 truncate">{p.name}</h4>
+                      <p className="text-lg font-bold text-[#7a1335] mb-2">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(calculateFinalPrice(p))}</p>
+                      <button className="w-full bg-[#7a1335]/10 text-[#7a1335] py-2 px-3 rounded-lg text-sm font-medium hover:bg-[#7a1335] hover:text-white transition-all duration-300">View Details</button>
+                    </div>
+                  </div>
+                )
+                )}
               </div>
             </section>
           )}
