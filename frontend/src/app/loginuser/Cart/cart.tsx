@@ -5,14 +5,37 @@ import { useNavigate } from 'react-router-dom';
 import { AppDispatch, RootState } from '../../../store';
 import { clearCart, fetchCart, removeFromCart, updateCartItemQuantity, checkoutCart } from '../../features/thunks/cartThunks';
 import Portal from '../../user/Portal';
-import { Product } from '../../types/type'; // Assuming your CartItem's ornament is of type Product
+
+// --- Interfaces to match the new API response ---
+interface OrnamentInCart {
+  id: number;
+  name: string;
+  category: string;
+  mainImage: string;
+  totalPrice: number;
+  totalPriceAfterDiscount: number;
+  // Other ornament fields can be added here if needed for display
+}
+
+interface CartItem {
+  id: number;
+  userId: number;
+  ornament: OrnamentInCart;
+  quantity: number;
+  totalPriceAfterDiscount?: number;
+  createdAt: string;
+}
 
 const Cart = () => {
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
 
   const { currentUser } = useSelector((state: RootState) => state.auth);
-  const { items: cartItems, status: cartStatus, error: cartError } = useSelector((state: RootState) => state.cart);
+  // Type the items from the selector to match our new API structure
+  const { items: cartItems, status: cartStatus, error: cartError } = useSelector((state: RootState) => ({
+    ...state.cart,
+    items: state.cart.items as unknown as CartItem[],
+  }));
 
   const [isUpdating, setIsUpdating] = useState<number | 'all' | 'checkout' | null>(null);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
@@ -82,19 +105,13 @@ const Cart = () => {
       setIsUpdating(null);
     }
   };
-
-  // --- CORRECTED PRICE CALCULATION LOGIC ---
-  const calculateItemPrice = (ornament: Product): number => {
-    if (Array.isArray(ornament.priceBreakups) && ornament.priceBreakups.length > 0) {
-      return ornament.priceBreakups.reduce((sum, pb) => sum + (pb.finalValue || 0), 0);
-    }
-    return ornament.totalPrice || 0; // Fallback
-  };
-
+  
+  // --- UPDATED PRICE CALCULATION LOGIC ---
   const subtotal = cartItems.reduce((sum, item) => {
-    const itemPrice = calculateItemPrice(item.ornament);
-    return sum + itemPrice * item.quantity;
+    // Use the final discounted price from the ornament object and multiply by quantity
+    return sum + (item.ornament.totalPriceAfterDiscount * item.quantity);
   }, 0);
+  
   const tax = subtotal * 0.03;
   const total = subtotal + tax;
 
@@ -131,7 +148,7 @@ const Cart = () => {
                       <h3 className="font-bold text-gray-800">{item.ornament.name}</h3>
                       <p className="text-sm text-gray-500">{item.ornament.category}</p>
                       <p className="mt-1 text-base font-semibold text-[#7a1436]">
-                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(calculateItemPrice(item.ornament))}
+                        {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(item.ornament.totalPriceAfterDiscount)}
                       </p>
                     </div>
                     <div className="flex w-full items-center justify-between self-stretch sm:w-auto sm:flex-col sm:items-end sm:gap-4">

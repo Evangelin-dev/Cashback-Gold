@@ -98,9 +98,9 @@ const LDigitalGoldSIPPlan = () => {
                 <div className="w-8 h-8 bg-[#6a0822] rounded-full flex items-center justify-center">
                   <Sparkles className="w-4 h-4 text-white" />
                 </div>
-                <h1 className="text-lg font-bold text-[#6a0822]">Gold SIP Plan</h1>
+                <h1 className="text-lg font-bold text-[#6a0822]">Cashback Gold</h1>
               </div>
-              <p className="text-gray-600 text-xs max-w-xl mx-auto">Review your purchased Gold SIP Plan investments.</p>
+              <p className="text-gray-600 text-xs max-w-xl mx-auto">Review your purchased Cashback Gold investments.</p>
             </div>
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-2 mb-4">

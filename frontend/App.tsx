@@ -5,7 +5,7 @@ import AdminDashboard from "./src/app/admin/AdminDashboard/admindashboard";
 import AdminLayout from "./src/app/admin/AdminLayout";
 import MarketingResourcesUpload from "./src/app/admin/AdminMarketPost/adminmarketpost.tsx";
 import AdminProfile from "./src/app/admin/AdminProfile/adminprofile";
-import AdminCampaigns from "./src/app/admin/Campaigns/campaigns";
+// import AdminCampaigns from "./src/app/admin/Campaigns/campaigns";
 import SavingPlan from "./src/app/admin/ChitJewelsSavingPlan/savingplan";
 import Commission from "./src/app/admin/Commission/commission";
 import SPIPPlan from "./src/app/admin/DigitalGoldSPIPlan/sipplan";
@@ -58,7 +58,7 @@ import LTerms from "./src/app/loginuser/TermsAndCondition/termsandcondition";
 import Wishlist from "./src/app/loginuser/Wishlist/wishlist";
 import PartnerLayout from "./src/app/partner/PartnerLayout";
 import PartnerPopup from "./src/app/partner/PartnerPopup";
-import PartnerCampaigns from "./src/app/partner/partnercampaigns";
+// import PartnerCampaigns from "./src/app/partner/partnercampaigns";
 import PartnerCommission from "./src/app/partner/partnercommission";
 import PartnerDashboard from "./src/app/partner/partnerdashboard";
 import PartnerMarketing from "./src/app/partner/partnermarketing";
@@ -114,7 +114,7 @@ const dispatch = useDispatch<AppDispatch>();
           <Route path="/mybankaccounts" element={<MyBankAccounts />} />
           <Route path="/manageornaments" element={<ManageOrnaments />} />
           <Route path="/manageusers" element={<ManageUsers />} />
-          <Route path="/campaigns" element={<AdminCampaigns />} />
+          {/* <Route path="/campaigns" element={<AdminCampaigns />} /> */}
           <Route path="/orderhistory" element={<AOrderHistory />} />
           <Route path="/faq" element={<FAQManagement />} />
           <Route path="/support-ticket" element={<SupportTicket />} />
@@ -153,7 +153,7 @@ const dispatch = useDispatch<AppDispatch>();
         <Route path="/pmarketing" element={<PartnerMarketing />} />
         <Route path="/pcommission" element={<PartnerCommission />} />
         <Route path="/ppayout" element={<PartnerPayout />} />
-        <Route path="/pcampaigns" element={<PartnerCampaigns />} />
+        {/* <Route path="/pcampaigns" element={<PartnerCampaigns />} /> */}
         <Route path="/psupport" element={<PartnerSupport />} />
         <Route path="/pprofile" element={<PartnerProfile />} />
         <Route path="/pnotifications" element={<PartnerNotification />} />

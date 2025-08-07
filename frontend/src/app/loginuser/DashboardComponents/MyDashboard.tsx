@@ -43,7 +43,7 @@ const LMyDashboard = () => {
     },
     {
       id: 2,
-      name: 'Digital Gold SIP Plan',
+      name: 'Cashback Gold',
       icon: <Coins className="w-8 h-8" />,
       description: 'Systematic investment in pure digital gold',
       currentValue: '₹28,750',

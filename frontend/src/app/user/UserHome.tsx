@@ -80,7 +80,7 @@ const UserHome = () => {
   const getFlyerName = (type: ProcessedFlyer['type']) => {
     switch (type) {
       case 'SAVING_PLAN': return 'DIGI GOLD CHIT PLAN';
-      case 'SIP_PLAN': return 'DIGI GOLD SIP PLAN';
+      case 'SIP_PLAN': return 'CASHBACK GOLD';
       case 'GOLD_PLANT': return 'GOLD PLANT SCHEME';
       default: return 'Gold Scheme';
     }

@@ -176,7 +176,7 @@ const SIPPlan = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-[#fbeaf0] to-white p-2 sm:p-6">
       <div className="bg-white rounded-xl shadow-lg p-4 mx-auto">
-        <h1 className="text-xl sm:text-2xl font-bold text-[#7a1335] mb-4 sm:mb-6">Digital Gold SPI Plans</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#7a1335] mb-4 sm:mb-6">Cashback Gold Plans</h1>
         {loading && <div className="text-center py-4">Loading plans...</div>}
         {error && <div className="text-center py-4 text-red-500">{error}</div>}
         {!loading && !error && (
@@ -246,14 +246,14 @@ const SIPPlan = () => {
         <button
           className="mt-4 sm:mt-6 bg-[#7a1335] hover:bg-[#a31d4b] text-white font-semibold py-2 px-6 rounded transition w-full sm:w-auto"
           onClick={openAddModal}
-        >Add New SPI Plan</button>
+        >Add New Cashback Gold</button>
 
         {/* 4. Render all modals into the #modal-root div using portals */}
         {showAddModal && ReactDOM.createPortal(
           <div className="fixed inset-0 overflow-y-auto h-full top-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 pt-5">
             <div className="bg-white rounded-lg shadow-xl p-6 w-full max-w-md animate-fade-in">
               <h2 className="text-lg font-bold  text-[#7a1335] text-center">
-                {editingPlan ? "Edit SPI Plan" : "Add New SPI Plan"}
+                {editingPlan ? "Edit Cashback Gold Plan" : "Add New Cashback Gold Plan"}
               </h2>
               <form onSubmit={handleSubmit} className="space-y-3">
                 <div>

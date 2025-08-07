@@ -1,3 +1,4 @@
+import { Loader } from "lucide-react"; // Import Loader icon
 import React, { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../../../store";
@@ -39,7 +40,7 @@ const emptyFormState = {
   id: null,
   name: "",
   gramPrice: "", // per gram price
-  discount: "",  // ADDED
+  discount: "",
   material: "",
   purity: "",
   quality: "",
@@ -200,21 +201,24 @@ const ManageOrnaments: React.FC = () => {
   const handleFinalSave = async () => {
     if (form.priceBreakups.length === 0) { alert("At least one price breakup row is required."); return; }
     for (const breakup of form.priceBreakups) {
-      for (const key in breakup) {
-        if (!breakup[key] || String(breakup[key]).trim() === "") { alert("Please fill all fields in all price breakup rows."); return; }
+      if (!breakup.component || String(breakup.component).trim() === "" ||
+          !breakup.netWeight || String(breakup.netWeight).trim() === "" ||
+          !breakup.value     || String(breakup.value).trim() === "") {
+        alert("Please fill all fields (Component, Net Weight, Value) in all price breakup rows.");
+        return;
       }
     }
 
     const warrantyValue = form.warranty === 'other' ? `${form.warrantyYears} years` : form.warranty;
+    const originValue = mainCategory.split(' ')[0].toUpperCase();
+
     const data = {
       name: form.name,
-      price: 0, // required by type but not sent to API
-      gramPrice: 0,
-      totalPrice: 0,
+      goldPerGramPrice: form.gramPrice ? parseFloat(form.gramPrice) : 0,
       category: mainCategory,
       subCategory: subCategory,
-      gender: form.gender || subCategory,
       itemType: item === "Other" ? customItem : item,
+      details: form.details,
       description: form.description,
       description1: form.description1,
       description2: form.description2,
@@ -223,14 +227,13 @@ const ManageOrnaments: React.FC = () => {
       purity: form.purity,
       quality: form.quality,
       warranty: warrantyValue,
-      details: form.details,
-      origin: form.origin ? form.origin : "",
-      discount: form.discount ? parseFloat(form.discount) : 0,
+      origin: originValue,
       makingChargePercent: form.makingChargePercent ? parseFloat(form.makingChargePercent) : 0,
+      discount: form.discount ? parseFloat(form.discount) : 0,
       priceBreakups: form.priceBreakups.map((p: any) => ({
         component: p.component,
         netWeight: p.netWeight === "" || p.netWeight === undefined ? null : parseFloat(p.netWeight),
-        value: p.value === "" ? null : parseFloat(p.value)
+        value: p.value === "" || p.value === undefined ? null : parseFloat(p.value)
       }))
     };
 
@@ -261,7 +264,6 @@ const ManageOrnaments: React.FC = () => {
     }
   };
 
- 
   const handleDelete = async (id: number) => {
     if (window.confirm("Are you sure?")) {
       try {
@@ -297,7 +299,22 @@ const ManageOrnaments: React.FC = () => {
     <div className="min-h-screen bg-gradient-to-br from-[#fbeaf0] to-white p-2 sm:p-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-[#7a1335]">Manage Ornaments</h1>
-        {!isFormVisible && (<button onClick={handleAddNew} className="bg-[#7a1335] text-white font-bold py-2 px-6 rounded-lg shadow hover:bg-[#a31d4b] transition">+ Add Ornament</button>)}
+        {!isFormVisible && (
+          <button
+            onClick={handleAddNew}
+            disabled={loadingGoldPrice}
+            className="bg-[#7a1335] text-white font-bold py-2 px-6 rounded-lg shadow hover:bg-[#a31d4b] transition-all disabled:bg-gray-400 disabled:cursor-wait flex items-center gap-2"
+          >
+            {loadingGoldPrice ? (
+              <>
+                <Loader className="w-5 h-5 animate-spin" />
+                <span>Loading...</span>
+              </>
+            ) : (
+              <span>+ Add Ornament</span>
+            )}
+          </button>
+        )}
       </div>
 
       {isFormVisible && (
@@ -317,11 +334,9 @@ const ManageOrnaments: React.FC = () => {
               </div>
               <input type="text" name="name" placeholder="Name *" value={form.name} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               
-              {/* Gram Price field from API (read-only) */}
               <input type="number" name="gramPrice" placeholder="Gram Price (from API) *" value={loadingGoldPrice ? "" : (form.gramPrice || '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" required />
               {goldPriceError && <div className="text-red-500 text-xs mb-2">{goldPriceError}</div>}
               
-              {/* Discount field */}
               <input
                 type="number"
                 name="discount"
@@ -334,7 +349,6 @@ const ManageOrnaments: React.FC = () => {
                 step="0.01"
               />
 
-              {/* Making Charge Percent field */}
               <input
                 type="number"
                 name="makingChargePercent"
@@ -347,7 +361,6 @@ const ManageOrnaments: React.FC = () => {
                 step="0.01"
               />
 
-              {/* --- RESTORED DROPDOWN UI --- */}
               <div className="mb-3 flex flex-col gap-3 bg-[#fbeaf0] p-4 rounded-lg shadow-inner overflow-y-auto">
                 <select name="mainCategory" value={mainCategory} onChange={e => { setMainCategory(e.target.value); setSubCategory(""); setItem(""); setCustomItem(""); }} className="overflow-y-auto px-3 py-2 border rounded w-full" required>
                   <option value="">Select Main Category *</option>

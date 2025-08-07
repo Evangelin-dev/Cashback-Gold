@@ -303,7 +303,7 @@ const GoldSIPPlansPage = () => {
     <div className="py-8 px-2 sm:px-4 bg-white">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-yellow-900 mb-2">Why Choose Gold SIP?</h2>
+          <h2 className="text-lg sm:text-xl font-bold text-yellow-900 mb-2">Why Choose Cashback Gold?</h2>
           <p className="text-gray-600 max-w-2xl mx-auto text-xs sm:text-sm">Gold Cashback Gold (Systematic Investment Plan) allows you to invest in gold regularly with small amounts. It's a disciplined approach to wealth creation that helps you benefit from rupee cost averaging and the long-term appreciation of gold prices.</p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
