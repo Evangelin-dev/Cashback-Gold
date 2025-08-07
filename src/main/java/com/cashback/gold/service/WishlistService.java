@@ -15,6 +15,7 @@ import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
 import java.util.stream.Collectors;
 
 @Service
@@ -58,37 +59,37 @@ public class WishlistService {
         wishlistRepository.deleteByUserAndOrnament(user, ornament);
     }
 
-//    @Transactional(readOnly = true)
-//    public PagedWishlistResponse list(UserPrincipal principal, int page, int size) {
-//        User user = requireUser(principal.getId());
-//        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
-//        Page<WishlistItem> p = wishlistRepository.findAllByUser(user, pageable);
-//
-//        return PagedWishlistResponse.builder()
-//                .items(p.getContent().stream().map(w -> {
-//                    var o = w.getOrnament();
-//                    // If you store totalPrice in ornament, use it; otherwise compute from priceBreakups
-//                    Double totalPrice = null;
-//                    try {
-//                        totalPrice = o.getTotalPrice(); // adjust if your entity differs
-//                    } catch (Exception ignored) {}
-//
-//                    return WishlistItemResponse.builder()
-//                            .ornamentId(o.getId())
-//                            .name(o.getName())
-//                            .mainImage(o.getMainImage())
-//                            .category(o.getCategory())
-//                            .itemType(o.getItemType())
-//                            .purity(o.getPurity())
-//                            .totalPrice(totalPrice)
-//                            .build();
-//                }).collect(Collectors.toList()))
-//                .page(p.getNumber())
-//                .size(p.getSize())
-//                .totalElements(p.getTotalElements())
-//                .totalPages(p.getTotalPages())
-//                .build();
-//    }
+    @Transactional(readOnly = true)
+    public PagedWishlistResponse list(UserPrincipal principal, int page, int size) {
+        User user = requireUser(principal.getId());
+        Pageable pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "createdAt"));
+        Page<WishlistItem> p = wishlistRepository.findAllByUser(user, pageable);
+
+        return PagedWishlistResponse.builder()
+                .items(p.getContent().stream().map(w -> {
+                    var o = w.getOrnament();
+                    // If you store totalPrice in ornament, use it; otherwise compute from priceBreakups
+                    BigDecimal totalPrice = null;
+                    try {
+                        totalPrice = o.getTotalPrice(); // adjust if your entity differs
+                    } catch (Exception ignored) {}
+
+                    return WishlistItemResponse.builder()
+                            .ornamentId(o.getId())
+                            .name(o.getName())
+                            .mainImage(o.getMainImage())
+                            .category(o.getCategory())
+                            .itemType(o.getItemType())
+                            .purity(o.getPurity())
+                            .totalPrice(totalPrice)
+                            .build();
+                }).collect(Collectors.toList()))
+                .page(p.getNumber())
+                .size(p.getSize())
+                .totalElements(p.getTotalElements())
+                .totalPages(p.getTotalPages())
+                .build();
+    }
 
     @Transactional(readOnly = true)
     public boolean exists(UserPrincipal principal, Long ornamentId) {

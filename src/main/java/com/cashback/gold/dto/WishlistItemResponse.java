@@ -2,6 +2,8 @@ package com.cashback.gold.dto;
 
 import lombok.*;
 
+import java.math.BigDecimal;
+
 @Getter @Setter
 @NoArgsConstructor @AllArgsConstructor @Builder
 public class WishlistItemResponse {
@@ -11,5 +13,5 @@ public class WishlistItemResponse {
     private String category;
     private String itemType;
     private String purity;
-    private Double totalPrice; // if you store computed total, else null
+    private BigDecimal totalPrice; // if you store computed total, else null
 }

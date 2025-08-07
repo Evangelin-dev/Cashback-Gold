@@ -29,12 +29,12 @@ public class WishlistController {
         return ResponseEntity.noContent().build();
     }
 
-//    @GetMapping
-//    public ResponseEntity<PagedWishlistResponse> list(@AuthenticationPrincipal UserPrincipal principal,
-//                                                      @RequestParam(defaultValue = "0") int page,
-//                                                      @RequestParam(defaultValue = "30") int size) {
-//        return ResponseEntity.ok(wishlistService.list(principal, page, size));
-//    }
+    @GetMapping
+    public ResponseEntity<PagedWishlistResponse> list(@AuthenticationPrincipal UserPrincipal principal,
+                                                      @RequestParam(defaultValue = "0") int page,
+                                                      @RequestParam(defaultValue = "30") int size) {
+        return ResponseEntity.ok(wishlistService.list(principal, page, size));
+    }
 
     @GetMapping("/exists/{ornamentId}")
     public ResponseEntity<Boolean> exists(@AuthenticationPrincipal UserPrincipal principal,
