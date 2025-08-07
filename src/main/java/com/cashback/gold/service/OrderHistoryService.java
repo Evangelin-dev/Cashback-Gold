@@ -185,6 +185,7 @@
 package com.cashback.gold.service;
 
 import com.cashback.gold.dto.OrderRequest;
+import com.cashback.gold.dto.OrnamentCheckoutRequest;
 import com.cashback.gold.dto.OrnamentPaymentCallbackRequest;
 import com.cashback.gold.entity.*;
 import com.cashback.gold.exception.InvalidArgumentException;
@@ -492,7 +493,7 @@ public class OrderHistoryService {
 //    }
 
     @Transactional
-    public Map<String, Object> initiateCheckoutOrnamentCart(UserPrincipal user) {
+    public Map<String, Object> initiateCheckoutOrnamentCart(UserPrincipal user, OrnamentCheckoutRequest request){
         List<CartItem> cartItems = cartRepo.findByUserId(user.getId());
         if (cartItems.isEmpty()) {
             throw new InvalidArgumentException("Cart is empty");
@@ -514,9 +515,22 @@ public class OrderHistoryService {
         }
 
         String itemSummary = items.toString().replaceAll(", $", "");
-        String address = userRepository.findById(user.getId()).map(u ->
-                String.join(", ", u.getTown(), u.getCity(), u.getState(), u.getCountry())
-        ).orElseThrow(() -> new InvalidArgumentException("User address not found"));
+        String address;
+        if (request.getAddressLine1() != null && !request.getAddressLine1().isBlank()) {
+            // Use address from request
+            address = String.join(", ",
+                    request.getAddressLine1(),
+                    request.getAddressLine2() != null ? request.getAddressLine2() : "",
+                    request.getCity(),
+                    request.getState(),
+                    request.getPostalCode()
+            );
+        } else {
+            // Fallback to user's registered address
+            address = userRepository.findById(user.getId()).map(u ->
+                    String.join(", ", u.getTown(), u.getCity(), u.getState(), u.getCountry())
+            ).orElseThrow(() -> new InvalidArgumentException("User address not found"));
+        }
 
         boolean isFirstOrder = repository.countByUserId(user.getId()) == 0;
         double discount = isFirstOrder ? Math.round(total * firstOrderDiscountRate * 100.0) / 100.0 : 0.0;

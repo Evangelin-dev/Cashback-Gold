@@ -69,6 +69,7 @@
 package com.cashback.gold.controller;
 
 import com.cashback.gold.dto.OrderRequest;
+import com.cashback.gold.dto.OrnamentCheckoutRequest;
 import com.cashback.gold.dto.OrnamentPaymentCallbackRequest;
 import com.cashback.gold.entity.OrderHistory;
 import com.cashback.gold.exception.InvalidArgumentException;
@@ -104,9 +105,17 @@ public class OrderHistoryController {
 //        return ResponseEntity.ok(response);
 //    }
 
+//    @PostMapping("/checkout/initiate")
+//    public ResponseEntity<?> initiate(@AuthenticationPrincipal UserPrincipal user) {
+//        return ResponseEntity.ok(orderHistoryService.initiateCheckoutOrnamentCart(user));
+//    }
+
     @PostMapping("/checkout/initiate")
-    public ResponseEntity<?> initiate(@AuthenticationPrincipal UserPrincipal user) {
-        return ResponseEntity.ok(orderHistoryService.initiateCheckoutOrnamentCart(user));
+    public ResponseEntity<?> initiate(
+            @AuthenticationPrincipal UserPrincipal user,
+            @RequestBody OrnamentCheckoutRequest request
+    ) {
+        return ResponseEntity.ok(orderHistoryService.initiateCheckoutOrnamentCart(user, request));
     }
 
     @PostMapping("/checkout/callback")
