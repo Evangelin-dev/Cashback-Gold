@@ -111,8 +111,10 @@ public class OrnamentController {
 
     // ✅ Get all ornaments
     @GetMapping
-    public ResponseEntity<List<OrnamentResponse>> getAll() {
-        return ResponseEntity.ok(ornamentService.getAllOrnaments());
+    public ResponseEntity<List<OrnamentResponse>> getAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+        return ResponseEntity.ok(ornamentService.getAllOrnaments(page, size));
     }
 
     // ✅ Get single ornament by ID

@@ -352,8 +352,10 @@ public class OrnamentService {
         }
     }
 
-    public List<OrnamentResponse> getAllOrnaments() {
-        return ornamentRepository.findAll().stream()
+    public List<OrnamentResponse> getAllOrnaments(int page, int size) {
+        Pageable pageable = PageRequest.of(page, size, Sort.by("id").descending());
+        return ornamentRepository.findAll(pageable)
+                .stream()
                 .map(this::mapToResponse)
                 .collect(Collectors.toList());
     }
