@@ -38,9 +38,8 @@ const CATEGORY_TREE = [
 const emptyFormState = {
   id: null,
   name: "",
-  totalGram: "", // total gram
   gramPrice: "", // per gram price
-  totalPrice: "", // calculated
+  discount: "",  // ADDED
   material: "",
   purity: "",
   quality: "",
@@ -55,7 +54,7 @@ const emptyFormState = {
   itemType: "", // Keep itemType for edit logic
 };
 
-const emptyBreakup = { component: "", netWeight: "", grossWeight: "", discount: "", finalValue: "" };
+const emptyBreakup = { component: "", netWeight: "", value: "" };
 
 const ManageOrnaments: React.FC = () => {
   const dispatch = useDispatch<AppDispatch>();
@@ -126,7 +125,6 @@ const ManageOrnaments: React.FC = () => {
     setIsFormVisible(true);
     setForm({
       ...product,
-      totalGram: product.totalGram ? product.totalGram.toString() : "",
       gramPrice: goldPrice,
       warranty: product.warranty?.includes('years') ? 'other' : product.warranty,
       warrantyYears: product.warranty?.includes('years') ? product.warranty.match(/\d+/)?.[0] || '' : '',
@@ -161,13 +159,6 @@ const ManageOrnaments: React.FC = () => {
     const { name, value } = e.target;
     if (name === "warranty" && value !== "other") {
       setForm({ ...form, warranty: value, warrantyYears: "" });
-    } else if (name === "totalGram") {
-      // When grams change, recalculate totalPrice
-      setForm((prev: any) => ({
-        ...prev,
-        totalGram: value,
-        totalPrice: value && prev.gramPrice ? (parseFloat(value) * parseFloat(prev.gramPrice)).toFixed(2) : ""
-      }));
     } else {
       setForm({ ...form, [name]: value });
     }
@@ -187,7 +178,7 @@ const ManageOrnaments: React.FC = () => {
   };
 
   const handleProductFormSave = () => {
-    const required = ["name", "totalGram", "material", "purity", "quality", "details"];
+    const required = ["name", "material", "purity", "quality", "details"];
     for (const key of required) {
       if (!form[key] || String(form[key]).trim() === "") {
         alert(`Please fill the required field: ${key}`);
@@ -215,10 +206,8 @@ const ManageOrnaments: React.FC = () => {
     }
 
     const warrantyValue = form.warranty === 'other' ? `${form.warrantyYears} years` : form.warranty;
-    const totalGramValue = parseFloat(form.totalGram);
     const data = {
       name: form.name,
-      totalGram: totalGramValue,
       price: 0, // required by type but not sent to API
       gramPrice: 0,
       totalPrice: 0,
@@ -236,13 +225,12 @@ const ManageOrnaments: React.FC = () => {
       warranty: warrantyValue,
       details: form.details,
       origin: form.origin ? form.origin : "",
+      discount: form.discount ? parseFloat(form.discount) : 0,
       makingChargePercent: form.makingChargePercent ? parseFloat(form.makingChargePercent) : 0,
       priceBreakups: form.priceBreakups.map((p: any) => ({
         component: p.component,
         netWeight: p.netWeight === "" || p.netWeight === undefined ? null : parseFloat(p.netWeight),
-        grossWeight: p.grossWeight === "" || p.grossWeight === undefined ? null : parseFloat(p.grossWeight),
-        discount: p.discount === "" ? null : parseFloat(p.discount),
-        finalValue: p.finalValue === "" ? null : parseFloat(p.finalValue)
+        value: p.value === "" ? null : parseFloat(p.value)
       }))
     };
 
@@ -328,13 +316,23 @@ const ManageOrnaments: React.FC = () => {
                 </div>
               </div>
               <input type="text" name="name" placeholder="Name *" value={form.name} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
-              {/* Total Gram field (was Price) */}
-              <input type="number" name="totalGram" placeholder="Total Gram *" value={form.totalGram} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
+              
               {/* Gram Price field from API (read-only) */}
               <input type="number" name="gramPrice" placeholder="Gram Price (from API) *" value={loadingGoldPrice ? "" : (form.gramPrice || '')} readOnly className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" required />
               {goldPriceError && <div className="text-red-500 text-xs mb-2">{goldPriceError}</div>}
-              {/* Total Price calculated field */}
-              <input type="number" name="totalPrice" placeholder="Total Price (auto-calculated)"   className="mb-3 px-3 py-2 border rounded w-full bg-gray-100" />
+              
+              {/* Discount field */}
+              <input
+                type="number"
+                name="discount"
+                placeholder="Discount *"
+                value={form.discount || ''}
+                onChange={handleChange}
+                className="mb-3 px-3 py-2 border rounded w-full"
+                required
+                min="0"
+                step="0.01"
+              />
 
               {/* Making Charge Percent field */}
               <input
@@ -350,8 +348,8 @@ const ManageOrnaments: React.FC = () => {
               />
 
               {/* --- RESTORED DROPDOWN UI --- */}
-              <div className="mb-3 flex flex-col gap-3 bg-[#fbeaf0] p-4 rounded-lg shadow-inner">
-                <select name="mainCategory" value={mainCategory} onChange={e => { setMainCategory(e.target.value); setSubCategory(""); setItem(""); setCustomItem(""); }} className="px-3 py-2 border rounded w-full" required>
+              <div className="mb-3 flex flex-col gap-3 bg-[#fbeaf0] p-4 rounded-lg shadow-inner overflow-y-auto">
+                <select name="mainCategory" value={mainCategory} onChange={e => { setMainCategory(e.target.value); setSubCategory(""); setItem(""); setCustomItem(""); }} className="overflow-y-auto px-3 py-2 border rounded w-full" required>
                   <option value="">Select Main Category *</option>
                   {CATEGORY_TREE.map(cat => (<option key={cat.name} value={cat.name}>{cat.name}</option>))}
                 </select>
@@ -408,17 +406,13 @@ const ManageOrnaments: React.FC = () => {
           {!showPriceBreakup ? (<div className="flex gap-4 mt-8"><button onClick={handleProductFormSave} className="bg-[#7a1335] text-white font-semibold py-2 px-6 rounded hover:bg-[#a31d4b]">Next</button><button onClick={resetAndHideForm} className="bg-gray-400 text-white font-semibold py-2 px-6 rounded hover:bg-gray-500">Cancel</button></div>) : (<div className="mt-10 border-t pt-8"><h3 className="text-xl font-bold text-[#7a1335] mb-4">Price Breakup</h3><div className="overflow-x-auto mb-6"><table className="min-w-full bg-white"><thead><tr className="border-b">
           <th className="px-4 py-2 text-left text-[#7a1335]">Component</th>
           <th className="px-4 py-2 text-left text-[#7a1335]">Net Weight (g)</th>
-          <th className="px-4 py-2 text-left text-[#7a1335]">Gross Weight (g)</th>
-          <th className="px-4 py-2 text-left text-[#7a1335]">Discount</th>
-          <th className="px-4 py-2 text-left text-[#7a1335]">Final Value</th>
+          <th className="px-4 py-2 text-left text-[#7a1335]">Value</th>
           <th className="px-4 py-2 text-left text-[#7a1335]">Actions</th>
 </tr></thead><tbody>{form.priceBreakups.map((row: any, i: number) => (
   <tr key={i} className="border-b">
     <td className="p-2"><input type="text" name="component" placeholder="Component *" value={row.component} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
     <td className="p-2"><input type="number" name="netWeight" placeholder="Net Weight (g)" value={row.netWeight} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2"><input type="number" name="grossWeight" placeholder="Gross Weight (g)" value={row.grossWeight} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2"><input type="number" name="discount" placeholder="Discount" value={row.discount} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
-    <td className="p-2"><input type="number" name="finalValue" placeholder="Final Value" value={row.finalValue} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
+    <td className="p-2"><input type="number" name="value" placeholder="Value" value={row.value} onChange={e => handleBreakupChange(e, i)} className="w-full px-2 py-1 border rounded" /></td>
     <td className="p-2 flex gap-2"><button onClick={() => handleBreakupDelete(i)} className="bg-red-500 text-white px-3 py-1 rounded text-xs">Delete</button></td>
   </tr>
 ))}</tbody></table></div><div className="flex gap-4"><button onClick={addBreakupRow} className="bg-blue-600 text-white font-semibold py-2 px-4 rounded">Add Row</button></div><div className="flex gap-4 mt-8 border-t pt-6"><button onClick={handleFinalSave} disabled={status === 'loading'} className="bg-green-600 text-white font-semibold py-2 px-8 rounded disabled:bg-gray-400 disabled:cursor-not-allowed">{status === 'loading' ? 'Saving...' : (form.id ? 'Update Product' : 'Save Product')}</button><button onClick={() => setShowPriceBreakup(false)} className="bg-gray-500 text-white font-semibold py-2 px-6 rounded">Back</button></div></div>)}
