@@ -3,6 +3,20 @@ import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
 import Portal from '../../user/Portal'; // Make sure this path is correct
+// Razorpay script loader
+const loadRazorpayScript = () => {
+  return new Promise((resolve) => {
+    if (document.getElementById('razorpay-script')) {
+      resolve(true);
+      return;
+    }
+    const script = document.createElement('script');
+    script.id = 'razorpay-script';
+    script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+    script.onload = () => resolve(true);
+    document.body.appendChild(script);
+  });
+};
 
 // --- INTERFACES to match /api/orders/my response ---
 interface OrderFromApi {
@@ -37,11 +51,37 @@ const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { styl
 const parseDurationMonths = (durationStr: string): number => parseInt(durationStr, 10) || 1;
 
 const LChitJewelsSavingPlan = () => {
-  // --- NEXT PAYMENT HANDLER ---
-  // --- NEXT PAYMENT MODAL STATE ---
+  // --- MODAL STATES ---
   const [paymentModalPlan, setPaymentModalPlan] = useState<ProcessedPlan | null>(null);
-  const handleNextPayment = (plan: ProcessedPlan) => {
+  const [sellBuyModalPlan, setSellBuyModalPlan] = useState<ProcessedPlan | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiMessage, setApiMessage] = useState<string | null>(null);
+  // Helper to get next unpaid month and amount
+  const getNextPaymentInfo = (plan: ProcessedPlan) => {
+    // Always use the first month's amount for all subsequent payments
+    if (!plan.payments || plan.payments.length === 0) return { month: 2, amount: null };
+    // Get the first month's amountPaid (the actual paid value, not monthlyPay)
+    let amount = null;
+    if (plan.payments[0]) {
+      amount = plan.payments[0].amountPaid || plan.payments[0].monthlyPay || plan.payments[0].amountDue || null;
+    }
+    // Find the next unpaid month after the first month
+    const next = plan.payments.find((p: any) => p.month > 1 && (!p.amountPaid || p.amountPaid === 0));
+    if (next) {
+      return { month: next.month, amount };
+    }
+    // If all months paid, fallback to the last month
+    const last = plan.payments[plan.payments.length - 1];
+    return { month: last.month, amount };
+  };
+
+  const handleNextPay = (plan: ProcessedPlan) => {
     setPaymentModalPlan(plan);
+    setApiMessage(null);
+  };
+  const handleSellBuy = (plan: ProcessedPlan) => {
+    setSellBuyModalPlan(plan);
+    setApiMessage(null);
   };
   // --- STATE MANAGEMENT ---
   const [userChitPlans, setUserChitPlans] = useState<ProcessedPlan[]>([]);
@@ -52,39 +92,39 @@ const LChitJewelsSavingPlan = () => {
   const navigate = useNavigate();
 
   // --- DATA FETCHING from /api/orders/my ---
-useEffect(() => {
-    const fetchUserPlans = async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        // Fetch enrolled chit plans for the user
-        const response = await axiosInstance.get('/api/user-savings/my-enrollments');
-        const enrolledPlans = response.data || [];
-        // Map the API response to new format
-        const processed = enrolledPlans.map((plan: any) => {
-          let status = (plan.status || '').toLowerCase();
-          if (status === 'enrolled') status = 'successful';
-          if (status === 'pending') status = 'pending';
-          if (status === 'rejected' || status === 'failed') status = 'rejected';
-          return {
-            id: plan.enrollmentId?.toString() || '',
-            name: plan.planName || '',
-            startDate: plan.startDate || '',
-            status,
-            totalAmountPaid: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(plan.totalAmountPaid || 0),
-            totalGoldAccumulated: (plan.totalGoldAccumulated || 0).toFixed(4) + 'g',
-            totalBonus: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(plan.totalBonus || 0),
-            payments: plan.payments || [],
-          };
-        });
-        setUserChitPlans(processed);
-      } catch (err) {
-        console.error("Failed to fetch enrolled Chit plans:", err);
-        setError("Could not load your enrolled saving plans at this time.");
-      } finally {
-        setLoading(false);
-      }
-    };
+  const fetchUserPlans = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Fetch enrolled chit plans for the user
+      const response = await axiosInstance.get('/api/user-savings/my-enrollments');
+      const enrolledPlans = response.data || [];
+      // Map the API response to new format
+      const processed = enrolledPlans.map((plan: any) => {
+        let status = (plan.status || '').toLowerCase();
+        if (status === 'enrolled') status = 'successful';
+        if (status === 'pending') status = 'pending';
+        if (status === 'rejected' || status === 'failed') status = 'rejected';
+        return {
+          id: plan.enrollmentId?.toString() || '',
+          name: plan.planName || '',
+          startDate: plan.startDate || '',
+          status,
+          totalAmountPaid: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(plan.totalAmountPaid || 0),
+          totalGoldAccumulated: (plan.totalGoldAccumulated || 0).toFixed(4) + 'g',
+          totalBonus: new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 2 }).format(plan.totalBonus || 0),
+          payments: plan.payments || [],
+        };
+      });
+      setUserChitPlans(processed);
+    } catch (err) {
+      console.error("Failed to fetch enrolled Chit plans:", err);
+      setError("Could not load your enrolled saving plans at this time.");
+    } finally {
+      setLoading(false);
+    }
+  };
+  useEffect(() => {
     fetchUserPlans();
   }, []);
 
@@ -164,8 +204,8 @@ useEffect(() => {
                       <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Bonus</span><span className="font-semibold text-gray-800">{plan.totalBonus}</span></div>
                     </div>
                     <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
-                      <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
-                      <button className="flex-1 bg-[#6a0822] text-white py-1.5 px-2 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold" onClick={() => handleNextPayment(plan)}>Next Payment</button>
+                      <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => handleSellBuy(plan)}>Sell/Buy</button>
+                      <button className="flex-1 bg-[#6a0822] text-white py-1.5 px-2 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold" onClick={() => handleNextPay(plan)}>Next Pay</button>
                     </div>
                   </div>
                 ))}
@@ -237,7 +277,7 @@ useEffect(() => {
               >
                 <X size={18} />
               </button>
-              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Next Payment</h3>
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Next Pay</h3>
               <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600 w-full">
                 <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{paymentModalPlan.name}</span></div>
                 <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{paymentModalPlan.startDate ? new Date(paymentModalPlan.startDate).toLocaleDateString() : '-'}</span></div>
@@ -247,10 +287,131 @@ useEffect(() => {
               </div>
               <button
                 className="mt-4 bg-[#6a0822] text-white py-1.5 px-4 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold w-full"
-                onClick={() => { alert('Payment flow coming soon!'); }}
+                disabled={apiLoading}
+                onClick={async () => {
+                  setApiLoading(true);
+                  setApiMessage(null);
+                  try {
+                    const { amount } = getNextPaymentInfo(paymentModalPlan);
+                    if (!amount || amount === 0) {
+                      setApiMessage('Payment amount is not available for this plan. Please contact support.');
+                      setApiLoading(false);
+                      return;
+                    }
+                    // Only initiate payment and open Razorpay, no callback
+                    const initiateRes = await axiosInstance.post('/api/user-savings/pay-monthly/initiate', {
+                      enrollmentId: Number(paymentModalPlan.id),
+                      amountPaid: amount
+                    });
+                    const razorpayOrderId = initiateRes.data.razorpayOrderId;
+                    const options = {
+                      key: window.RAZORPAY_KEY_ID,
+                      amount: amount * 100,
+                      currency: 'INR',
+                      name: 'Chit Jewels',
+                      description: paymentModalPlan.name,
+                      order_id: razorpayOrderId,
+                      handler: function (response: any) {
+                        setApiMessage('Payment successful!');
+                        fetchUserPlans();
+                        setApiLoading(false);
+                      },
+                      prefill: { name: '', email: '', contact: '' },
+                      theme: { color: '#6a0822' },
+                      modal: { ondismiss: function () { setApiLoading(false); } }
+                    };
+                    if (!window.Razorpay) {
+                      const script = document.createElement('script');
+                      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                      script.async = true;
+                      script.onload = () => { const rzp = new window.Razorpay(options); rzp.open(); };
+                      document.body.appendChild(script);
+                    } else {
+                      const rzp = new window.Razorpay(options);
+                      rzp.open();
+                    }
+                  } catch (err: any) {
+                    let apiError = 'Payment failed. Please try again.';
+                    if (err?.response) {
+                      if (typeof err.response.data === 'string' && err.response.data) {
+                        apiError = err.response.data;
+                      } else if (err.response.data?.message) {
+                        apiError = err.response.data.message;
+                      }
+                    }
+                    setApiMessage(apiError);
+                    setApiLoading(false);
+                  }
+                }}
               >
-                Pay Now
+                {apiLoading ? 'Processing...' : 'Pay Now'}
               </button>
+              {apiMessage && <div className="mt-2 text-xs text-center text-green-600">{apiMessage}</div>}
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* --- SELL/BUY MODAL --- */}
+      {sellBuyModalPlan && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+            <div className="bg-white rounded-xl p-4 max-w-xs w-full mx-auto relative shadow-xl flex flex-col items-center">
+              <button
+                onClick={() => setSellBuyModalPlan(null)}
+                className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+              >
+                <X size={18} />
+              </button>
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Sell / Buy</h3>
+              <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600 w-full">
+                <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{sellBuyModalPlan.name}</span></div>
+                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{sellBuyModalPlan.startDate ? new Date(sellBuyModalPlan.startDate).toLocaleDateString() : '-'}</span></div>
+                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{sellBuyModalPlan.totalAmountPaid}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{sellBuyModalPlan.totalGoldAccumulated}</span></div>
+                <div className="flex justify-between items-center"><span>Bonus:</span><span className="font-semibold">{sellBuyModalPlan.totalBonus}</span></div>
+              </div>
+              <div className="flex gap-2 w-full mt-4">
+                <button
+                  className="flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold"
+                  disabled={apiLoading}
+                  onClick={async () => {
+                    setApiLoading(true);
+                    setApiMessage(null);
+                    try {
+                      await axiosInstance.post('/api/user-savings/recall', {
+                        enrollmentId: Number(sellBuyModalPlan.id),
+                        action: 'SELL_GOLD'
+                      });
+                      setApiMessage('Gold sold successfully!');
+                    } catch (err: any) {
+                      setApiMessage('Sell failed. Please try again.');
+                    } finally {
+                      setApiLoading(false);
+                    }
+                  }}
+                >{apiLoading ? 'Processing...' : 'Sell Gold'}</button>
+                <button
+                  className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold"
+                  disabled={apiLoading}
+                  onClick={async () => {
+                    setApiLoading(true);
+                    setApiMessage(null);
+                    try {
+                      await axiosInstance.post('/api/user-savings/recall', {
+                        enrollmentId: Number(sellBuyModalPlan.id),
+                        action: 'BUY_JEWEL'
+                      });
+                      setApiMessage('Jewel bought successfully!');
+                    } catch (err: any) {
+                      setApiMessage('Buy failed. Please try again.');
+                    } finally {
+                      setApiLoading(false);
+                    }
+                  }}
+                >{apiLoading ? 'Processing...' : 'Buy Jewel'}</button>
+              </div>
+              {apiMessage && <div className="mt-2 text-xs text-center text-green-600">{apiMessage}</div>}
             </div>
           </div>
         </Portal>

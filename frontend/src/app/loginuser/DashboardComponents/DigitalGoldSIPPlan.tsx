@@ -41,6 +41,11 @@ const LDigitalGoldSIPPlan = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState('active');
   const [viewedPlan, setViewedPlan] = useState<ProcessedSIPPlan | null>(null);
+  const [apiLoading, setApiLoading] = useState(false);
+  const [apiMessage, setApiMessage] = useState<string | null>(null);
+  const [buyModalPlan, setBuyModalPlan] = useState<ProcessedSIPPlan | null>(null);
+  const [buyAmount, setBuyAmount] = useState<string>('');
+  const [sellModalPlan, setSellModalPlan] = useState<ProcessedSIPPlan | null>(null);
   const navigate = useNavigate();
 
   // --- DATA FETCHING from /api/orders/my ---
@@ -146,9 +151,153 @@ const LDigitalGoldSIPPlan = () => {
                 </div>
                 <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
                   <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
+                  <button className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold" onClick={() => setBuyModalPlan(plan)}>Buy</button>
+                  <button className="flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold" onClick={() => setSellModalPlan(plan)}>Sell</button>
                 </div>
               </div>
             ))}
+      {/* --- BUY MODAL --- */}
+      {buyModalPlan && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+            <div className="bg-white rounded-xl p-4 max-w-xs w-full mx-auto relative shadow-xl flex flex-col items-center">
+              <button onClick={() => { setBuyModalPlan(null); setApiMessage(null); setBuyAmount(''); }} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Buy Gold SIP</h3>
+              <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600 w-full">
+                <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{buyModalPlan.schemeName}</span></div>
+                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{buyModalPlan.totalPaid}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{buyModalPlan.goldAccumulated}</span></div>
+                
+                <div className="flex justify-between items-center"><span>Amount to Buy (Min ₹100):</span>
+                  <input
+                    type="number"
+                    min="100"
+                    className="border rounded px-2 py-1 w-24 text-right"
+                    value={buyAmount}
+                    onChange={e => setBuyAmount(e.target.value)}
+                    placeholder="Enter amount"
+                   
+                  />
+                </div>
+              </div>
+              <button
+                className="mt-4 bg-green-700 text-white py-1.5 px-4 rounded hover:bg-green-800 transition-colors text-xs font-semibold w-full"
+                disabled={apiLoading || !buyAmount || Number(buyAmount) < 100 }
+                onClick={async () => {
+                  setApiLoading(true);
+                  setApiMessage(null);
+                  try {
+                    // Razorpay payment flow
+                    const initiateRes = await axiosInstance.post('/api/cashback-gold-user/recall', {
+                      enrollmentId: Number(buyModalPlan.id),
+                      mode: 'BUY',
+                      amount: Number(buyAmount)
+                    });
+                    // Assume backend returns Razorpay order details
+                    const { razorpayOrderId, keyId } = initiateRes.data;
+                    if (!razorpayOrderId || !keyId) {
+                      setApiMessage('Payment initiation failed.');
+                      setApiLoading(false);
+                      return;
+                    }
+                    const options = {
+                      key: keyId,
+                      amount: Number(buyAmount) * 100,
+                      currency: 'INR',
+                      name: 'Gold SIP Buy',
+                      description: buyModalPlan.schemeName,
+                      order_id: razorpayOrderId,
+                      handler: function (response: any) {
+                        setApiMessage('Buy request successful!');
+                        setBuyModalPlan(null);
+                        setBuyAmount('');
+                        window.location.reload();
+                      },
+                      prefill: {},
+                      theme: { color: '#6a0822' }
+                    };
+                    if (window.Razorpay) {
+                      const rzp = new window.Razorpay(options);
+                      rzp.open();
+                    } else {
+                      setApiMessage('Razorpay SDK not loaded.');
+                    }
+                  } catch (err: any) {
+                    let apiError = 'Buy failed. Please try again.';
+                    if (err?.response) {
+                      if (typeof err.response.data === 'string' && err.response.data) {
+                        apiError = err.response.data;
+                      } else if (err.response.data?.message) {
+                        apiError = err.response.data.message;
+                      }
+                    }
+                    setApiMessage(apiError);
+                    setApiLoading(false);
+                  }
+                }}
+              >{apiLoading ? 'Processing...' : 'Buy Now'}</button>
+              {apiMessage && <div className="mt-2 text-xs text-center text-green-600">{apiMessage}</div>}
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* --- SELL MODAL --- */}
+      {sellModalPlan && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+            <div className="bg-white rounded-xl p-4 max-w-xs w-full mx-auto relative shadow-xl flex flex-col items-center">
+              <button onClick={() => { setSellModalPlan(null); setApiMessage(null); }} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Sell Gold SIP</h3>
+              <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600 w-full">
+                <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{sellModalPlan.schemeName}</span></div>
+                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{sellModalPlan.totalPaid}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{sellModalPlan.goldAccumulated}</span></div>
+              </div>
+              <button
+                className="mt-4 bg-yellow-600 text-white py-1.5 px-4 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold w-full"
+                disabled={apiLoading}
+                onClick={async () => {
+                  setApiLoading(true);
+                  setApiMessage(null);
+                  try {
+                    // Fetch user bank accounts
+                    const bankRes = await axiosInstance.get('/api/cashback-gold-user/mybankaccounts');
+                    const bank = bankRes.data?.[0];
+                    if (!bank || !bank.accountNumber || !bank.ifscCode) {
+                      setApiMessage('Account Number, IFSC code is not there');
+                      setApiLoading(false);
+                      return;
+                    }
+                    // For sell, send mode: 'SELL'
+                    await axiosInstance.post('/api/cashback-gold-user/recall', {
+                      enrollmentId: Number(sellModalPlan.id),
+                      mode: 'SELL',
+                      accountNumber: bank.accountNumber,
+                      ifscCode: bank.ifscCode
+                    });
+                    setApiMessage('Gold SIP sold successfully! Amount will be credited to your bank account.');
+                    setSellModalPlan(null);
+                    window.location.reload();
+                  } catch (err: any) {
+                    let apiError = 'Sell failed. Please try again.';
+                    if (err?.response) {
+                      if (typeof err.response.data === 'string' && err.response.data) {
+                        apiError = err.response.data;
+                      } else if (err.response.data?.message) {
+                        apiError = err.response.data.message;
+                      }
+                    }
+                    setApiMessage(apiError);
+                    setApiLoading(false);
+                  }
+                }}
+              >{apiLoading ? 'Processing...' : 'Sell Now'}</button>
+              {apiMessage && <div className="mt-2 text-xs text-center text-green-600">{apiMessage}</div>}
+            </div>
+          </div>
+        </Portal>
+      )}
           </div>
         ) : (
           <div className="bg-white rounded-xl shadow-sm p-6 text-center">
