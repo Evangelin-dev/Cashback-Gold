@@ -57,7 +57,7 @@ public class Ornament {
     private BigDecimal totalPrice;
 
     @Column(name = "total_price_after_discount", nullable = false)
-    private BigDecimal totalPriceAfterDiscount;
+    private Double totalPriceAfterDiscount;
 
 
     @Column(name = "main_image")

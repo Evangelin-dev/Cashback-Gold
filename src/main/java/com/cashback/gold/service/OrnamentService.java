@@ -57,7 +57,7 @@ public class OrnamentService {
             // Final price calculations
             BigDecimal totalPrice = sumValue.add(makingCharge);
             BigDecimal discount = req.getDiscount() != null ? req.getDiscount() : BigDecimal.ZERO;
-            BigDecimal totalPriceAfterDiscount = totalPrice.subtract(discount);
+            Double totalPriceAfterDiscount = totalPrice.subtract(discount).doubleValue();
 
             // Create and save Ornament entity
             Ornament ornament = Ornament.builder().name(req.getName()).goldPerGramPrice(req.getGoldPerGramPrice()).category(req.getCategory()).subCategory(req.getSubCategory()).itemType(req.getItemType()).details(req.getDetails()).description(req.getDescription()).description1(req.getDescription1()).description2(req.getDescription2()).description3(req.getDescription3()).material(req.getMaterial()).purity(req.getPurity()).quality(req.getQuality()).warranty(req.getWarranty()).origin(req.getOrigin()).makingChargePercent(req.getMakingChargePercent()).grossWeight(totalWeight).discount(discount).totalPrice(totalPrice).totalPriceAfterDiscount(totalPriceAfterDiscount).mainImage(mainImageUrl).subImages(subImageUrls).build();
@@ -106,7 +106,7 @@ public class OrnamentService {
         BigDecimal discount = ornament.getDiscount() != null ? ornament.getDiscount() : BigDecimal.ZERO;
         BigDecimal totalPrice = ornament.getTotalPrice() != null ? ornament.getTotalPrice() : BigDecimal.ZERO;
 
-        return OrnamentResponse.builder().id(ornament.getId()).name(ornament.getName()).goldPerGramPrice(ornament.getGoldPerGramPrice()).category(ornament.getCategory()).subCategory(ornament.getSubCategory()).itemType(ornament.getItemType()).details(ornament.getDetails()).description(ornament.getDescription()).description1(ornament.getDescription1()).description2(ornament.getDescription2()).description3(ornament.getDescription3()).material(ornament.getMaterial()).purity(ornament.getPurity()).quality(ornament.getQuality()).warranty(ornament.getWarranty()).origin(ornament.getOrigin()).makingChargePercent(ornament.getMakingChargePercent()).grossWeight(ornament.getGrossWeight()).discount(discount).totalPrice(totalPrice).totalPriceAfterDiscount(totalPrice.subtract(discount)).mainImage(ornament.getMainImage()).subImages(ornament.getSubImages()).priceBreakups(ornament.getPriceBreakups().stream().map(pb -> {
+        return OrnamentResponse.builder().id(ornament.getId()).name(ornament.getName()).goldPerGramPrice(ornament.getGoldPerGramPrice()).category(ornament.getCategory()).subCategory(ornament.getSubCategory()).itemType(ornament.getItemType()).details(ornament.getDetails()).description(ornament.getDescription()).description1(ornament.getDescription1()).description2(ornament.getDescription2()).description3(ornament.getDescription3()).material(ornament.getMaterial()).purity(ornament.getPurity()).quality(ornament.getQuality()).warranty(ornament.getWarranty()).origin(ornament.getOrigin()).makingChargePercent(ornament.getMakingChargePercent()).grossWeight(ornament.getGrossWeight()).discount(discount).totalPrice(totalPrice).totalPriceAfterDiscount(totalPrice.subtract(discount).doubleValue()).mainImage(ornament.getMainImage()).subImages(ornament.getSubImages()).priceBreakups(ornament.getPriceBreakups().stream().map(pb -> {
             PriceBreakupDTO dto = new PriceBreakupDTO();
             dto.setComponent(pb.getComponent());
             dto.setNetWeight(pb.getNetWeight());
@@ -163,7 +163,7 @@ public class OrnamentService {
             BigDecimal makingCharge = totalValue.multiply(req.getMakingChargePercent()).divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
             BigDecimal totalPrice = totalValue.add(makingCharge);
             BigDecimal discount = req.getDiscount() != null ? req.getDiscount() : BigDecimal.ZERO;
-            BigDecimal totalPriceAfterDiscount = totalPrice.subtract(discount);
+            Double totalPriceAfterDiscount = totalPrice.subtract(discount).doubleValue();
 
             ornament.setGrossWeight(grossWeight);
             ornament.setTotalPrice(totalPrice);

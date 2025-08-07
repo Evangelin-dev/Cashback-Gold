@@ -491,76 +491,76 @@ public class OrderHistoryService {
 //        return response;
 //    }
 
-//    @Transactional
-//    public Map<String, Object> initiateCheckoutOrnamentCart(UserPrincipal user) {
-//        List<CartItem> cartItems = cartRepo.findByUserId(user.getId());
-//        if (cartItems.isEmpty()) {
-//            throw new InvalidArgumentException("Cart is empty");
-//        }
-//
-//        double total = 0.0;
-//        StringBuilder items = new StringBuilder();
-//
-//        for (CartItem item : cartItems) {
-//            Ornament ornament = item.getOrnament();
-//            if (ornament == null || item.getQuantity() <= 0) {
-//                throw new InvalidArgumentException("Invalid cart item");
-//            }
-//
-//            double basePrice = ornament.getTotalPrice() * item.getQuantity();
-//            double itemGst = Math.round(basePrice * ornamentGstRate * 100.0) / 100.0;
-//            total += basePrice + itemGst;
-//            items.append(ornament.getName()).append(" x").append(item.getQuantity()).append(", ");
-//        }
-//
-//        String itemSummary = items.toString().replaceAll(", $", "");
-//        String address = userRepository.findById(user.getId()).map(u ->
-//                String.join(", ", u.getTown(), u.getCity(), u.getState(), u.getCountry())
-//        ).orElseThrow(() -> new InvalidArgumentException("User address not found"));
-//
-//        boolean isFirstOrder = repository.countByUserId(user.getId()) == 0;
-//        double discount = isFirstOrder ? Math.round(total * firstOrderDiscountRate * 100.0) / 100.0 : 0.0;
-//        double subtotal = total - discount;
-//        double cgst = Math.round(subtotal * cgstRate * 100.0) / 100.0;
-//        double sgst = Math.round(subtotal * sgstRate * 100.0) / 100.0;
-//        double gst = cgst + sgst;
-//        double finalAmount = subtotal + gst;
-//
-//        String receiptId = "ORN-" + UUID.randomUUID();
-//
-//        Order razorpayOrder = razorpayService.createOrder(BigDecimal.valueOf(finalAmount), receiptId);
-//        razorpayService.savePayment(razorpayOrder.get("id"), null, null, BigDecimal.valueOf(finalAmount), "ORNAMENTS", null);
-//
-//        OrderHistory order = OrderHistory.builder()
-//                .orderId(receiptId)
-//                .userId(user.getId())
-//                .customerName(user.getUsername())
-//                .razorpayOrderId(razorpayOrder.get("id").toString())
-//                .customerType(user.getRole().toLowerCase())
-//                .planType("ORNAMENT")
-//                .planName(itemSummary)
-//                .duration("-")
-//                .amount(finalAmount)
-//                .paymentMethod("PENDING")
-//                .status("pending")
-//                .address(address)
-//                .createdAt(LocalDateTime.now())
-//                .cgst(cgst)
-//                .sgst(sgst)
-//                .gst(gst)
-//                .build();
-//
-//        repository.save(order);
-//
-//        Map<String, Object> response = new HashMap<>();
-//        response.put("orderId", razorpayOrder.get("id"));
-//        response.put("amount", finalAmount);
-//        response.put("currency", "INR");
-//        response.put("key", razorpayService.getKeyId());
-//        response.put("receipt", receiptId);
-//
-//        return response;
-//    }
+    @Transactional
+    public Map<String, Object> initiateCheckoutOrnamentCart(UserPrincipal user) {
+        List<CartItem> cartItems = cartRepo.findByUserId(user.getId());
+        if (cartItems.isEmpty()) {
+            throw new InvalidArgumentException("Cart is empty");
+        }
+
+        double total = 0.0;
+        StringBuilder items = new StringBuilder();
+
+        for (CartItem item : cartItems) {
+            Ornament ornament = item.getOrnament();
+            if (ornament == null || item.getQuantity() <= 0) {
+                throw new InvalidArgumentException("Invalid cart item");
+            }
+
+            double basePrice = ornament.getTotalPriceAfterDiscount() * item.getQuantity();
+            double itemGst = Math.round(basePrice * ornamentGstRate * 100.0) / 100.0;
+            total += basePrice + itemGst;
+            items.append(ornament.getName()).append(" x").append(item.getQuantity()).append(", ");
+        }
+
+        String itemSummary = items.toString().replaceAll(", $", "");
+        String address = userRepository.findById(user.getId()).map(u ->
+                String.join(", ", u.getTown(), u.getCity(), u.getState(), u.getCountry())
+        ).orElseThrow(() -> new InvalidArgumentException("User address not found"));
+
+        boolean isFirstOrder = repository.countByUserId(user.getId()) == 0;
+        double discount = isFirstOrder ? Math.round(total * firstOrderDiscountRate * 100.0) / 100.0 : 0.0;
+        double subtotal = total - discount;
+        double cgst = Math.round(subtotal * cgstRate * 100.0) / 100.0;
+        double sgst = Math.round(subtotal * sgstRate * 100.0) / 100.0;
+        double gst = cgst + sgst;
+        double finalAmount = subtotal + gst;
+
+        String receiptId = "ORN-" + UUID.randomUUID();
+
+        Order razorpayOrder = razorpayService.createOrder(BigDecimal.valueOf(finalAmount), receiptId);
+        razorpayService.savePayment(razorpayOrder.get("id"), null, null, BigDecimal.valueOf(finalAmount), "ORNAMENTS", null);
+
+        OrderHistory order = OrderHistory.builder()
+                .orderId(receiptId)
+                .userId(user.getId())
+                .customerName(user.getUsername())
+                .razorpayOrderId(razorpayOrder.get("id").toString())
+                .customerType(user.getRole().toLowerCase())
+                .planType("ORNAMENT")
+                .planName(itemSummary)
+                .duration("-")
+                .amount(finalAmount)
+                .paymentMethod("PENDING")
+                .status("pending")
+                .address(address)
+                .createdAt(LocalDateTime.now())
+                .cgst(cgst)
+                .sgst(sgst)
+                .gst(gst)
+                .build();
+
+        repository.save(order);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orderId", razorpayOrder.get("id"));
+        response.put("amount", finalAmount);
+        response.put("currency", "INR");
+        response.put("key", razorpayService.getKeyId());
+        response.put("receipt", receiptId);
+
+        return response;
+    }
 
     @Transactional
     public RazorpayPayment verifyCheckoutOrnamentPayment(OrnamentPaymentCallbackRequest request, UserPrincipal user) {

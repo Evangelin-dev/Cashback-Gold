@@ -25,7 +25,7 @@ public class OrnamentResponse {
     private BigDecimal grossWeight;
     private BigDecimal discount;
     private BigDecimal totalPrice;
-    private BigDecimal totalPriceAfterDiscount;
+    private Double totalPriceAfterDiscount;
     private String mainImage;
     private List<String> subImages;
     private List<PriceBreakupDTO> priceBreakups;

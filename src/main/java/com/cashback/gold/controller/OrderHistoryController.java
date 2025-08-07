@@ -104,10 +104,10 @@ public class OrderHistoryController {
 //        return ResponseEntity.ok(response);
 //    }
 
-//    @PostMapping("/checkout/initiate")
-//    public ResponseEntity<?> initiate(@AuthenticationPrincipal UserPrincipal user) {
-//        return ResponseEntity.ok(orderHistoryService.initiateCheckoutOrnamentCart(user));
-//    }
+    @PostMapping("/checkout/initiate")
+    public ResponseEntity<?> initiate(@AuthenticationPrincipal UserPrincipal user) {
+        return ResponseEntity.ok(orderHistoryService.initiateCheckoutOrnamentCart(user));
+    }
 
     @PostMapping("/checkout/callback")
     public ResponseEntity<?> callback(@RequestBody OrnamentPaymentCallbackRequest request,
