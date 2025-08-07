@@ -174,19 +174,13 @@
             <column name="name" type="VARCHAR(255)">
                 <constraints nullable="false"/>
             </column>
-            <column name="total_gram" type="DECIMAL(10,2)">
-                <constraints nullable="false"/>
-            </column>
-            <column name="gram_price" type="DECIMAL(10,2)">
+            <column name="gold_per_gram_price" type="DECIMAL(10,2)">
                 <constraints nullable="true"/>
-            </column>
-            <column name="total_price" type="DECIMAL(10,2)">
-                <constraints nullable="false"/>
             </column>
             <column name="category" type="VARCHAR(100)"/>
             <column name="sub_category" type="VARCHAR(100)"/>
-            <column name="gender" type="VARCHAR(50)"/>
             <column name="item_type" type="VARCHAR(100)"/>
+            <column name="details" type="TEXT"/>
             <column name="description" type="TEXT"/>
             <column name="description1" type="TEXT"/>
             <column name="description2" type="TEXT"/>
@@ -195,11 +189,18 @@
             <column name="purity" type="VARCHAR(100)"/>
             <column name="quality" type="VARCHAR(100)"/>
             <column name="warranty" type="VARCHAR(100)"/>
-            <column name="details" type="TEXT"/>
             <column name="origin" type="VARCHAR(20)" defaultValue="INDIAN">
                 <constraints nullable="false"/>
             </column>
-            <column name="making_charge_percent" type="DECIMAL(5,2)" defaultValueNumeric="11.00">
+            <column name="making_charge_percent" type="DECIMAL(5,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="gross_weight" type="DECIMAL(10,2)"/>
+            <column name="discount" type="DECIMAL(10,2)"/>
+            <column name="total_price" type="DECIMAL(10,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_price_after_discount" type="DECIMAL(10,2)">
                 <constraints nullable="false"/>
             </column>
             <column name="main_image" type="TEXT"/>
@@ -221,9 +222,7 @@
                 <constraints nullable="false"/>
             </column>
             <column name="net_weight" type="DECIMAL(10,2)"/>
-            <column name="gross_weight" type="DECIMAL(10,2)"/>
-            <column name="discount" type="DECIMAL(10,2)"/>
-            <column name="final_value" type="DECIMAL(10,2)"/>
+            <column name="value" type="DECIMAL(10,2)"/>
             <column name="created_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
             <column name="updated_at" type="TIMESTAMP" defaultValueComputed="CURRENT_TIMESTAMP"/>
         </createTable>
