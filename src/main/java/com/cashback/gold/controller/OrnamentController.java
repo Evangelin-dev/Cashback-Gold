@@ -130,14 +130,16 @@ public class OrnamentController {
         return ResponseEntity.noContent().build();
     }
 
-//    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
-//    public ResponseEntity<OrnamentResponse> updateOrnament(
-//            @PathVariable Long id,
-//            @RequestPart("data") String dataJson,
-//            @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
-//            @RequestPart(value = "subImages", required = false) List<MultipartFile> subImages
-//    ) {
-//        return ResponseEntity.ok(ornamentService.update(id, dataJson, mainImage, subImages));
-//    }
+    @PutMapping(value = "/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    public ResponseEntity<OrnamentResponse> updateOrnament(
+            @PathVariable Long id,
+            @RequestPart("data") String dataJson,
+            @RequestPart(value = "mainImage", required = false) MultipartFile mainImage,
+            @RequestPart(value = "subImages", required = false) List<MultipartFile> subImages
+    ) {
+        OrnamentResponse response = ornamentService.update(id, dataJson, mainImage, subImages);
+        return ResponseEntity.ok(response);
+    }
+
 
 }

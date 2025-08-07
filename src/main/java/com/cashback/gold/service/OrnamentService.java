@@ -22,6 +22,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.List;
 //
 //@Service
@@ -418,6 +419,83 @@ public class OrnamentService {
                                 .collect(Collectors.toList())
                 )
                 .build();
+    }
+
+    @Transactional
+    public OrnamentResponse update(Long id, String dataJson, MultipartFile mainImage, List<MultipartFile> subImages) {
+        try {
+            OrnamentRequest req = objectMapper.readValue(dataJson, OrnamentRequest.class);
+            Ornament ornament = ornamentRepository.findById(id)
+                    .orElseThrow(() -> new InvalidArgumentException("Ornament not found"));
+
+            // ✅ Update all basic fields
+            ornament.setName(req.getName());
+            ornament.setGoldPerGramPrice(req.getGoldPerGramPrice());
+            ornament.setCategory(req.getCategory());
+            ornament.setSubCategory(req.getSubCategory());
+            ornament.setItemType(req.getItemType());
+            ornament.setDetails(req.getDetails());
+            ornament.setDescription(req.getDescription());
+            ornament.setDescription1(req.getDescription1());
+            ornament.setDescription2(req.getDescription2());
+            ornament.setDescription3(req.getDescription3());
+            ornament.setMaterial(req.getMaterial());
+            ornament.setPurity(req.getPurity());
+            ornament.setQuality(req.getQuality());
+            ornament.setWarranty(req.getWarranty());
+            ornament.setOrigin(req.getOrigin());
+            ornament.setMakingChargePercent(req.getMakingChargePercent());
+            ornament.setDiscount(req.getDiscount());
+
+            // ✅ Delete old price breakups
+            priceBreakupRepository.deleteByOrnamentId(ornament.getId());
+
+            // ✅ Add new price breakups and compute totals
+            BigDecimal totalValue = BigDecimal.ZERO;
+            BigDecimal grossWeight = BigDecimal.ZERO;
+
+            for (PriceBreakupDTO dto : req.getPriceBreakups()) {
+                PriceBreakup pb = new PriceBreakup();
+                pb.setOrnament(ornament);
+                pb.setComponent(dto.getComponent());
+                pb.setNetWeight(dto.getNetWeight());
+                pb.setValue(dto.getValue());
+                priceBreakupRepository.save(pb);
+
+                totalValue = totalValue.add(dto.getValue());
+                grossWeight = grossWeight.add(dto.getNetWeight());
+            }
+
+            // ✅ Calculate final prices
+            BigDecimal makingCharge = totalValue.multiply(req.getMakingChargePercent())
+                    .divide(BigDecimal.valueOf(100), 2, RoundingMode.HALF_UP);
+            BigDecimal totalPrice = totalValue.add(makingCharge);
+            BigDecimal discount = req.getDiscount() != null ? req.getDiscount() : BigDecimal.ZERO;
+            BigDecimal totalPriceAfterDiscount = totalPrice.subtract(discount);
+
+            ornament.setGrossWeight(grossWeight);
+            ornament.setTotalPrice(totalPrice);
+            ornament.setTotalPriceAfterDiscount(totalPriceAfterDiscount);
+
+            // ✅ Replace images if new ones are uploaded
+            if (mainImage != null && !mainImage.isEmpty()) {
+                ornament.setMainImage(s3Service.uploadFile(mainImage));
+            }
+
+            if (subImages != null && !subImages.isEmpty()) {
+                List<String> newSubImages = subImages.stream()
+                        .map(s3Service::uploadFile)
+                        .collect(Collectors.toList());
+                ornament.setSubImages(newSubImages);
+            }
+
+            ornament.setUpdatedAt(LocalDateTime.now());
+            ornamentRepository.save(ornament);
+
+            return mapToResponse(ornament);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to update ornament", e);
+        }
     }
 
 
