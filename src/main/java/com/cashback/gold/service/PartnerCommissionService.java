@@ -3,6 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.entity.Commission;
 import com.cashback.gold.entity.PayoutRequest;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.CommissionRepository;
 import com.cashback.gold.repository.PayoutRequestRepository;
 import lombok.RequiredArgsConstructor;
@@ -87,7 +88,7 @@ public class PartnerCommissionService {
 
     public void updateCommissionStatus(Long id, String status) {
         Commission c = commissionRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Not found"));
         c.setStatus(status);
         commissionRepository.save(c);
     }

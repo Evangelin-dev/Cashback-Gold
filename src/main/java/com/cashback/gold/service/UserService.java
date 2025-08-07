@@ -2,6 +2,7 @@ package com.cashback.gold.service;
 
 import com.cashback.gold.dto.*;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.UserRepository;
 import com.cashback.gold.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
@@ -51,10 +52,10 @@ public class UserService {
 
     public ReferralCodeResponse getReferralCode(UserPrincipal userPrincipal) {
         User user = userRepository.findById(userPrincipal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
 
         if (!"PARTNER".equalsIgnoreCase(user.getRole())) {
-            throw new RuntimeException("Referral code is only available for PARTNER role users.");
+            throw new InvalidArgumentException("Referral code is only available for PARTNER role users.");
         }
 
         return new ReferralCodeResponse(user.getId(), user.getReferralCode());
@@ -62,7 +63,7 @@ public class UserService {
 
     public UserProfileResponse getUserProfile(UserPrincipal principal) {
         User user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
 
         return new UserProfileResponse(
                 user.getFullName(),

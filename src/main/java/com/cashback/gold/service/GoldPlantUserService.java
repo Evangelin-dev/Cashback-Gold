@@ -66,7 +66,7 @@ public class GoldPlantUserService {
 
     public Map<String, Object> initiateEnrollment(GoldPlantEnrollRequest request, UserPrincipal principal) {
         User user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
 
         GoldPlantScheme scheme = schemeRepository.findById(request.getSchemeId())
                 .orElseThrow(() -> new InvalidArgumentException("Invalid scheme"));
@@ -103,7 +103,7 @@ public class GoldPlantUserService {
         }
 
         User user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
 
         GoldPlantScheme scheme = schemeRepository.findById(request.getSchemeId())
                 .orElseThrow(() -> new InvalidArgumentException("Invalid scheme"));

@@ -4,6 +4,7 @@ import com.cashback.gold.dto.NomineeRequest;
 import com.cashback.gold.dto.NomineeResponse;
 import com.cashback.gold.entity.Nominee;
 import com.cashback.gold.entity.User;
+import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.NomineeRepository;
 import com.cashback.gold.repository.UserRepository;
 import com.cashback.gold.security.UserPrincipal;
@@ -22,7 +23,7 @@ public class NomineeService {
 
     public NomineeResponse addNominee(UserPrincipal principal, NomineeRequest request) {
         User user = userRepository.findById(principal.getId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
+                .orElseThrow(() -> new InvalidArgumentException("User not found"));
 
         Nominee nominee = Nominee.builder()
                 .fullName(request.getFullName())

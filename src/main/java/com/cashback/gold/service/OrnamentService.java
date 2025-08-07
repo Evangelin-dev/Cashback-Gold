@@ -88,7 +88,7 @@ public class OrnamentService {
     }
 
     public OrnamentResponse getOrnamentById(Long id) {
-        return ornamentRepository.findById(id).map(this::mapToResponse).orElseThrow(() -> new RuntimeException("Ornament not found"));
+        return ornamentRepository.findById(id).map(this::mapToResponse).orElseThrow(() -> new InvalidArgumentException("Ornament not found"));
     }
 
     public void deleteOrnament(Long id) {

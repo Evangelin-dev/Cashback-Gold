@@ -35,7 +35,7 @@ public class CashbackGoldUserService {
     @Transactional
     public Object enroll(CashbackGoldEnrollmentRequest request, UserPrincipal principal) {
         CashbackGoldScheme scheme = schemeRepo.findById(request.getSchemeId())
-                .orElseThrow(() -> new RuntimeException("Scheme not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Scheme not found"));
 
         User user = userRepository.findById(principal.getId()).orElseThrow();
 
@@ -57,10 +57,10 @@ public class CashbackGoldUserService {
 //    @Transactional
 //    public Object pay(CashbackGoldPaymentRequest request, UserPrincipal principal) {
 //        UserCashbackGoldEnrollment enrollment = enrollmentRepo.findById(request.getEnrollmentId())
-//                .orElseThrow(() -> new RuntimeException("Enrollment not found"));
+//                .orElseThrow(() -> new InvalidArgumentException("Enrollment not found"));
 //
 //        if (!enrollment.getUser().getId().equals(principal.getId())) {
-//            throw new RuntimeException("Unauthorized access to enrollment");
+//            throw new InvalidArgumentException("Unauthorized access to enrollment");
 //        }
 //
 //        double goldRate = goldRateService.getCurrentGoldRate(); // ₹ per gram
@@ -168,18 +168,18 @@ public class CashbackGoldUserService {
     @Transactional
     public Object recall(CashbackGoldRecallRequest request, UserPrincipal principal) {
         UserCashbackGoldEnrollment enrollment = enrollmentRepo.findById(request.getEnrollmentId())
-                .orElseThrow(() -> new RuntimeException("Enrollment not found"));
+                .orElseThrow(() -> new InvalidArgumentException("Enrollment not found"));
 
         if (!enrollment.getUser().getId().equals(principal.getId())) {
-            throw new RuntimeException("Unauthorized");
+            throw new InvalidArgumentException("Unauthorized");
         }
 
         if (!enrollment.isActivated()) {
-            throw new RuntimeException("Scheme not activated yet (less than 1 gm gold accumulated)");
+            throw new InvalidArgumentException("Scheme not activated yet (less than 1 gm gold accumulated)");
         }
 
         if (enrollment.isRecalled()) {
-            throw new RuntimeException("Already recalled");
+            throw new InvalidArgumentException("Already recalled");
         }
 
         enrollment.setRecalled(true);
