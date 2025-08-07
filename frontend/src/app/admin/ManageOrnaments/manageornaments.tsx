@@ -242,7 +242,6 @@ const ManageOrnaments: React.FC = () => {
     try {
       if (form.id) {
         await dispatch(updateOrnament({ id: form.id, data, mainImage: mainImageFile, subImages: filteredSubImages })).unwrap();
-        alert("Ornament updated successfully!");
       } else {
         if (!mainImageFile) { alert("Main image is required."); return; }
         await dispatch(addOrnament({ data, mainImage: mainImageFile, subImages: filteredSubImages })).unwrap();
@@ -268,7 +267,6 @@ const ManageOrnaments: React.FC = () => {
     if (window.confirm("Are you sure?")) {
       try {
         await dispatch(deleteOrnament(id)).unwrap();
-        alert("Ornament deleted.");
         dispatch(fetchAllOrnaments({ page: currentPage, size: pageSize }));
       } catch (err: any) {
         console.error('Error in handleDelete:', err);
