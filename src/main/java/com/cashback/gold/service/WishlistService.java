@@ -71,7 +71,7 @@ public class WishlistService {
                     // If you store totalPrice in ornament, use it; otherwise compute from priceBreakups
                     BigDecimal totalPrice = null;
                     try {
-                        totalPrice = o.getTotalPrice(); // adjust if your entity differs
+                        totalPrice = BigDecimal.valueOf(o.getTotalPriceAfterDiscount()); // adjust if your entity differs
                     } catch (Exception ignored) {}
 
                     return WishlistItemResponse.builder()
