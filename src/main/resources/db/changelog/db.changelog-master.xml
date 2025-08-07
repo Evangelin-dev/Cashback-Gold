@@ -1316,5 +1316,35 @@
         </createIndex>
     </changeSet>
 
+    <changeSet id="43" author="azeeem">
+        <createTable tableName="addresses">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true"/>
+            </column>
+            <column name="full_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="mobile" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address_line1" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="address_line2" type="VARCHAR(255)"/>
+            <column name="city" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="state" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="postal_code" type="VARCHAR(20)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_addresses_user"
+                             referencedTableName="users" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+    </changeSet>
 
 </databaseChangeLog>

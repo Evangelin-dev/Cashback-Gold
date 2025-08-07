@@ -119,6 +119,7 @@ public class SecurityConfig {
                                 .requestMatchers("/api/wishlist/**").hasAnyAuthority("USER")
                                 .requestMatchers("/partner/dashboard/**").hasAuthority("PARTNER")
                                 .requestMatchers("/account-summary").hasAnyAuthority("ADMIN")
+                                .requestMatchers("/user/addresses").hasAnyAuthority("USER")
                                 // All other requests require authentication
                                 .anyRequest().authenticated()
                 )
