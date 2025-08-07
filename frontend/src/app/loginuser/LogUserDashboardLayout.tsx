@@ -27,8 +27,10 @@ import BankUPIManager from './DashboardComponents/MyBankAccounts';
 import LMyDashboard from './DashboardComponents/MyDashboard';
 import LMyProfile from './DashboardComponents/MyProfile';
 import LNomineeies from './DashboardComponents/Nominee';
-import LNotification from './DashboardComponents/Notification';
+import UserMyOrders from './user-myorders/UserMyOrders';
 import Wishlist from './Wishlist/wishlist';
+import { FaBuilding } from 'react-icons/fa';
+import UserAddresses from './Addresses/UserAddresses';
 
 const Dashboard: React.FC = () => {
   const [activeTab, setActiveTab] = useState('My Dashboard');
@@ -47,6 +49,8 @@ const Dashboard: React.FC = () => {
     { id: 'CashBackGold Scheme ', label: 'CashBackGold Scheme ', icon: Coins },
     { id: 'Gold Plant Scheme ', label: 'Gold Plant Scheme ', icon: Sprout },
     { id: 'Wishlist', label: 'Wishlist', icon: Heart },
+    { id: 'My Orders', label: 'My Orders', icon: CreditCard },
+    { id: 'Addresses', label: 'Addresses', icon: FaBuilding },
     { id: 'My Bank Accounts', label: 'My Bank Accounts', icon: Building2 },
   ];
 
@@ -73,7 +77,8 @@ const Dashboard: React.FC = () => {
       case 'CashBackGold Scheme ': return <LDigitalGoldSIPPlan/>;
       case 'Gold Plant Scheme ': return <LGoldPlantScheme/>;
       case 'Wishlist': return <Wishlist/>;  
-      case 'Cart': return <Cart/>;
+      case 'My Orders': return <UserMyOrders/>;
+      case 'Addresses': return <UserAddresses/>;
       case 'My Bank Accounts': return <BankUPIManager/>;
       default: return <LMyDashboard/>;
     }

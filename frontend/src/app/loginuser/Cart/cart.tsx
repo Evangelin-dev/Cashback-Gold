@@ -1,12 +1,11 @@
-import { Loader2, Minus, Plus, ShoppingBag, Trash2, X } from 'lucide-react';
+import { Loader2, ShoppingBag, Trash2, X } from 'lucide-react';
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import { AppDispatch, RootState } from '../../../store';
-import { clearCart, fetchCart, removeFromCart, updateCartItemQuantity, checkoutCart } from '../../features/thunks/cartThunks';
+import { clearCart, fetchCart, removeFromCart, updateCartItemQuantity } from '../../features/thunks/cartThunks';
 import Portal from '../../user/Portal';
 
-// --- Interfaces to match the new API response ---
 interface OrnamentInCart {
   id: number;
   name: string;
@@ -14,7 +13,6 @@ interface OrnamentInCart {
   mainImage: string;
   totalPrice: number;
   totalPriceAfterDiscount: number;
-  // Other ornament fields can be added here if needed for display
 }
 
 interface CartItem {
@@ -22,7 +20,6 @@ interface CartItem {
   userId: number;
   ornament: OrnamentInCart;
   quantity: number;
-  totalPriceAfterDiscount?: number;
   createdAt: string;
 }
 
@@ -31,13 +28,12 @@ const Cart = () => {
   const dispatch = useDispatch<AppDispatch>();
 
   const { currentUser } = useSelector((state: RootState) => state.auth);
-  // Type the items from the selector to match our new API structure
   const { items: cartItems, status: cartStatus, error: cartError } = useSelector((state: RootState) => ({
     ...state.cart,
     items: state.cart.items as unknown as CartItem[],
   }));
 
-  const [isUpdating, setIsUpdating] = useState<number | 'all' | 'checkout' | null>(null);
+  const [isUpdating, setIsUpdating] = useState<number | 'all' | null>(null);
   const [showConfirmPopup, setShowConfirmPopup] = useState(false);
   const [actionToConfirm, setActionToConfirm] = useState<{ type: 'remove' | 'clear', itemId?: number } | null>(null);
 
@@ -86,34 +82,18 @@ const Cart = () => {
     setActionToConfirm(null);
   };
 
-  const handleUpdateQuantity = (cartItemId: number, newQuantity: number) => {
-    if (newQuantity < 1) return;
-    setIsUpdating(cartItemId);
-    dispatch(updateCartItemQuantity({ cartItemId, quantity: newQuantity }))
-      .finally(() => setIsUpdating(null));
-  };
-  
-  const handleCheckout = async () => {
-    setIsUpdating('checkout');
-    try {
-      await dispatch(checkoutCart()).unwrap();
-      alert("Checkout successful! Your order has been placed.");
-    } catch (err) {
-      console.error("Checkout failed:", err);
-      alert("Checkout failed. Please try again.");
-    } finally {
-      setIsUpdating(null);
-    }
-  };
-  
-  // --- UPDATED PRICE CALCULATION LOGIC ---
-  const subtotal = cartItems.reduce((sum, item) => {
-    // Use the final discounted price from the ornament object and multiply by quantity
+  const total = cartItems.reduce((sum, item) => {
     return sum + (item.ornament.totalPriceAfterDiscount * item.quantity);
   }, 0);
-  
-  const tax = subtotal * 0.03;
-  const total = subtotal + tax;
+
+  // --- REVISED HANDLECHECKOUT: Navigates to the address page ---
+  const handleProceedToCheckout = () => {
+    if (cartItems.length > 0) {
+      navigate('/checkout', { state: { totalAmount: total, cartItems: cartItems } });
+    } else {
+      alert("Your cart is empty.");
+    }
+  };
 
   if (cartStatus === 'loading') return <div className="flex min-h-[80vh] items-center justify-center bg-slate-50"><Loader2 className="h-12 w-12 animate-spin text-[#7a1436]" /></div>;
   if (cartError) return <div className="flex min-h-[80vh] items-center justify-center bg-slate-50 p-6"><div className="text-center text-red-600"><p className="mb-2 text-xl font-semibold">Error</p><p>{cartError}</p></div></div>;
@@ -152,9 +132,7 @@ const Cart = () => {
                       </p>
                     </div>
                     <div className="flex w-full items-center justify-between self-stretch sm:w-auto sm:flex-col sm:items-end sm:gap-4">
-                      <div className="font-semibold text-gray-700 text-sm">
-                        Qty: {item.quantity}
-                      </div>
+                      <div className="font-semibold text-gray-700 text-sm">Qty: {item.quantity}</div>
                       <button onClick={() => handleRemoveItem(item.id)} disabled={isUpdating === item.id} className="flex items-center gap-1.5 rounded-lg p-2 text-xs font-medium text-gray-500 transition-colors hover:bg-red-50 hover:text-red-600 disabled:cursor-not-allowed">
                         {isUpdating === item.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />} Remove
                       </button>
@@ -166,13 +144,12 @@ const Cart = () => {
               <div className="lg:col-span-1">
                 <div className="sticky top-32 rounded-2xl bg-white p-6 shadow-sm">
                   <h2 className="mb-4 text-lg font-semibold text-gray-800">Order Summary</h2>
-                  <div className="space-y-3">
-                    <div className="flex justify-between text-gray-600"><span>Subtotal</span><span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(subtotal)}</span></div>
-                    <div className="flex justify-between text-gray-600"><span>Taxes (3%)</span><span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(tax)}</span></div>
-                    <div className="flex justify-between border-t pt-3 text-lg font-bold text-gray-800"><span>Total</span><span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total)}</span></div>
+                  <div className="flex justify-between border-t pt-3 text-lg font-bold text-gray-800">
+                    <span>Total</span>
+                    <span>{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(total)}</span>
                   </div>
-                  <button onClick={handleCheckout} disabled={isUpdating === 'checkout' || cartItems.length === 0} className="mt-6 w-full rounded-lg bg-[#7a1436] py-3 font-semibold text-white transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:bg-gray-400">
-                    {isUpdating === 'checkout' ? <Loader2 className="mx-auto h-6 w-6 animate-spin" /> : 'Proceed to Checkout'}
+                  <button onClick={handleProceedToCheckout} disabled={cartItems.length === 0} className="mt-6 w-full rounded-lg bg-[#7a1436] py-3 font-semibold text-white transition-transform hover:scale-105 disabled:cursor-not-allowed disabled:bg-gray-400">
+                    Proceed to Checkout
                   </button>
                 </div>
               </div>
@@ -198,4 +175,5 @@ const Cart = () => {
     </>
   );
 };
+
 export default Cart;

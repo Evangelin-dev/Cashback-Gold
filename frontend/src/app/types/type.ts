@@ -2,7 +2,7 @@ export interface User {
   id: number;
   email: string;
   mobile: string | null;
-  role: 'USER' | 'PARTNER' | 'B2B' | 'ADMIN'; 
+  role: 'USER' | 'PARTNER' | 'B2B' | 'ADMIN';
   status: 'APPROVED' | 'PENDING' | 'REJECTED';
 }
 
@@ -79,8 +79,8 @@ export interface LoginResponse extends ApiResponse {
 export interface Ornament {
   id: number;
   name: string;
-  totalGram: number; // total gram
-  totalPrice?: number; // calculated (optional for backward compatibility)
+  totalGram: number;
+  totalPrice?: number;
   meta: string;
   category: string;
   subCategory: string;
@@ -99,6 +99,7 @@ export interface Ornament {
   priceBreakups: PriceBreakup[];
   itemType: string | null;
   warranty: string;
+  totalPriceAfterDiscount?: number | undefined;
 }
 
 export interface AdminState {
@@ -110,11 +111,11 @@ export interface AdminState {
   totalPages: number;
   totalElements: number;
   pageSize: number;
-  
+
   profile: AdminProfileData | null;
   profileStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   profileError: string | null;
-  
+
   partnerUsers: UserListState;
   b2bUsers: UserListState;
   normalUsers: UserListState;
@@ -168,6 +169,7 @@ export interface CartItem {
   ornament: Ornament; // The full product details are nested here
   quantity: number;
   createdAt: string;
+  totalPriceAfterDiscount?: number;
 }
 
 
@@ -186,7 +188,7 @@ export interface KycData {
   panCardUrl: string | null;
   addressProofUrl: string | null;
   bankStatementUrl: string | null;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED'; 
+  status: 'PENDING' | 'APPROVED' | 'REJECTED';
   submittedAt: string;
 }
 
@@ -217,11 +219,11 @@ export interface WishlistItem {
 
 // This now EXACTLY matches the paginated response from your API
 export interface PaginatedWishlistResponse {
-    items: WishlistItem[];
-    page: number;
-    size: number;
-    totalElements: number;
-    totalPages: number;
+  items: WishlistItem[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
 }
 
 // This is the shape of the Wishlist state inside your Redux store
