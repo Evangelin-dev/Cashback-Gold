@@ -149,6 +149,9 @@ public class CashbackGoldUserService {
                 .enrollment(enrollment)
                 .amountPaid(amount)
                 .goldGrams(goldGrams)
+                .razorpayPaymentId(request.getRazorpayPaymentId())
+                .razorpayOrderId(request.getRazorpayOrderId())
+                .razorpaySignature(request.getRazorpaySignature())
                 .paymentDate(LocalDate.now())
                 .build();
         paymentRepo.save(payment);
