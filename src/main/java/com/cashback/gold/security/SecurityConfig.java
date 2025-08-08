@@ -29,6 +29,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(req -> req
                                 // Public endpoints
                                 .requestMatchers("/auth/**").permitAll()
+                                .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/swagger-ui.html").permitAll() // ✅ Add this
                                 .requestMatchers(HttpMethod.GET, "/admin/sip-plans").permitAll()
 
                                 // General Order Creation
