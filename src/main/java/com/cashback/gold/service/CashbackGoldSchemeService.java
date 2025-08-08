@@ -2,8 +2,10 @@ package com.cashback.gold.service;
 
 import com.cashback.gold.dto.CashbackGoldSchemeRequest;
 import com.cashback.gold.entity.CashbackGoldScheme;
+import com.cashback.gold.entity.UserCashbackGoldEnrollment;
 import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.CashbackGoldSchemeRepository;
+import com.cashback.gold.repository.UserCashbackGoldEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +17,7 @@ import java.util.List;
 public class CashbackGoldSchemeService {
 
     private final CashbackGoldSchemeRepository repository;
+    private final UserCashbackGoldEnrollmentRepository userCashbackGoldEnrollmentRepository;
 
     public List<CashbackGoldScheme> getAll() {
         return repository.findAll();
@@ -60,5 +63,9 @@ public class CashbackGoldSchemeService {
                 .orElseThrow(() -> new InvalidArgumentException("Cashback Gold Scheme not found"));
         scheme.setStatus(status.toUpperCase());
         repository.save(scheme);
+    }
+
+    public List<UserCashbackGoldEnrollment> getWithdrawnEnrollments() {
+        return userCashbackGoldEnrollmentRepository.findByStatus("WITHDRAWN");
     }
 }

@@ -10,5 +10,7 @@ public interface UserCashbackGoldEnrollmentRepository extends JpaRepository<User
     List<UserCashbackGoldEnrollment> findByUser(User user);
 
     List<UserCashbackGoldEnrollment> findByUserId(Long userId);
+    List<UserCashbackGoldEnrollment> findByStatus(String status);
+
 
 }

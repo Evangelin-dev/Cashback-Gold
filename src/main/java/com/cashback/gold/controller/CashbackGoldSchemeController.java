@@ -2,6 +2,7 @@ package com.cashback.gold.controller;
 
 import com.cashback.gold.dto.CashbackGoldSchemeRequest;
 import com.cashback.gold.entity.CashbackGoldScheme;
+import com.cashback.gold.entity.UserCashbackGoldEnrollment;
 import com.cashback.gold.service.CashbackGoldSchemeService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -41,5 +42,11 @@ public class CashbackGoldSchemeController {
     public ResponseEntity<Void> changeStatus(@PathVariable Long id, @RequestParam String status) {
         service.changeStatus(id, status);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/withdrawn")
+    public ResponseEntity<List<UserCashbackGoldEnrollment>> getWithdrawnEnrollments() {
+        List<UserCashbackGoldEnrollment> withdrawn = service.getWithdrawnEnrollments();
+        return ResponseEntity.ok(withdrawn);
     }
 }
