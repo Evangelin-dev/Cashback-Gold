@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle, Gem, ShieldX, Star, TrendingUp, X } from 'lucide-react';
+import { Calendar, CheckCircle, Gem, ShieldX, Star, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
@@ -52,9 +52,10 @@ const parseDurationMonths = (durationStr: string): number => parseInt(durationSt
 
 const LChitJewelsSavingPlan = () => {
   // --- MODAL STATES ---
-  const [paymentModalPlan, setPaymentModalPlan] = useState<ProcessedPlan | null>(null);
-  const [sellBuyModalPlan, setSellBuyModalPlan] = useState<ProcessedPlan | null>(null);
-  const [successPopup, setSuccessPopup] = useState<{ message: string; amount?: number } | null>(null);
+  // Separate modals for Buy and Sell
+  const [buyModalPlan, setBuyModalPlan] = useState<ProcessedPlan | null>(null);
+  const [sellModalPlan, setSellModalPlan] = useState<ProcessedPlan | null>(null);
+  const [successPopup, setSuccessPopup] = useState<{ message: string; amount?: number, sellResult?: any } | null>(null);
   const [apiLoading, setApiLoading] = useState(false);
   const [apiMessage, setApiMessage] = useState<string | null>(null);
   // Helper to get next unpaid month and amount
@@ -77,11 +78,11 @@ const LChitJewelsSavingPlan = () => {
   };
 
   const handleNextPay = (plan: ProcessedPlan) => {
-    setPaymentModalPlan(plan);
+    setBuyModalPlan(plan);
     setApiMessage(null);
   };
-  const handleSellBuy = (plan: ProcessedPlan) => {
-    setSellBuyModalPlan(plan);
+  const handleSell = (plan: ProcessedPlan) => {
+    setSellModalPlan(plan);
     setApiMessage(null);
   };
   // --- STATE MANAGEMENT ---
@@ -102,13 +103,15 @@ const LChitJewelsSavingPlan = () => {
       const enrolledPlans = response.data || [];
       // Map the API response to new format
       const processed = enrolledPlans.map((plan: any) => {
+        // Force selled status if selled, sold, or terminated
         let status = (plan.status || '').toLowerCase();
-        if (status === 'enrolled') status = 'successful';
-        if (status === 'pending') status = 'pending';
-        // If plan is sold, mark as 'selled'
-        if (status === 'rejected' || status === 'failed' || status === 'selled') status = 'selled';
-        // If plan has a property indicating sold (e.g., plan.selled === true), mark as 'selled'
-        if (plan.selled === true || plan.sold === true) status = 'selled';
+        if (plan.selled === true || plan.sold === true || status === 'terminated') {
+          status = 'selled';
+        } else if (status === 'enrolled') {
+          status = 'successful';
+        } else if (status === 'rejected' || status === 'failed' || status === 'selled') {
+          status = 'selled';
+        }
         return {
           id: plan.enrollmentId?.toString() || '',
           name: plan.planName || '',
@@ -134,13 +137,11 @@ const LChitJewelsSavingPlan = () => {
 
   // --- DYNAMIC STATS BASED ON USER ORDERS ---
   const stats = useMemo(() => {
-    // These filters now work correctly on the full list of plans
+    // Only show Active and Selled tabs
     const active = userChitPlans.filter(p => p.status === 'successful').length;
-    const pending = userChitPlans.filter(p => p.status === 'pending').length;
     const selled = userChitPlans.filter(p => p.status === 'selled').length;
     return [
       { label: 'Active', count: active, color: 'from-[#7a1335] to-pink-600', icon: CheckCircle },
-      { label: 'Pending', count: pending, color: 'from-green-400 to-emerald-500', icon: TrendingUp },
       { label: 'Selled', count: selled, color: 'from-rose-400 to-pink-500', icon: ShieldX }
     ];
   }, [userChitPlans]);
@@ -148,7 +149,6 @@ const LChitJewelsSavingPlan = () => {
   // This will now correctly find and display plans for each tab
   const plansToShow = useMemo(() => {
   if (selectedTab === 'active') return userChitPlans.filter(p => p.status === 'successful');
-  if (selectedTab === 'pending') return userChitPlans.filter(p => p.status === 'pending');
   if (selectedTab === 'selled') return userChitPlans.filter(p => p.status === 'selled');
   return [];
   }, [selectedTab, userChitPlans]);
@@ -207,14 +207,14 @@ const LChitJewelsSavingPlan = () => {
                       <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Gold Accumulated</span><span className="font-semibold text-gray-800">{plan.totalGoldAccumulated}</span></div>
                       <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Bonus</span><span className="font-semibold text-gray-800">{plan.totalBonus}</span></div>
                     </div>
-                    {plan.status === 'selled' ? (
+                    {selectedTab === 'selled' ? (
                       <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
                         <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
                       </div>
                     ) : (
                       <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
-                        <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => handleSellBuy(plan)}>Sell/Buy</button>
-                        <button className="flex-1 bg-[#6a0822] text-white py-1.5 px-2 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold" onClick={() => handleNextPay(plan)}>Next Pay</button>
+                        <button className="flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold" onClick={() => handleSell(plan)}>Sell Gold</button>
+                        <button className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold" onClick={() => handleNextPay(plan)}>Buy Jewel</button>
                       </div>
                     )}
                   </div>
@@ -276,24 +276,24 @@ const LChitJewelsSavingPlan = () => {
         </Portal>
       )}
 
-      {/* --- NEXT PAYMENT MODAL --- */}
-      {paymentModalPlan && (
+      {/* --- BUY MODAL --- */}
+      {buyModalPlan && (
         <Portal>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
             <div className="bg-white rounded-xl p-4 max-w-xs w-full mx-auto relative shadow-xl flex flex-col items-center">
               <button
-                onClick={() => setPaymentModalPlan(null)}
+                onClick={() => setBuyModalPlan(null)}
                 className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
               >
                 <X size={18} />
               </button>
-              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Next Pay</h3>
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Buy Jewel</h3>
               <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600 w-full">
-                <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{paymentModalPlan.name}</span></div>
-                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{paymentModalPlan.startDate ? new Date(paymentModalPlan.startDate).toLocaleDateString() : '-'}</span></div>
-                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{paymentModalPlan.totalAmountPaid}</span></div>
-                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{paymentModalPlan.totalGoldAccumulated}</span></div>
-                <div className="flex justify-between items-center"><span>Bonus:</span><span className="font-semibold">{paymentModalPlan.totalBonus}</span></div>
+                <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{buyModalPlan.name}</span></div>
+                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{buyModalPlan.startDate ? new Date(buyModalPlan.startDate).toLocaleDateString() : '-'}</span></div>
+                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{buyModalPlan.totalAmountPaid}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{buyModalPlan.totalGoldAccumulated}</span></div>
+                <div className="flex justify-between items-center"><span>Bonus:</span><span className="font-semibold">{buyModalPlan.totalBonus}</span></div>
               </div>
               <button
                 className="mt-4 bg-[#6a0822] text-white py-1.5 px-4 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold w-full"
@@ -302,7 +302,7 @@ const LChitJewelsSavingPlan = () => {
                   setApiLoading(true);
                   setApiMessage(null);
                   try {
-                    const { amount } = getNextPaymentInfo(paymentModalPlan);
+                    const { amount } = getNextPaymentInfo(buyModalPlan);
                     if (!amount || amount === 0) {
                       setApiMessage('Payment amount is not available for this plan. Please contact support.');
                       setApiLoading(false);
@@ -310,7 +310,7 @@ const LChitJewelsSavingPlan = () => {
                     }
                     // Only initiate payment and open Razorpay, no callback
                     const initiateRes = await axiosInstance.post('/api/user-savings/pay-monthly/initiate', {
-                      enrollmentId: Number(paymentModalPlan.id),
+                      enrollmentId: Number(buyModalPlan.id),
                       amountPaid: amount
                     });
                     const razorpayOrderId = initiateRes.data.razorpayOrderId;
@@ -319,7 +319,7 @@ const LChitJewelsSavingPlan = () => {
                       amount: amount * 100,
                       currency: 'INR',
                       name: 'Chit Jewels',
-                      description: paymentModalPlan.name,
+                      description: buyModalPlan.name,
                       order_id: razorpayOrderId,
                       handler: function (response: any) {
                         setApiMessage('Payment successful!');
@@ -362,88 +362,69 @@ const LChitJewelsSavingPlan = () => {
         </Portal>
       )}
 
-      {/* --- SELL/BUY MODAL --- */}
-      {sellBuyModalPlan && (
+      {/* --- SELL MODAL --- */}
+      {sellModalPlan && (
         <Portal>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
             <div className="bg-white rounded-xl p-4 max-w-xs w-full mx-auto relative shadow-xl flex flex-col items-center">
               <button
-                onClick={() => setSellBuyModalPlan(null)}
+                onClick={() => setSellModalPlan(null)}
                 className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
               >
                 <X size={18} />
               </button>
-              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Sell / Buy</h3>
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Sell Gold</h3>
               <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600 w-full">
-                <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{sellBuyModalPlan.name}</span></div>
-                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{sellBuyModalPlan.startDate ? new Date(sellBuyModalPlan.startDate).toLocaleDateString() : '-'}</span></div>
-                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{sellBuyModalPlan.totalAmountPaid}</span></div>
-                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{sellBuyModalPlan.totalGoldAccumulated}</span></div>
-                <div className="flex justify-between items-center"><span>Bonus:</span><span className="font-semibold">{sellBuyModalPlan.totalBonus}</span></div>
+                <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{sellModalPlan.name}</span></div>
+                <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{sellModalPlan.startDate ? new Date(sellModalPlan.startDate).toLocaleDateString() : '-'}</span></div>
+                <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{sellModalPlan.totalAmountPaid}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{sellModalPlan.totalGoldAccumulated}</span></div>
+                <div className="flex justify-between items-center"><span>Bonus:</span><span className="font-semibold">{sellModalPlan.totalBonus}</span></div>
               </div>
-              <div className="flex gap-2 w-full mt-4">
-                <button
-                  className="flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold"
-                  disabled={apiLoading}
-                  onClick={async () => {
-                    setApiLoading(true);
-                    setApiMessage(null);
-                    try {
-                      const res = await axiosInstance.post('/api/user-savings/recall', {
-                        enrollmentId: Number(sellBuyModalPlan.id),
-                        action: 'SELL_GOLD'
-                      });
-                      // After selling gold, send amount to user's bank account
-                      const amount = res.data?.amount;
-                      // Fetch user's bank account
-                      const bankRes = await axiosInstance.get('/api/bank-accounts');
-                      const bank = bankRes.data?.[0];
-                      if (bank && bank.account && bank.ifsc) {
-                        await axiosInstance.post('/api/bank-accounts', {
-                          enrollmentId: Number(sellBuyModalPlan.id),
-                          mode: 'SELL',
-                          accountNumber: bank.account,
-                          ifscCode: bank.ifsc,
-                          holderName: bank.holderName,
-                          bankName: bank.bank,
-                          amount: amount
-                        });
-                        setSuccessPopup({ message: 'Gold sold successfully! Amount will be sent to your bank account.' });
-                      } else {
-                        setSuccessPopup({ message: 'Gold sold successfully! Please fill your bank account details.' });
-                      }
-                    } catch (err: any) {
-                      setApiMessage('Sell failed. Please try again.');
-                    } finally {
-                      setApiLoading(false);
-                    }
-                  }}
-                >{apiLoading ? 'Processing...' : 'Sell Gold'}</button>
-                <button
-                  className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold"
-                  disabled={apiLoading}
-                  onClick={async () => {
-                    setApiLoading(true);
-                    setApiMessage(null);
-                    try {
-                      const res = await axiosInstance.post('/api/user-savings/recall', {
-                        enrollmentId: Number(sellBuyModalPlan.id),
-                        action: 'BUY_JEWEL'
-                      });
-                      // Assume response contains amount for buying ornaments
-                      const amount = res.data?.amount || null;
-                      setSuccessPopup({ message: 'Jewel bought successfully!', amount });
-                    } catch (err: any) {
-                      setApiMessage('Buy failed. Please try again.');
-                    } finally {
-                      setApiLoading(false);
-                    }
+              <button
+                className="mt-4 bg-yellow-600 text-white py-1.5 px-4 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold w-full"
+                disabled={apiLoading}
+                onClick={async () => {
+                  setApiLoading(true);
+                  setApiMessage(null);
+                  try {
+                    const res = await axiosInstance.post('/api/user-savings/recall', {
+                      enrollmentId: Number(sellModalPlan.id),
+                      action: 'SELL_GOLD'
+                    });
+                    setSuccessPopup({
+                      message: 'Gold sold successfully!',
+                      sellResult: res.data
+                    });
+                    setSelectedTab('selled');
+                    fetchUserPlans();
+                  } catch (err: any) {
+                    setApiMessage('Sell failed. Please try again.');
+                  } finally {
+                    setApiLoading(false);
+                  }
+                }}
+              >{apiLoading ? 'Processing...' : 'Sell Gold'}</button>
+              {apiMessage && <div className="mt-2 text-xs text-center text-green-600">{apiMessage}</div>}
+            </div>
+          </div>
+        </Portal>
+      )}
       {/* --- SUCCESS POPUP --- */}
       {successPopup && (
         <Portal>
           <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2">
             <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full mx-auto p-8 flex flex-col items-center justify-center">
               <h3 className="text-xl font-bold text-green-700 mb-4 text-center">{successPopup.message}</h3>
+              {successPopup.sellResult ? (
+                <div className="space-y-2 bg-gray-50 p-3 rounded text-xs text-gray-600 w-full mb-4">
+                  <div className="flex justify-between items-center"><span>Action:</span><span className="font-semibold">{successPopup.sellResult.action}</span></div>
+                  <div className="flex justify-between items-center"><span>Accumulated Gold:</span><span className="font-semibold">{successPopup.sellResult.accumulatedGoldGrams}g</span></div>
+                  <div className="flex justify-between items-center"><span>Accumulated Amount:</span><span className="font-semibold">₹{successPopup.sellResult.accumulatedAmount}</span></div>
+                  <div className="flex justify-between items-center"><span>Service Charge:</span><span className="font-semibold">₹{successPopup.sellResult.serviceCharge}</span></div>
+                  <div className="flex justify-between items-center"><span>Final Return Amount:</span><span className="font-semibold">₹{successPopup.sellResult.finalReturnAmount}</span></div>
+                </div>
+              ) : null}
               {successPopup.amount ? (
                 <button
                   className="mt-4 bg-[#6a0822] text-white py-2 px-6 rounded hover:bg-[#7a1335] font-semibold"
@@ -458,14 +439,6 @@ const LChitJewelsSavingPlan = () => {
                   onClick={() => setSuccessPopup(null)}
                 >Close</button>
               )}
-            </div>
-          </div>
-        </Portal>
-      )}
-                  }}
-                >{apiLoading ? 'Processing...' : 'Buy Jewel'}</button>
-              </div>
-              {apiMessage && <div className="mt-2 text-xs text-center text-green-600">{apiMessage}</div>}
             </div>
           </div>
         </Portal>

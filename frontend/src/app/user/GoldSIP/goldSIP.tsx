@@ -51,6 +51,8 @@ const GoldSIPPlansPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [enrollmentResult, setEnrollmentResult] = useState<any | null>(null);
+  // State for custom payment amount
+  const [customAmount, setCustomAmount] = useState<string>("");
 
   // --- DATA FETCHING (Unchanged) ---
   useEffect(() => {
@@ -88,24 +90,30 @@ const GoldSIPPlansPage = () => {
     setSelectedPlan(plan);
     setShowModal(true);
     setSubmitError(null); // Clear previous errors when opening the modal
+    setCustomAmount(parseAmount(plan.monthlyAmount).toString()); // Default to min amount
   };
 
   // --- NEW FUNCTION TO HANDLE FULL PAYMENT FLOW LIKE CHITJEWELS ---
   const handleMakePayment = async () => {
     if (!selectedPlan) return;
+    const amountToPay = parseAmount(customAmount);
+    if (isNaN(amountToPay) || amountToPay < parseAmount(selectedPlan.monthlyAmount)) {
+      setSubmitError(`Please enter an amount of ₹${selectedPlan.monthlyAmount} or more.`);
+      return;
+    }
     setIsSubmitting(true);
     setSubmitError(null);
     try {
       // 1. Enroll user in scheme
       const enrollRes = await axiosInstance.post('/api/cashback-gold-user/enroll', {
         schemeId: selectedPlan.id,
-        initialAmount: parseAmount(selectedPlan.monthlyAmount)
+        initialAmount: amountToPay
       });
       const enrollmentId = enrollRes.data.id;
       // 2. Initiate payment
       const initiateRes = await axiosInstance.post('/api/cashback-gold-user/pay/initiate', {
         enrollmentId,
-        amountPaid: parseAmount(selectedPlan.monthlyAmount)
+        amountPaid: amountToPay
       });
       const { razorpayOrderId, amount } = initiateRes.data;
       // 3. Open Razorpay checkout
@@ -380,9 +388,23 @@ const GoldSIPPlansPage = () => {
               <h3 className="text-lg font-bold text-yellow-900 mb-1">Confirm Your Plan</h3>
               <p className="text-gray-600 mb-2 text-xs">You've chosen the {selectedPlan.name}</p>
               <div className="bg-yellow-50 rounded-lg p-3 mb-3 text-left">
-                <div className="flex justify-between items-center mb-1"><span className="text-gray-600">Monthly Amount:</span><span className="font-semibold text-yellow-700">{selectedPlan.monthlyAmount}</span></div>
+                <div className="flex justify-between items-center mb-1"><span className="text-gray-600">Monthly Amount (Min):</span><span className="font-semibold text-yellow-700">{selectedPlan.monthlyAmount}</span></div>
                 <div className="flex justify-between items-center mb-1"><span className="text-gray-600">Tenure:</span><span className="font-semibold">{selectedPlan.tenure}</span></div>
                 <div className="flex justify-between items-center"><span className="text-gray-600">Expected Returns:</span><span className="font-semibold text-green-600">{selectedPlan.returns}</span></div>
+                <div className="mt-3">
+                  <label htmlFor="customAmount" className="block text-xs font-semibold text-yellow-900 mb-1">Enter Amount to Pay (₹):</label>
+                  <input
+                    id="customAmount"
+                    type="number"
+                    min={parseAmount(selectedPlan.monthlyAmount)}
+                    step="1"
+                    value={customAmount}
+                    onChange={e => setCustomAmount(e.target.value)}
+                    className="w-full px-3 py-2 border rounded focus:outline-none focus:ring focus:ring-yellow-400"
+                    disabled={isSubmitting}
+                  />
+                  <span className="text-xs text-gray-500">Minimum: ₹{selectedPlan.monthlyAmount}</span>
+                </div>
               </div>
               {submitError && <div className="text-center text-red-600 mb-2 bg-red-50 p-2 rounded-lg text-xs">{submitError}</div>}
               <div className="space-y-2">

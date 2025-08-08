@@ -46,6 +46,7 @@ const LDigitalGoldSIPPlan = () => {
   const [buyModalPlan, setBuyModalPlan] = useState<ProcessedSIPPlan | null>(null);
   const [buyAmount, setBuyAmount] = useState<string>('');
   const [sellModalPlan, setSellModalPlan] = useState<ProcessedSIPPlan | null>(null);
+  const [sellResult, setSellResult] = useState<any | null>(null);
   const navigate = useNavigate();
 
   // --- DATA FETCHING from /api/orders/my ---
@@ -61,7 +62,7 @@ const LDigitalGoldSIPPlan = () => {
           schemeName: enrollment.schemeName || '',
           totalPaid: formatCurrency(enrollment.totalPaid || 0),
           goldAccumulated: (enrollment.goldAccumulated || 0).toFixed(4) + 'g',
-          activated: !!enrollment.activated,
+          activated: !!enrollment.activated && !enrollment.recalled, // Only activated if not recalled
           recalled: !!enrollment.recalled,
           status: (enrollment.status || '').toLowerCase(),
         }));
@@ -154,16 +155,20 @@ const LDigitalGoldSIPPlan = () => {
                 </div>
                 <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
                   <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
-                  <button className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold" onClick={() => setBuyModalPlan(plan)}>Buy</button>
-                  <button
-                    className={`flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold ${parseFloat(plan.goldAccumulated) < 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    onClick={() => {
-                      if (parseFloat(plan.goldAccumulated) >= 1) {
-                        setSellModalPlan(plan);
-                      }
-                    }}
-                    disabled={parseFloat(plan.goldAccumulated) < 1}
-                  >Sell</button>
+                  {selectedTab !== 'recalled' && plan.status !== 'recalled' && (
+                    <>
+                      <button className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold" onClick={() => setBuyModalPlan(plan)}>Buy</button>
+                      <button
+                        className={`flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold ${parseFloat(plan.goldAccumulated) < 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        onClick={() => {
+                          if (parseFloat(plan.goldAccumulated) >= 1) {
+                            setSellModalPlan(plan);
+                          }
+                        }}
+                        disabled={parseFloat(plan.goldAccumulated) < 1}
+                      >Sell</button>
+                    </>
+                  )}
                 </div>
               </div>
             ))}
@@ -296,26 +301,14 @@ const LDigitalGoldSIPPlan = () => {
                   setApiLoading(true);
                   setApiMessage(null);
                   try {
-                    // Fetch user bank accounts (structure: { account, ifsc, holderName, bank, upiId })
-                    const bankRes = await axiosInstance.get('/api/bank-accounts');
-                    const bank = bankRes.data?.[0];
-                    if (!bank || !bank.account || !bank.ifsc) {
-                      setApiMessage('Please fill the bank account');
-                      setApiLoading(false);
-                      return;
-                    }
-                    // For sell, send mode: 'SELL' and use correct keys
-                    await axiosInstance.post('/api/bank-accounts', {
+                    // Call recall API for selling
+                    const sellRes = await axiosInstance.post('/api/cashback-gold-user/recall', {
                       enrollmentId: Number(sellModalPlan.id),
-                      mode: 'SELL',
-                      accountNumber: bank.account,
-                      ifscCode: bank.ifsc,
-                      holderName: bank.holderName,
-                      bankName: bank.bank
+                      mode: 'SELL'
                     });
-                    setApiMessage('The amount will be received in your account.');
+                    setSellResult(sellRes.data);
                     setSellModalPlan(null);
-                    window.location.reload();
+                    setApiLoading(false);
                   } catch (err: any) {
                     let apiError = 'Sell failed. Please try again.';
                     if (err?.response) {
@@ -331,6 +324,29 @@ const LDigitalGoldSIPPlan = () => {
                 }}
               >{apiLoading ? 'Processing...' : 'Sell Now'}</button>
               {apiMessage && <div className="mt-2 text-xs text-center text-green-600">{apiMessage}</div>}
+      {/* --- SELL RESULT MODAL --- */}
+      {sellResult && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+            <div className="bg-white rounded-xl p-4 max-w-md w-full mx-auto relative shadow-xl flex flex-col items-center">
+              <button onClick={() => setSellResult(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Sell Successful</h3>
+              <div className="space-y-2 bg-gray-50 p-3 rounded text-xs text-gray-600 w-full">
+                <div className="flex justify-between items-center"><span>Scheme Name:</span><span className="font-semibold">{sellResult.scheme?.name}</span></div>
+                <div className="flex justify-between items-center"><span>Total Amount Paid:</span><span className="font-semibold">₹{sellResult.totalAmountPaid}</span></div>
+                <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{sellResult.goldAccumulated}g</span></div>
+                <div className="flex justify-between items-center"><span>Status:</span><span className="font-semibold capitalize">{sellResult.status}</span></div>
+                <div className="flex justify-between items-center"><span>Activated:</span><span className="font-semibold">{sellResult.activated ? 'Yes' : 'No'}</span></div>
+                <div className="flex justify-between items-center"><span>Recalled:</span><span className="font-semibold">{sellResult.recalled ? 'Yes' : 'No'}</span></div>
+                <div className="flex justify-between items-center"><span>Sell Date:</span><span className="font-semibold">{sellResult.createdAt?.slice(0,10)}</span></div>
+              </div>
+              <div className="mt-4 w-full flex justify-center">
+                <button onClick={() => setSellResult(null)} className="py-2 px-6 rounded bg-yellow-700 text-white font-semibold transition-transform hover:scale-105">Close</button>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
             </div>
           </div>
         </Portal>

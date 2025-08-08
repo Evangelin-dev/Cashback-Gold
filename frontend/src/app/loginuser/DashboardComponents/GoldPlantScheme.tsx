@@ -1,4 +1,4 @@
-import { Calendar, CheckCircle, ShieldX, Sparkles, Star, TrendingUp, X } from 'lucide-react';
+import { Calendar, CheckCircle, ShieldX, Sparkles, Star, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axiosInstance from '../../../utils/axiosInstance'; // Make sure this path is correct
@@ -32,6 +32,7 @@ const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { styl
 
 const LGoldPlantScheme = () => {
   const [sellPopup, setSellPopup] = useState<{ message: string; success: boolean } | null>(null);
+  const [recallResult, setRecallResult] = useState<any | null>(null);
   const navigate = useNavigate();
 
   // --- STATE MANAGEMENT ---
@@ -74,22 +75,30 @@ const LGoldPlantScheme = () => {
 
   // --- DYNAMIC STATS BASED ON USER ORDERS ---
   const stats = useMemo(() => {
+    // Only show Active and Selled tabs
     const active = userSchemePlans.filter(p => p.status === 'enrolled' && !p.recalled).length;
-    const pending = userSchemePlans.filter(p => p.status === 'pending' && !p.recalled).length;
-    const recalled = userSchemePlans.filter(p => p.recalled).length;
+    const recalled = userSchemePlans.filter(p => p.recalled || p.status === 'recalled').length;
     return [
       { label: 'Active', count: active, color: 'from-emerald-400 to-emerald-600', icon:  CheckCircle },
-      { label: 'Pending', count: pending, color: 'from-blue-400 to-blue-600', icon: TrendingUp },
       { label: 'Recalled', count: recalled, color: 'from-red-400 to-red-600', icon: ShieldX },
     ];
   }, [userSchemePlans]);
 
   const plansToShow = useMemo(() => {
   if (selectedTab === 'active') return userSchemePlans.filter(p => p.status === 'enrolled' && !p.recalled);
-  if (selectedTab === 'pending') return userSchemePlans.filter(p => p.status === 'pending' && !p.recalled);
-  if (selectedTab === 'recalled') return userSchemePlans.filter(p => p.recalled);
+  if (selectedTab === 'recalled') return userSchemePlans.filter(p => p.recalled || p.status === 'recalled');
   return [];
   }, [selectedTab, userSchemePlans]);
+
+  // Example recall handler for a card
+  const handleRecall = async (id: string) => {
+    try {
+      const res = await axiosInstance.post(`/user/gold-plant/recall/${id}`, { id });
+      setRecallResult(res.data);
+    } catch (err) {
+      setRecallResult({ message: 'Recall failed. Please try again.' });
+    }
+  };
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
@@ -161,65 +170,18 @@ const LGoldPlantScheme = () => {
                 </div>
                 <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
                   <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
-                  <button
-                    className="flex-1 bg-yellow-100 text-yellow-800 py-1.5 px-2 rounded hover:bg-yellow-200 transition-colors text-xs font-semibold"
-                    disabled={sellLoading === plan.id}
-                    onClick={async () => {
-                      setSellLoading(plan.id);
-                      setSellMessage((prev) => ({ ...prev, [plan.id]: '' }));
-                      try {
-                        // 1. Recall gold
-                        const recallRes = await axiosInstance.post('/api/cashback-gold-user/recall', {
-                          enrollmentId: Number(plan.id),
-                          mode: 'SELL'
-                        });
-                        if (recallRes.data?.status === 'SUCCESS') {
-                          // 2. Send amount to user's bank account
-                          const amount = recallRes.data?.amount;
-                          const bankRes = await axiosInstance.get('/api/bank-accounts');
-                          const bank = bankRes.data?.[0];
-                          if (bank && bank.account && bank.ifsc) {
-                            await axiosInstance.post('/api/bank-accounts', {
-                              enrollmentId: Number(plan.id),
-                              mode: 'SELL',
-                              accountNumber: bank.account,
-                              ifscCode: bank.ifsc,
-                              holderName: bank.holderName,
-                              bankName: bank.bank,
-                              amount: amount
-                            });
-                            setSellPopup({ message: 'Gold selled successfully!', success: true });
-                          } else {
-                            setSellPopup({ message: 'Gold selled successfully! Please fill your bank account details.', success: true });
-                          }
-                        } else {
-                          setSellPopup({ message: recallRes.data?.message || 'Failed to sell gold.', success: false });
-                        }
-                      } catch (err) {
-                        setSellPopup({ message: 'Failed to sell gold. Please try again.', success: false });
-                      } finally {
-                        setSellLoading(null);
-                      }
-  {/* Sell Gold Result Popup */}
-  {sellPopup && (
-    <Portal>
-      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2">
-        <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full mx-auto p-8 flex flex-col items-center justify-center">
-          <h3 className={`text-xl font-bold mb-4 text-center ${sellPopup.success ? 'text-green-700' : 'text-red-700'}`}>{sellPopup.message}</h3>
-          <button
-            className="mt-4 bg-[#6a0822] text-white py-2 px-6 rounded hover:bg-[#7a1335] font-semibold"
-            onClick={() => setSellPopup(null)}
-          >Close</button>
-        </div>
-      </div>
-    </Portal>
-  )}
-                    }}
-                  >{sellLoading === plan.id ? 'Selling...' : 'Sell Gold'}</button>
+                  {selectedTab === 'active' && (
+                    <button
+                      className="flex-1 bg-yellow-100 text-yellow-800 py-1.5 px-2 rounded hover:bg-yellow-200 transition-colors text-xs font-semibold"
+                      disabled={sellLoading === plan.id}
+                      onClick={() => handleRecall(plan.id)}
+                    >{sellLoading === plan.id ? 'Selling...' : 'Sell Gold'}</button>
+                  )}
                 </div>
                 {sellMessage[plan.id] && (
                   <div className="mt-2 text-xs text-center text-green-600">{sellMessage[plan.id]}</div>
                 )}
+                {/* <button onClick={() => handleRecall(plan.id)}>Recall</button> */}
               </div>
             ))}
           </div>
@@ -247,6 +209,39 @@ const LGoldPlantScheme = () => {
                 <div className="flex justify-between items-center"><span>Recalled:</span><span className="font-semibold">{viewedPlan.recalled ? 'Yes' : 'No'}</span></div>
                 <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{viewedPlan.startDate ? new Date(viewedPlan.startDate).toLocaleDateString() : '-'}</span></div>
               </div>
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* Sell Gold Result Popup */}
+      {sellPopup && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2">
+            <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full mx-auto p-8 flex flex-col items-center justify-center">
+              <h3 className={`text-xl font-bold mb-4 text-center ${sellPopup.success ? 'text-green-700' : 'text-red-700'}`}>{sellPopup.message}</h3>
+              <button
+                className="mt-4 bg-[#6a0822] text-white py-2 px-6 rounded hover:bg-[#7a1335] font-semibold"
+                onClick={() => setSellPopup(null)}
+              >Close</button>
+            </div>
+          </div>
+        </Portal>
+      )}
+
+      {/* Recall Result Popup */}
+      {recallResult && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-2">
+            <div className="bg-white rounded-xl p-6 max-w-xs w-full mx-auto relative shadow-xl flex flex-col items-center">
+              <h3 className="text-lg font-bold text-[#6a0822] mb-2">Recall Result</h3>
+              <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600 w-full">
+                <div className="flex justify-between items-center"><span>Status:</span><span className="font-semibold">{recallResult.recallStatus}</span></div>
+                <div className="flex justify-between items-center"><span>Refund Amount:</span><span className="font-semibold">₹{recallResult.refundAmount}</span></div>
+                <div className="flex justify-between items-center"><span>Penalty Applied:</span><span className="font-semibold">{recallResult.penaltyApplied ? 'Yes' : 'No'}</span></div>
+                <div className="flex justify-between items-center"><span>Message:</span><span className="font-semibold">{recallResult.message}</span></div>
+              </div>
+              <button className="mt-4 bg-[#6a0822] text-white py-2 px-6 rounded hover:bg-[#7a1335] font-semibold" onClick={() => setRecallResult(null)}>Close</button>
             </div>
           </div>
         </Portal>
