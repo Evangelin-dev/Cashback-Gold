@@ -39,6 +39,8 @@ const LGoldPlantScheme = () => {
   const [error, setError] = useState<string | null>(null);
   const [selectedTab, setSelectedTab] = useState('active');
   const [viewedPlan, setViewedPlan] = useState<ProcessedPlan | null>(null);
+  const [sellLoading, setSellLoading] = useState<string | null>(null);
+  const [sellMessage, setSellMessage] = useState<{[key:string]:string}>({});
 
   // --- DATA FETCHING from /user/gold-plant/my-enrollments ---
   useEffect(() => {
@@ -158,7 +160,33 @@ const LGoldPlantScheme = () => {
                 </div>
                 <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
                   <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
+                  <button
+                    className="flex-1 bg-yellow-100 text-yellow-800 py-1.5 px-2 rounded hover:bg-yellow-200 transition-colors text-xs font-semibold"
+                    disabled={sellLoading === plan.id}
+                    onClick={async () => {
+                      setSellLoading(plan.id);
+                      setSellMessage((prev) => ({ ...prev, [plan.id]: '' }));
+                      try {
+                        const res = await axiosInstance.post('/api/bank-accounts', {
+                          enrollmentId: Number(plan.id),
+                          mode: 'SELL'
+                        });
+                        if (res.data?.status === 'SUCCESS') {
+                          setSellMessage((prev) => ({ ...prev, [plan.id]: res.data.message || 'Gold recalled and sold successfully.' }));
+                        } else {
+                          setSellMessage((prev) => ({ ...prev, [plan.id]: res.data?.message || 'Failed to sell gold.' }));
+                        }
+                      } catch (err) {
+                        setSellMessage((prev) => ({ ...prev, [plan.id]: 'Failed to sell gold. Please try again.' }));
+                      } finally {
+                        setSellLoading(null);
+                      }
+                    }}
+                  >{sellLoading === plan.id ? 'Selling...' : 'Sell Gold'}</button>
                 </div>
+                {sellMessage[plan.id] && (
+                  <div className="mt-2 text-xs text-center text-green-600">{sellMessage[plan.id]}</div>
+                )}
               </div>
             ))}
           </div>

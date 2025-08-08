@@ -96,17 +96,17 @@ const LDigitalGoldSIPPlan = () => {
   }, [selectedTab, userSIPPlans]);
 
   return (
-    
     <div className="min-h-full bg-gray-50 p-3">
+      {/* Removed Gold SIP Scheme Rules box as requested */}
       <div className="text-center mb-6">
-              <div className="inline-flex items-center gap-2 mb-2">
-                <div className="w-8 h-8 bg-[#6a0822] rounded-full flex items-center justify-center">
-                  <Sparkles className="w-4 h-4 text-white" />
-                </div>
-                <h1 className="text-lg font-bold text-[#6a0822]">Gold SIP Plan</h1>
-              </div>
-              <p className="text-gray-600 text-xs max-w-xl mx-auto">Review your purchased Gold SIP Plan investments.</p>
-            </div>
+        <div className="inline-flex items-center gap-2 mb-2">
+          <div className="w-8 h-8 bg-[#6a0822] rounded-full flex items-center justify-center">
+            <Sparkles className="w-4 h-4 text-white" />
+          </div>
+          <h1 className="text-lg font-bold text-[#6a0822]">Gold SIP Plan</h1>
+        </div>
+        <p className="text-gray-600 text-xs max-w-xl mx-auto">Review your purchased Gold SIP Plan investments.</p>
+      </div>
       {/* Stats Cards */}
       <div className="grid grid-cols-3 gap-2 mb-4">
         {stats.map((stat) => (
@@ -147,12 +147,23 @@ const LDigitalGoldSIPPlan = () => {
                   <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Total Paid</span><span className="font-semibold text-gray-800">{plan.totalPaid}</span></div>
                   <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Gold Accumulated</span><span className="font-semibold text-gray-800">{plan.goldAccumulated}</span></div>
                   <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Activated</span><span className="font-semibold text-gray-800">{plan.activated ? 'Yes' : 'No'}</span></div>
-                  <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Recalled</span><span className="font-semibold text-gray-800">{plan.recalled ? 'Yes' : 'No'}</span></div>
+                  {/* Hide recalled in active section */}
+                  {!(selectedTab === 'active') && (
+                    <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Recalled</span><span className="font-semibold text-gray-800">{plan.recalled ? 'Yes' : 'No'}</span></div>
+                  )}
                 </div>
                 <div className="flex items-center space-x-2 mt-auto pt-2 border-t">
                   <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
                   <button className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold" onClick={() => setBuyModalPlan(plan)}>Buy</button>
-                  <button className="flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold" onClick={() => setSellModalPlan(plan)}>Sell</button>
+                  <button
+                    className={`flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold ${parseFloat(plan.goldAccumulated) < 1 ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    onClick={() => {
+                      if (parseFloat(plan.goldAccumulated) >= 1) {
+                        setSellModalPlan(plan);
+                      }
+                    }}
+                    disabled={parseFloat(plan.goldAccumulated) < 1}
+                  >Sell</button>
                 </div>
               </div>
             ))}
@@ -167,7 +178,6 @@ const LDigitalGoldSIPPlan = () => {
                 <div className="flex justify-between items-center"><span>Plan:</span><span className="font-semibold">{buyModalPlan.schemeName}</span></div>
                 <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{buyModalPlan.totalPaid}</span></div>
                 <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{buyModalPlan.goldAccumulated}</span></div>
-                
                 <div className="flex justify-between items-center"><span>Amount to Buy (Min ₹100):</span>
                   <input
                     type="number"
@@ -176,7 +186,6 @@ const LDigitalGoldSIPPlan = () => {
                     value={buyAmount}
                     onChange={e => setBuyAmount(e.target.value)}
                     placeholder="Enter amount"
-                   
                   />
                 </div>
               </div>
@@ -188,20 +197,22 @@ const LDigitalGoldSIPPlan = () => {
                   setApiMessage(null);
                   try {
                     // Razorpay payment flow
-                    const initiateRes = await axiosInstance.post('/api/cashback-gold-user/recall', {
+                    const payload = {
                       enrollmentId: Number(buyModalPlan.id),
-                      mode: 'BUY',
-                      amount: Number(buyAmount)
-                    });
-                    // Assume backend returns Razorpay order details
-                    const { razorpayOrderId, keyId } = initiateRes.data;
-                    if (!razorpayOrderId || !keyId) {
-                      setApiMessage('Payment initiation failed.');
+                      amountPaid: Number(buyAmount)
+                    };
+                    console.log('Sending payload to /api/cashback-gold-user/pay/initiate:', payload);
+                    const initiateRes = await axiosInstance.post('/api/cashback-gold-user/pay/initiate', payload);
+                    // Debug: Log full response
+                    console.log('Initiate API response:', initiateRes.data);
+                    const { razorpayOrderId } = initiateRes.data;
+                    if (!razorpayOrderId) {
+                      setApiMessage('Payment initiation failed. Missing Razorpay order ID.');
                       setApiLoading(false);
                       return;
                     }
                     const options = {
-                      key: keyId,
+                      key: window.RAZORPAY_KEY_ID,
                       amount: Number(buyAmount) * 100,
                       currency: 'INR',
                       name: 'Gold SIP Buy',
@@ -220,7 +231,24 @@ const LDigitalGoldSIPPlan = () => {
                       const rzp = new window.Razorpay(options);
                       rzp.open();
                     } else {
-                      setApiMessage('Razorpay SDK not loaded.');
+                      // Dynamically load Razorpay SDK
+                      setApiMessage('Loading payment gateway...');
+                      const script = document.createElement('script');
+                      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                      script.async = true;
+                      script.onload = () => {
+                        setApiMessage(null);
+                        if (window.Razorpay) {
+                          const rzp = new window.Razorpay(options);
+                          rzp.open();
+                        } else {
+                          setApiMessage('Failed to load Razorpay SDK.');
+                        }
+                      };
+                      script.onerror = () => {
+                        setApiMessage('Failed to load Razorpay SDK.');
+                      };
+                      document.body.appendChild(script);
                     }
                   } catch (err: any) {
                     let apiError = 'Buy failed. Please try again.';
@@ -254,29 +282,38 @@ const LDigitalGoldSIPPlan = () => {
                 <div className="flex justify-between items-center"><span>Total Paid:</span><span className="font-semibold">{sellModalPlan.totalPaid}</span></div>
                 <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{sellModalPlan.goldAccumulated}</span></div>
               </div>
+              {/* Show warning if gold accumulated < 1g */}
+              {parseFloat(sellModalPlan.goldAccumulated) < 1 && (
+                <div className="mb-2 text-xs text-center text-red-600 bg-red-50 rounded p-2">
+                  You need to accumulate at least <span className="font-bold">1g</span> of gold before you can sell.
+                </div>
+              )}
               <button
                 className="mt-4 bg-yellow-600 text-white py-1.5 px-4 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold w-full"
-                disabled={apiLoading}
+                disabled={apiLoading || parseFloat(sellModalPlan.goldAccumulated) < 1}
                 onClick={async () => {
+                  if (parseFloat(sellModalPlan.goldAccumulated) < 1) return;
                   setApiLoading(true);
                   setApiMessage(null);
                   try {
-                    // Fetch user bank accounts
-                    const bankRes = await axiosInstance.get('/api/cashback-gold-user/mybankaccounts');
+                    // Fetch user bank accounts (structure: { account, ifsc, holderName, bank, upiId })
+                    const bankRes = await axiosInstance.get('/api/bank-accounts');
                     const bank = bankRes.data?.[0];
-                    if (!bank || !bank.accountNumber || !bank.ifscCode) {
-                      setApiMessage('Account Number, IFSC code is not there');
+                    if (!bank || !bank.account || !bank.ifsc) {
+                      setApiMessage('Please fill the bank account');
                       setApiLoading(false);
                       return;
                     }
-                    // For sell, send mode: 'SELL'
-                    await axiosInstance.post('/api/cashback-gold-user/recall', {
+                    // For sell, send mode: 'SELL' and use correct keys
+                    await axiosInstance.post('/api/bank-accounts', {
                       enrollmentId: Number(sellModalPlan.id),
                       mode: 'SELL',
-                      accountNumber: bank.accountNumber,
-                      ifscCode: bank.ifscCode
+                      accountNumber: bank.account,
+                      ifscCode: bank.ifsc,
+                      holderName: bank.holderName,
+                      bankName: bank.bank
                     });
-                    setApiMessage('Gold SIP sold successfully! Amount will be credited to your bank account.');
+                    setApiMessage('The amount will be received in your account.');
                     setSellModalPlan(null);
                     window.location.reload();
                   } catch (err: any) {

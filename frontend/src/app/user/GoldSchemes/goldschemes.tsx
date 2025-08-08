@@ -129,7 +129,7 @@ const GoldPlantSchemes = () => {
     setIsSubmitting(true);
     setSubmitError(null);
     try {
-      // 1. Initiate enrollment
+      // 1. Initiate payment (first API)
       const initiateRes = await axiosInstance.post('/user/gold-plant/enroll/initiate', {
         schemeId: selectedPlan.id,
         amountInvested: parseAmount(selectedPlan.minInvestment)
@@ -145,7 +145,7 @@ const GoldPlantSchemes = () => {
         description: selectedPlan.schemeName,
         order_id: razorpayOrderId,
         handler: async function (response: any) {
-          // 3. On payment success, call callback API
+          // 3. On payment success, call callback API (second API)
           try {
             const callbackRes = await axiosInstance.post('/user/gold-plant/enroll/callback', {
               schemeId,

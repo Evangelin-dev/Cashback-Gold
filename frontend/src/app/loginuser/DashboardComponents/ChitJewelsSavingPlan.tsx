@@ -54,6 +54,7 @@ const LChitJewelsSavingPlan = () => {
   // --- MODAL STATES ---
   const [paymentModalPlan, setPaymentModalPlan] = useState<ProcessedPlan | null>(null);
   const [sellBuyModalPlan, setSellBuyModalPlan] = useState<ProcessedPlan | null>(null);
+  const [successPopup, setSuccessPopup] = useState<{ message: string; amount?: number } | null>(null);
   const [apiLoading, setApiLoading] = useState(false);
   const [apiMessage, setApiMessage] = useState<string | null>(null);
   // Helper to get next unpaid month and amount
@@ -104,7 +105,10 @@ const LChitJewelsSavingPlan = () => {
         let status = (plan.status || '').toLowerCase();
         if (status === 'enrolled') status = 'successful';
         if (status === 'pending') status = 'pending';
-        if (status === 'rejected' || status === 'failed') status = 'rejected';
+        // If plan is sold, mark as 'selled'
+        if (status === 'rejected' || status === 'failed' || status === 'selled') status = 'selled';
+        // If plan has a property indicating sold (e.g., plan.selled === true), mark as 'selled'
+        if (plan.selled === true || plan.sold === true) status = 'selled';
         return {
           id: plan.enrollmentId?.toString() || '',
           name: plan.planName || '',
@@ -133,20 +137,20 @@ const LChitJewelsSavingPlan = () => {
     // These filters now work correctly on the full list of plans
     const active = userChitPlans.filter(p => p.status === 'successful').length;
     const pending = userChitPlans.filter(p => p.status === 'pending').length;
-    const rejected = userChitPlans.filter(p => p.status === 'rejected').length;
+    const selled = userChitPlans.filter(p => p.status === 'selled').length;
     return [
       { label: 'Active', count: active, color: 'from-[#7a1335] to-pink-600', icon: CheckCircle },
       { label: 'Pending', count: pending, color: 'from-green-400 to-emerald-500', icon: TrendingUp },
-      { label: 'Rejected', count: rejected, color: 'from-rose-400 to-pink-500', icon: ShieldX }
+      { label: 'Selled', count: selled, color: 'from-rose-400 to-pink-500', icon: ShieldX }
     ];
   }, [userChitPlans]);
 
   // This will now correctly find and display plans for each tab
   const plansToShow = useMemo(() => {
-    if (selectedTab === 'active') return userChitPlans.filter(p => p.status === 'successful');
-    if (selectedTab === 'pending') return userChitPlans.filter(p => p.status === 'pending');
-    if (selectedTab === 'rejected') return userChitPlans.filter(p => p.status === 'rejected');
-    return [];
+  if (selectedTab === 'active') return userChitPlans.filter(p => p.status === 'successful');
+  if (selectedTab === 'pending') return userChitPlans.filter(p => p.status === 'pending');
+  if (selectedTab === 'selled') return userChitPlans.filter(p => p.status === 'selled');
+  return [];
   }, [selectedTab, userChitPlans]);
 
   console.log(plansToShow, 'plansToShow');
@@ -203,10 +207,16 @@ const LChitJewelsSavingPlan = () => {
                       <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Gold Accumulated</span><span className="font-semibold text-gray-800">{plan.totalGoldAccumulated}</span></div>
                       <div className="flex justify-between items-center text-xs"><span className="text-gray-500">Bonus</span><span className="font-semibold text-gray-800">{plan.totalBonus}</span></div>
                     </div>
-                    <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
-                      <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => handleSellBuy(plan)}>Sell/Buy</button>
-                      <button className="flex-1 bg-[#6a0822] text-white py-1.5 px-2 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold" onClick={() => handleNextPay(plan)}>Next Pay</button>
-                    </div>
+                    {plan.status === 'selled' ? (
+                      <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
+                        <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => setViewedPlan(plan)}>View Details</button>
+                      </div>
+                    ) : (
+                      <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
+                        <button className="flex-1 bg-gray-100 text-gray-700 py-1.5 px-2 rounded hover:bg-gray-200 transition-colors text-xs font-semibold" onClick={() => handleSellBuy(plan)}>Sell/Buy</button>
+                        <button className="flex-1 bg-[#6a0822] text-white py-1.5 px-2 rounded hover:bg-[#7a1335] transition-colors text-xs font-semibold" onClick={() => handleNextPay(plan)}>Next Pay</button>
+                      </div>
+                    )}
                   </div>
                 ))}
 
@@ -237,7 +247,7 @@ const LChitJewelsSavingPlan = () => {
               <div className="text-center">
                 <h3 className="text-lg font-bold text-[#6a0822] mb-2">{viewedPlan.name}</h3>
                 <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600">
-                  <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'successful' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
+                  <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'successful' ? 'bg-green-100 text-green-800' : viewedPlan.status === 'selled' ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status === 'selled' ? 'Selled' : viewedPlan.status}</span></div>
                   <div className="flex justify-between items-center"><span>Start Date:</span><span className="font-semibold">{viewedPlan.startDate ? new Date(viewedPlan.startDate).toLocaleDateString() : '-'}</span></div>
                   <div className="flex justify-between items-center"><span>Total Amount Paid:</span><span className="font-semibold">{viewedPlan.totalAmountPaid}</span></div>
                   <div className="flex justify-between items-center"><span>Total Gold Accumulated:</span><span className="font-semibold">{viewedPlan.totalGoldAccumulated}</span></div>
@@ -379,11 +389,29 @@ const LChitJewelsSavingPlan = () => {
                     setApiLoading(true);
                     setApiMessage(null);
                     try {
-                      await axiosInstance.post('/api/user-savings/recall', {
+                      const res = await axiosInstance.post('/api/user-savings/recall', {
                         enrollmentId: Number(sellBuyModalPlan.id),
                         action: 'SELL_GOLD'
                       });
-                      setApiMessage('Gold sold successfully!');
+                      // After selling gold, send amount to user's bank account
+                      const amount = res.data?.amount;
+                      // Fetch user's bank account
+                      const bankRes = await axiosInstance.get('/api/bank-accounts');
+                      const bank = bankRes.data?.[0];
+                      if (bank && bank.account && bank.ifsc) {
+                        await axiosInstance.post('/api/bank-accounts', {
+                          enrollmentId: Number(sellBuyModalPlan.id),
+                          mode: 'SELL',
+                          accountNumber: bank.account,
+                          ifscCode: bank.ifsc,
+                          holderName: bank.holderName,
+                          bankName: bank.bank,
+                          amount: amount
+                        });
+                        setSuccessPopup({ message: 'Gold sold successfully! Amount will be sent to your bank account.' });
+                      } else {
+                        setSuccessPopup({ message: 'Gold sold successfully! Please fill your bank account details.' });
+                      }
                     } catch (err: any) {
                       setApiMessage('Sell failed. Please try again.');
                     } finally {
@@ -398,16 +426,42 @@ const LChitJewelsSavingPlan = () => {
                     setApiLoading(true);
                     setApiMessage(null);
                     try {
-                      await axiosInstance.post('/api/user-savings/recall', {
+                      const res = await axiosInstance.post('/api/user-savings/recall', {
                         enrollmentId: Number(sellBuyModalPlan.id),
                         action: 'BUY_JEWEL'
                       });
-                      setApiMessage('Jewel bought successfully!');
+                      // Assume response contains amount for buying ornaments
+                      const amount = res.data?.amount || null;
+                      setSuccessPopup({ message: 'Jewel bought successfully!', amount });
                     } catch (err: any) {
                       setApiMessage('Buy failed. Please try again.');
                     } finally {
                       setApiLoading(false);
                     }
+      {/* --- SUCCESS POPUP --- */}
+      {successPopup && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2">
+            <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full mx-auto p-8 flex flex-col items-center justify-center">
+              <h3 className="text-xl font-bold text-green-700 mb-4 text-center">{successPopup.message}</h3>
+              {successPopup.amount ? (
+                <button
+                  className="mt-4 bg-[#6a0822] text-white py-2 px-6 rounded hover:bg-[#7a1335] font-semibold"
+                  onClick={() => {
+                    setSuccessPopup(null);
+                    navigate(`/buyornaments?amount=${successPopup.amount}`);
+                  }}
+                >Go to Ornaments</button>
+              ) : (
+                <button
+                  className="mt-4 bg-[#6a0822] text-white py-2 px-6 rounded hover:bg-[#7a1335] font-semibold"
+                  onClick={() => setSuccessPopup(null)}
+                >Close</button>
+              )}
+            </div>
+          </div>
+        </Portal>
+      )}
                   }}
                 >{apiLoading ? 'Processing...' : 'Buy Jewel'}</button>
               </div>
