@@ -37,6 +37,8 @@ import PaymentPopup from "./src/app/components/PopUp/PaymentPopUp/Paymentpopup";
 import LAboutUsPage from "./src/app/loginuser/AboutUs/aboutus";
 import BuyNow from "./src/app/loginuser/BuyNow/buynow";
 import Cart from "./src/app/loginuser/Cart/cart";
+import CheckoutPage from "./src/app/loginuser/Checkout/CheckoutPage"; 
+import BuyNowCheckoutPage from "./src/app/loginuser/Checkout/CheckoutBuyNow";
 import LContactUsPage from "./src/app/loginuser/ContactUs/contactus";
 import LChitJewelsSavingPlan from "./src/app/loginuser/DashboardComponents/ChitJewelsSavingPlan.tsx";
 import LDigitalGoldSIPPlan from "./src/app/loginuser/DashboardComponents/DigitalGoldSIPPlan.tsx";
@@ -195,6 +197,8 @@ const dispatch = useDispatch<AppDispatch>();
           <Route path="paymentpopup" element={<PaymentPopup />} />
           <Route path="/lrefund" element={<LRefund />} />
           <Route path="/cart" element={<Cart />} />
+          <Route path="/checkout" element={<CheckoutPage />} />
+          <Route path="/buy-now-checkout" element={<BuyNowCheckoutPage />} />
           <Route path="/lSIPplandisclaimer" element={<LSIPPlanDisclaimer />} />
           <Route path="/lshippingpolicy" element={<LShippingPolicy />} />
 

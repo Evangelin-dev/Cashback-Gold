@@ -27,6 +27,10 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
 
   const { status, error: authError, currentUser } = useSelector((state: RootState) => state.auth);
 
+
+  if(currentUser){
+    navigate('/');
+  }
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [step, setStep] = useState<"form" | "otp">("form");
   const [otp, setOtp] = useState(["", "", "", "", "", ""]);
@@ -66,7 +70,7 @@ const SignupPopup: React.FC<SignupPopupProps> = ({ open, onClose }) => {
         navigate("/user");
         onClose();
       } else {
-        setValidationError("Login failed. Please check your credentials or contact support.");
+        setValidationError("Login failed. Please check your credentials or Login portal.");
         dispatch(logoutUser());
       }
     }

@@ -30,13 +30,13 @@ const getErrorMessage = (error: unknown): string => {
 
 export interface OrnamentApiData {
   name: string;
-  totalGram: number; // total gram
-  price: number; // legacy field for backend compatibility
-  gramPrice?: number; // per gram price (optional for backward compatibility)
-  totalPrice?: number; // calculated (optional for backward compatibility)
+  totalGram?: number;
+  price?: number;
+  gramPrice?: number;
+  totalPrice?: number;
   category: string;
   subCategory: string;
-  gender: string;
+  gender?: string;
   itemType: string;
   description1: string;
   description2: string;

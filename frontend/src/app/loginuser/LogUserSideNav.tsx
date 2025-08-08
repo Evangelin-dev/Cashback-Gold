@@ -28,7 +28,7 @@ export default function LogUserSideNav() {
       {/* Mobile Menu Button */}
       <button
         onClick={toggleSidebar}
-        className="md:hidden fixed top-4 left-4 z-50 p-3 bg-[#7a1335] text-white rounded-xl shadow-lg hover:bg-[#5d0f28] transition-all duration-300 hover:scale-105"
+        className="md:hidden fixed top-4 left-4 z-30 p-3 bg-[#7a1335] text-white rounded-xl shadow-lg hover:bg-[#5d0f28] transition-all duration-300 hover:scale-105"
       >
         {isOpen ? <FaTimes className="w-5 h-5" /> : <FaBars className="w-5 h-5" />}
       </button>
