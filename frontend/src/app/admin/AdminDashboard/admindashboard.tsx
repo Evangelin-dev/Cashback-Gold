@@ -2,6 +2,7 @@ import { Activity, Award, ChevronLeft, ChevronRight, Clock, DollarSign, Edit, Fi
 import { useCallback, useEffect, useState } from "react";
 import axiosInstance from "../../../utils/axiosInstance";
 
+// --- TYPE DEFINITIONS ---
 interface InventoryData {
 	totalStock: number;
 	inStoreStock: number;
@@ -12,44 +13,35 @@ interface InventoryData {
 	updatedAt?: string;
 }
 
+interface AccountSummaryData {
+    totalUsers: number;
+    partners: number;
+    goldSoldGrams: number;
+    goldSoldDisplay: string;
+    commissionEarnedInr: number;
+    commissionEarnedDisplay: string;
+    b2bVendors: number;
+}
+
 type EditableInventory = Record<keyof Omit<InventoryData, 'unit' | 'updatedAt'>, string>;
 
-const stats = [
-	{ label: "Total Users", value: "1,240", color: "from-blue-500 to-blue-600", icon: Users, trend: "+12%" },
-	{ label: "Gold Sold", value: "3.2kg", color: "from-yellow-500 to-yellow-600", icon: Award, trend: "+8%" },
-	{ label: "Commission Earned", value: "₹1,20,000", color: "from-green-500 to-green-600", icon: DollarSign, trend: "+15%" },
-	{ label: "Partners", value: "42", color: "from-purple-500 to-purple-600", icon: Handshake, trend: "+3%" },
-];
-
+// Static data for recent activity
 const activityData = [
 	{ time: "10:30 AM", desc: "User John Doe purchased 10g gold.", type: "user", icon: User },
 	{ time: "09:15 AM", desc: "Partner request approved for S. Kumar.", type: "partner", icon: UserCheck },
 	{ time: "Yesterday", desc: "Commission payout processed.", type: "partner", icon: DollarSign },
-	{ time: "Yesterday", desc: "User Priya Sharma updated profile.", type: "user", icon: User },
-	{ time: "2 days ago", desc: "Gold price updated.", type: "all", icon: TrendingUp },
-	{ time: "2 days ago", desc: "Partner payout released.", type: "partner", icon: DollarSign },
-	{ time: "3 days ago", desc: "User feedback received.", type: "user", icon: User },
-	{ time: "3 days ago", desc: "New offer for partners.", type: "partner", icon: UserCheck },
-	{ time: "4 days ago", desc: "System maintenance scheduled.", type: "all", icon: Activity },
-	{ time: "4 days ago", desc: "User KYC approved.", type: "user", icon: User },
-	{ time: "5 days ago", desc: "Partner commission updated.", type: "partner", icon: UserCheck },
-	{ time: "5 days ago", desc: "User profile updated.", type: "user", icon: User },
-];
-
-const FILTERS = [
-	{ label: "All", value: "all", icon: Activity },
-	{ label: "Users", value: "user", icon: User },
-	{ label: "Partners", value: "partner", icon: UserCheck },
-	{ label: "Recent", value: "time", icon: Clock },
 ];
 
 const AdminDashboard = () => {
-
+	// --- STATE ---
 	const [apiGoldPrice, setApiGoldPrice] = useState<string | null>(null);
 	const [apiSilverPrice, setApiSilverPrice] = useState<string | null>(null);
 	const [rateLoading, setRateLoading] = useState(true);
 	const [rateError, setRateError] = useState<string | null>(null);
 
+	const [summaryData, setSummaryData] = useState<AccountSummaryData | null>(null);
+	const [summaryLoading, setSummaryLoading] = useState(true);
+	const [summaryError, setSummaryError] = useState<string | null>(null);
 
 	const [inventoryData, setInventoryData] = useState<InventoryData | null>(null);
 	const [inventoryLoading, setInventoryLoading] = useState(true);
@@ -60,11 +52,9 @@ const AdminDashboard = () => {
 		totalStock: "", inStoreStock: "", goldStock: "", silverStock: "", diamondStock: ""
 	});
 
-
-	const [activityPage, setActivityPage] = useState(1);
 	const [activityFilter, setActivityFilter] = useState("all");
-	const pageSize = 6;
 
+	// --- API FETCHING ---
 	const fetchRates = useCallback(async () => {
 		setRateLoading(true);
 		setRateError(null);
@@ -75,7 +65,6 @@ const AdminDashboard = () => {
 			setApiSilverPrice(silverRateInrPerGram.toFixed(2));
 		} catch (err) {
 			setRateError("Failed to fetch rates.");
-			console.error("Fetch rates error:", err);
 		} finally {
 			setRateLoading(false);
 		}
@@ -89,69 +78,67 @@ const AdminDashboard = () => {
 			setInventoryData(response.data);
 			setIsInventoryInitialized(true);
 		} catch (err: any) {
-			if (err.response && err.response.data && err.response.data.success === false) {
+			if (err.response?.status === 404) {
 				setIsInventoryInitialized(false);
 			} else {
 				setInventoryError("Could not load inventory data.");
-				console.error("Fetch inventory error:", err);
 			}
 		} finally {
 			setInventoryLoading(false);
 		}
 	}, []);
 
+	const fetchSummary = useCallback(async () => {
+		setSummaryLoading(true);
+		setSummaryError(null);
+		try {
+			const response = await axiosInstance.get<AccountSummaryData>('/account-summary');
+			setSummaryData(response.data);
+		} catch (err) {
+			setSummaryError("Failed to fetch summary.");
+		} finally {
+			setSummaryLoading(false);
+		}
+	}, []);
+
 	useEffect(() => {
 		fetchRates();
 		fetchInventory();
-	}, [fetchRates, fetchInventory]);
+		fetchSummary();
+	}, [fetchRates, fetchInventory, fetchSummary]);
 
-
+	// --- HANDLERS ---
 	const handleSaveInventory = async () => {
-		const numericPayload = {
-			totalStock: Number(editStockValues.totalStock),
-			inStoreStock: Number(editStockValues.inStoreStock),
-			goldStock: Number(editStockValues.goldStock),
-			silverStock: Number(editStockValues.silverStock),
-			diamondStock: Number(editStockValues.diamondStock),
-		};
+		const numericPayload = Object.fromEntries(
+			Object.entries(editStockValues).map(([key, value]) => [key, Number(value)])
+		);
 
-		for (const key in numericPayload) {
-			if (isNaN(numericPayload[key as keyof typeof numericPayload])) {
-				alert(`Invalid number for ${key}. Please check your inputs.`);
-				return;
-			}
+		if (Object.values(numericPayload).some(isNaN)) {
+			alert("Invalid number found. Please check your inputs.");
+			return;
 		}
 
 		const fullPayload = { ...numericPayload, unit: 'gram' };
-
 		setInventoryLoading(true);
 		try {
 			await axiosInstance.put('/api/inventory', fullPayload);
-			alert("Inventory updated successfully!");
 			setEditInventory(false);
 			await fetchInventory();
 		} catch (err) {
 			alert("Failed to update inventory.");
-			console.error("Save inventory error:", err);
 		} finally {
 			setInventoryLoading(false);
 		}
 	};
-
-	const b2bInvoices = [{ id: "B2B-INV-001", customerName: "ABC Gold Traders", customerType: "b2b", goldType: "Gold Bar", quantity: 10, weight: "1kg", price: 6500000, date: "2024-06-01", status: "completed", paymentMethod: "Bank Transfer", address: "123 Market St, Mumbai" }];
-	const partnerInvoices = [{ id: "PART-INV-001", customerName: "Sunrise Jewels", customerType: "partner", goldType: "Gold Coin", quantity: 50, weight: "500g", price: 3250000, date: "2024-06-02", status: "completed", paymentMethod: "UPI", address: "789 Partner Rd, Chennai" }];
-	const b2bVendorCount = 5;
-	let filteredActivities = activityData.filter(a => activityFilter === 'all' || a.type === activityFilter);
-	const totalPages = Math.ceil(filteredActivities.length / pageSize);
-	const pagedActivities = filteredActivities.slice((activityPage - 1) * pageSize, activityPage * pageSize);
-	const getActivityTypeColor = (type: string) => {
-		switch (type) {
-			case "user": return "bg-blue-50 border-blue-200 text-blue-700";
-			case "partner": return "bg-purple-50 border-purple-200 text-purple-700";
-			default: return "bg-gray-50 border-gray-200 text-gray-700";
-		}
-	};
-
+    
+    // --- DYNAMIC DATA FOR UI ---
+    const summaryCards = summaryData ? [
+        { label: "Total Users", value: summaryData.totalUsers.toLocaleString(), color: "from-blue-500 to-blue-600", icon: Users },
+        { label: "Gold Sold", value: summaryData.goldSoldDisplay, color: "from-yellow-500 to-yellow-600", icon: Award },
+        { label: "Commission Earned", value: summaryData.commissionEarnedDisplay, color: "from-green-500 to-green-600", icon: DollarSign },
+        { label: "Partners", value: summaryData.partners.toLocaleString(), color: "from-purple-500 to-purple-600", icon: Handshake },
+        { label: "B2B Vendors", value: summaryData.b2bVendors.toLocaleString(), color: "from-pink-400 to-pink-600", icon: Handshake }
+    ] : [];
 
 	return (
 		<div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 p-2 sm:p-3 md:p-4 lg:p-6 xl:p-8">
@@ -255,53 +242,41 @@ const AdminDashboard = () => {
 					</div>
 				)}
 			</div>
-
-			<div className="mb-4 sm:mb-6">
-				<h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Account Summary</h2>
-				<div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
-					{stats.map((stat, idx) => (
-						<div
-							key={idx}
-							className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-3 sm:p-4 border border-gray-100 hover:border-gray-200 overflow-hidden"
-						>
-							<div className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
-							<div className="relative z-10">
-								<div className="flex items-center justify-between mb-2">
-									<div className={`p-2 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}>
-										<stat.icon className="w-5 h-5 text-white" />
-									</div>
-									<div className="flex items-center space-x-1 text-green-600 text-xs font-medium">
-										<TrendingUp className="w-3 h-3" />
-										<span>{stat.trend}</span>
-									</div>
-								</div>
-								<div className="space-y-1">
-									<h3 className="text-lg sm:text-xl font-bold text-gray-800">{stat.value}</h3>
-									<p className="text-gray-600 text-xs font-medium">{stat.label}</p>
-								</div>
-							</div>
-						</div>
-					))}
-					<div className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-3 sm:p-4 border border-gray-100 hover:border-gray-200 overflow-hidden">
-						<div className="absolute inset-0 bg-gradient-to-r from-pink-400 to-pink-600 opacity-0 group-hover:opacity-5 transition-opacity duration-300"></div>
-						<div className="relative z-10">
-							<div className="flex items-center justify-between mb-2">
-								<div className="p-2 rounded-xl bg-gradient-to-r from-pink-400 to-pink-600 shadow-lg">
-									<Handshake className="w-5 h-5 text-white" />
-								</div>
-								<div className="flex items-center space-x-1 text-pink-600 text-xs font-medium">
-									<TrendingUp className="w-3 h-3" />
-									<span>+5%</span>
-								</div>
-							</div>
-							<div className="space-y-1">
-								<h3 className="text-lg sm:text-xl font-bold text-gray-800">{b2bVendorCount}</h3>
-								<p className="text-gray-600 text-xs font-medium">B2B Vendors</p>
-							</div>
-						</div>
-					</div>
-				</div>
-			</div>
+            
+            <div className="mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-800 mb-2">Account Summary</h2>
+                {summaryLoading ? (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4 animate-pulse">
+                        {Array.from({ length: 5 }).map((_, idx) => (
+                            <div key={idx} className="bg-gray-200 h-28 rounded-xl"></div>
+                        ))}
+                    </div>
+                ) : summaryError ? (
+                    <p className="text-red-500 text-center">{summaryError}</p>
+                ) : (
+                    <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
+                        {summaryCards.map((stat, idx) => (
+                            <div
+                                key={idx}
+                                className="group relative bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 p-3 sm:p-4 border border-gray-100 hover:border-gray-200 overflow-hidden"
+                            >
+                                <div className={`absolute inset-0 bg-gradient-to-r ${stat.color} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                                <div className="relative z-10">
+                                    <div className="flex items-center justify-between mb-2">
+                                        <div className={`p-2 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}>
+                                            <stat.icon className="w-5 h-5 text-[#7a1436]" />
+                                        </div>
+                                    </div>
+                                    <div className="space-y-1">
+                                        <h3 className="text-lg sm:text-xl font-bold text-gray-800">{stat.value}</h3>
+                                        <p className="text-gray-600 text-xs font-medium">{stat.label}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+            </div>
 		</div>
 	);
 };

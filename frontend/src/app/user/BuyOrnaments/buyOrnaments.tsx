@@ -113,11 +113,8 @@ const BuyOrnamentsPage = () => {
   };
 
   const getProductWeight = (product: Product) => {
-    // Corrected to use totalGram directly as it's more reliable.
-    return product.totalGram != null ? `${product.totalGram}g` : 'N/A';
+    return product.grossWeight != null ? `${product.grossWeight.toFixed(2)}g` : 'N/A';
   };
-
-
 
   const getSubCategories = () => CATEGORY_TREE.find(cat => cat.name === dropdownMain)?.children || [];
   const getItems = () => (getSubCategories() as any[]).find(s => s.name === dropdownSub)?.items || [];
@@ -437,7 +434,7 @@ const BuyOrnamentsPage = () => {
                       <div className="mt-auto">
                         <div className="text-center mb-3.5">
                           <div className="text-center text-lg font-semibold text-[#7a1335] tracking-tight mt-2">
-                            {product.totalPrice ? `₹${product.totalPrice.toLocaleString('en-IN')}` : 'N/A'}
+                            {product.totalPriceAfterDiscount ? `₹${product.totalPriceAfterDiscount.toLocaleString('en-IN')}` : 'N/A'}
                           </div>
 
                           <div className="text-[0.7rem] text-[#64748b] mt-0.5">Inclusive of all taxes</div>

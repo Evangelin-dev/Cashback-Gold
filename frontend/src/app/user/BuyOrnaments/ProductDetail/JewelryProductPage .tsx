@@ -1,52 +1,45 @@
-import { Award, Heart, Loader, Minus, Plus, Share2, Shield, ShoppingCart, Sparkles, Zap } from 'lucide-react';
-import { useEffect, useState } from "react";
-import { useSelector } from 'react-redux';
+import { Award, Check, Crown, Eye, Filter, Heart, Loader, Minus, Plus, Share2, Shield, ShoppingCart, Sparkles, Zap } from 'lucide-react';
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate, useParams } from "react-router-dom";
 import { RootState } from '../../../../store';
 import axiosInstance from '../../../../utils/axiosInstance';
 import Portal from '../../Portal';
 
-// --- Interfaces to match your API response ---
 
+// --- Updated Interfaces to match the new API response ---
 interface PriceBreakup {
   component: string;
   netWeight: number | null;
-  grossWeight: number | null;
-  discount: number;
-  finalValue?: number;
+  value: number;
 }
 
 interface Product {
   id: number;
   name: string;
-  totalGram: number;
   category: string;
   subCategory: string;
-  gender: string;
   itemType: string | null;
+  details: string;
   description: string;
+  description1?: string;
+  description2?: string;
+  description3?: string;
   material: string;
   purity: string;
   quality: string;
   warranty: string;
-  details: string;
   origin: string;
-  makingChargePercent: number;
   mainImage: string;
   subImages: string[];
-  description1?: string;
-  description2?: string;
-  description3?: string;
   priceBreakups: PriceBreakup[];
-  totalPrice?: number;
-}
-
-// Razorpay type declaration for window
-declare global {
-  interface Window {
-    Razorpay?: any;
-    RAZORPAY_KEY_ID?: string;
-  }
+  // New detailed pricing fields
+  goldPerGramPrice: number;
+  makingChargePercent: number;
+  grossWeight: number;
+  discount: number;
+  totalPrice: number; // Price before discount
+  totalPriceAfterDiscount: number; // Final price
 }
 
 const JewelryProductPage = () => {
@@ -256,20 +249,11 @@ const JewelryProductPage = () => {
         const rzp = new window.Razorpay(options);
         rzp.open();
       }
-    } catch (err: any) {
-      console.error('Payment flow error:', err);
-      let apiError = "Sorry, we couldn't process your payment at this time. Please try again.";
-      if (err?.response) {
-        if (typeof err.response.data === 'string' && err.response.data) {
-          apiError = err.response.data;
-        } else if (err.response.data?.message) {
-          apiError = err.response.data.message;
-        }
-      } else if (err?.message) {
-        apiError = err.message;
-      }
-      setPaymentError(apiError);
-      setIsPaying(false);
+    } catch (err) {
+      console.error("Failed to update wishlist:", err);
+      alert("Failed to update wishlist. Please try again.");
+    } finally {
+      setIsLiking(false);
     }
   };
 
@@ -288,7 +272,7 @@ const JewelryProductPage = () => {
 
   const productImages = [product.mainImage, ...product.subImages].filter(Boolean);
   const keyFeatures = [product.description1, product.description2, product.description3].filter(Boolean);
-
+  
   return (
     <div className="min-h-screen bg-gradient-to-br from-rose-50 via-white to-purple-50 pt-16">
       <div className="relative overflow-hidden">
@@ -317,16 +301,16 @@ const JewelryProductPage = () => {
             <div className="lg:col-span-6 space-y-4 flex flex-col">
               <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-4 shadow-xl border border-white/20">
                 <h1 className="text-2xl font-bold text-[#7a1335] mb-2">{product.name}</h1>
-                <div className="flex items-center space-x-3">
-                  <span className="text-3xl font-bold text-[#7a1335]">
-                    {(() => {
-                      let totalPrice = typeof product.totalPrice === 'number' ? product.totalPrice : NaN;
-                      if (isNaN(totalPrice) && Array.isArray(product.priceBreakups)) {
-                        totalPrice = product.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
-                      }
-                      return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice);
-                    })()}
-                  </span>
+                <div className="flex items-baseline space-x-3">
+                  <div className="text-3xl font-semibold text-[#7a1335] tracking-tight">
+                    ₹{product.totalPriceAfterDiscount.toLocaleString('en-IN')}
+                  </div>
+                  <div className="text-lg font-medium text-gray-400 line-through">
+                    ₹{product.totalPrice.toLocaleString('en-IN')}
+                  </div>
+                  <div className="px-2 py-1 bg-green-100 text-green-700 text-xs font-bold rounded">
+                    SAVE ₹{product.discount.toLocaleString('en-IN')}
+                  </div>
                 </div>
               </div>
               <div className="grid grid-cols-2 gap-3">{[ { icon: Award, label: "Material", value: product.material }, { icon: Shield, label: "Purity", value: product.purity }, { icon: Sparkles, label: "Quality", value: product.quality }, { icon: Zap, label: "Warranty", value: product.warranty }].map((item, index) => (<div key={index} className="bg-white/80 backdrop-blur-sm rounded-xl p-3 shadow-lg border border-white/20 hover:shadow-xl transition-all duration-300 group"><div className="flex items-center space-x-2"><item.icon className="w-4 h-4 text-[#7a1335] group-hover:scale-110 transition-transform" /><div><div className="text-xs text-[#7a1335]/70">{item.label}</div><div className="font-semibold text-[#7a1335] text-sm">{item.value}</div></div></div></div>))}</div>
@@ -431,35 +415,40 @@ const JewelryProductPage = () => {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-[#7a1335]/20">
-                          <th className="text-left py-2 text-[#7a1335] font-semibold">Component</th>
-                          <th className="text-left py-2 text-[#7a1335] font-semibold">Net Weight</th>
-                          <th className="text-left py-2 text-[#7a1335] font-semibold">Gross Weight</th>
-                          <th className="text-left py-2 text-[#7a1335] font-semibold">Discount</th>
-                          <th className="text-left py-2 text-[#7a1335] font-semibold">Final</th>
+                          <th className="text-left py-2 px-2 text-[#7a1335] font-semibold">Component</th>
+                          <th className="text-left py-2 px-2 text-[#7a1335] font-semibold">Net Weight</th>
+                          <th className="text-left py-2 px-2 text-[#7a1335] font-semibold">Value</th>
                         </tr>
                       </thead>
                       <tbody>
                         {product.priceBreakups.map((row, idx) => (
                           <tr key={idx} className="hover:bg-white/50 transition-colors">
-                            <td className="py-2 font-medium text-[#7a1335]">{row.component}</td>
-                            <td className="py-2 text-[#7a1335]">{row.netWeight != null ? row.netWeight + 'g' : 'N/A'}</td>
-                            <td className="py-2 text-[#7a1335]">{row.grossWeight != null ? row.grossWeight + 'g' : 'N/A'}</td>
-                            <td className="py-2 text-green-600 font-medium">{row.discount != null ? row.discount : 0}</td>
-                            <td className="py-2 font-bold text-[#7a1335]">{row.finalValue != null ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(row.finalValue) : 'N/A'}</td>
+                            <td className="py-2 px-2 font-medium text-[#7a1335]">{row.component}</td>
+                            <td className="py-2 px-2 text-[#7a1335]">{row.netWeight != null ? row.netWeight.toFixed(2) + 'g' : 'N/A'}</td>
+                            <td className="py-2 px-2 font-bold text-[#7a1335]">{row.value != null ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(row.value) : 'N/A'}</td>
                           </tr>
                         ))}
                       </tbody>
                     </table>
-                    <div className="mt-4 pt-4 border-t border-[#7a1335]/20 text-right">
-                      <div className="text-xl font-bold text-[#7a1335]">
-                        Total: {(() => {
-                          let totalPrice = typeof product.totalPrice === 'number' ? product.totalPrice : NaN;
-                          if (isNaN(totalPrice) && Array.isArray(product.priceBreakups)) {
-                            totalPrice = product.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
-                          }
-                          return new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice);
-                        })()}
-                      </div>
+                    <div className="mt-4 pt-4 border-t border-[#7a1335]/20 text-right space-y-1">
+                       <div className="flex justify-end items-center gap-4">
+                            <span className="text-gray-600">Sub-total:</span>
+                            <span className="font-medium text-gray-700 w-32 text-left">
+                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.totalPrice)}
+                            </span>
+                        </div>
+                        <div className="flex justify-end items-center gap-4">
+                            <span className="text-green-600">Discount:</span>
+                            <span className="font-medium text-green-600 w-32 text-left">
+                                - {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.discount)}
+                            </span>
+                        </div>
+                        <div className="flex justify-end items-center gap-4 text-xl font-bold text-[#7a1335] mt-2">
+                            <span className="">Total:</span>
+                            <span className="w-32 text-left">
+                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.totalPriceAfterDiscount)}
+                            </span>
+                        </div>
                     </div>
                   </div>
                 </div>
@@ -469,27 +458,21 @@ const JewelryProductPage = () => {
           
           {similarProducts.length > 0 && (
             <section className="mb-12">
-              <h2 className="text-3xl font-bold text-[#7a1335] mb-8">Similar Products You May Like</h2>
+              <h2 className="text-2xl font-bold text-[#7a1335] mb-6 text-center">Similar Products You May Like</h2>
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
-                {similarProducts?.map((p) => {
-                  let totalPrice = typeof p.totalPrice === 'number' ? p.totalPrice : NaN;
-                  if (isNaN(totalPrice) && Array.isArray(p.priceBreakups)) {
-                    totalPrice = p.priceBreakups.reduce((sum, pb) => sum + (typeof pb.finalValue === 'number' ? pb.finalValue : 0), 0);
-                  }
-                  if (!Number.isFinite(totalPrice)) totalPrice = 0;
-                  return (
-                    <div key={p.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer" onClick={() => navigate(`/buyornaments/${p.id}`)}>
-                      <div className="aspect-square overflow-hidden">
-                        <img src={p.mainImage} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
-                      </div>
-                      <div className="p-4">
-                        <h4 className="font-semibold text-gray-800 mb-1 truncate">{p.name}</h4>
-                        <p className="text-lg font-bold text-[#7a1335] mb-2">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(totalPrice)}</p>
-                        <button className="w-full bg-[#7a1335]/10 text-[#7a1335] py-2 px-3 rounded-lg text-sm font-medium hover:bg-[#7a1335] hover:text-white transition-all duration-300">View Details</button>
-                      </div>
+                {similarProducts?.map((p) => (
+                  <div key={p.id} className="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 group cursor-pointer" onClick={() => navigate(`/buyornaments/${p.id}`)}>
+                    <div className="aspect-square overflow-hidden">
+                      <img src={p.mainImage} alt={p.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
                     </div>
-                  );
-                })}
+                    <div className="p-4">
+                      <h4 className="font-semibold text-gray-800 mb-1 truncate">{p.name}</h4>
+                      <p className="text-lg font-bold text-[#7a1335] mb-2">{new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(p.totalPriceAfterDiscount)}</p>
+                      <button className="w-full bg-[#7a1335]/10 text-[#7a1335] py-2 px-3 rounded-lg text-sm font-medium hover:bg-[#7a1335] hover:text-white transition-all duration-300">View Details</button>
+                    </div>
+                  </div>
+                )
+                )}
               </div>
             </section>
           )}

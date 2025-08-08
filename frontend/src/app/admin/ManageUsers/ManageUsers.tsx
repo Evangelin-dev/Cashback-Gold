@@ -4,7 +4,6 @@ import { UserType } from '../../features/thunks/adminThunks';
 import { useEffect } from "react";
 import { useSelector, useDispatch } from 'react-redux';
 import { fetchUsers, updateUserStatus, } from '../../features/thunks/adminThunks';
-import { setPartnerPage, setB2bPage, setNormalPage } from '../../features/slices/adminSlice';
 import { AppDispatch, RootState } from '../../../store';
 
 
@@ -35,7 +34,7 @@ export const UserCategoryCard: React.FC<UserCategoryCardProps> = ({ title, state
 
       {status === 'loading' && <div className="flex justify-center items-center min-h-[200px]">Loading...</div>}
       {status === 'failed' && <div className="flex justify-center items-center min-h-[200px] text-red-500">{error}</div>}
-      
+
       {status === 'succeeded' && (
         <>
           <div className="space-y-3 sm:space-y-4 min-h-[200px]">
@@ -55,9 +54,9 @@ export const UserCategoryCard: React.FC<UserCategoryCardProps> = ({ title, state
                         defaultValue="default"
                         disabled={actionInProgress}
                         onChange={e => {
-                           if (e.target.value === 'approve' || e.target.value === 'reject') {
-                             onStatusUpdate(user.id, e.target.value, userType);
-                           }
+                          if (e.target.value === 'approve' || e.target.value === 'reject') {
+                            onStatusUpdate(user.id, e.target.value, userType);
+                          }
                         }}
                         className="px-2 py-1 rounded-full border text-xs font-semibold bg-white text-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
@@ -76,7 +75,7 @@ export const UserCategoryCard: React.FC<UserCategoryCardProps> = ({ title, state
             <div className="flex justify-center items-center gap-2 mt-4 flex-wrap">
               <button
                 className="px-2 sm:px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs sm:text-sm disabled:opacity-50"
-                disabled={currentPage === 1 }
+                disabled={currentPage === 1}
                 onClick={() => onPageChange(currentPage - 1)}
               >
                 Prev
@@ -86,7 +85,7 @@ export const UserCategoryCard: React.FC<UserCategoryCardProps> = ({ title, state
               </span>
               <button
                 className="px-2 sm:px-3 py-1 rounded bg-gray-200 hover:bg-gray-300 text-gray-700 text-xs sm:text-sm disabled:opacity-50"
-                disabled={currentPage === totalPages }
+                disabled={currentPage === totalPages}
                 onClick={() => onPageChange(currentPage + 1)}
               >
                 Next
@@ -108,9 +107,6 @@ const ManageUsers: React.FC = () => {
   useEffect(() => {
     if (partnerUsers.status === 'idle') {
       dispatch(fetchUsers({ userType: 'partner', page: 1, size: PAGE_SIZE }));
-    }
-    if (b2bUsers.status === 'idle') {
-      dispatch(fetchUsers({ userType: 'b2b', page: 1, size: PAGE_SIZE }));
     }
     if (normalUsers.status === 'idle') {
       dispatch(fetchUsers({ userType: 'user', page: 1, size: PAGE_SIZE }));
@@ -142,23 +138,14 @@ const ManageUsers: React.FC = () => {
             actionInProgress={actionStatus === 'loading'}
           />
           <UserCategoryCard
-            title="B2B Users"
-            state={b2bUsers}
-            userType="b2b"
-            onPageChange={(page) => handlePageChange('b2b', page)}
+            title="Normal Users"
+            state={normalUsers}
+            userType="user"
+            onPageChange={(page) => handlePageChange('user', page)}
             onStatusUpdate={handleStatusUpdate}
             actionInProgress={actionStatus === 'loading'}
           />
         </div>
-
-        <UserCategoryCard
-          title="Normal Users"
-          state={normalUsers}
-          userType="user"
-          onPageChange={(page) => handlePageChange('user', page)}
-          onStatusUpdate={handleStatusUpdate}
-          actionInProgress={actionStatus === 'loading'}
-        />
       </div>
     </div>
   );

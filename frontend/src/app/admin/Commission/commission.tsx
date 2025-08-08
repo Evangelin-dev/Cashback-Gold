@@ -117,7 +117,6 @@ const Commission = () => {
               className="px-3 py-2 border rounded bg-white text-gray-700 focus:ring-2 focus:ring-[#7a1335] focus:border-transparent"
             >
               <option value="all">All</option>
-              <option value="b2b">B2B</option>
               <option value="partner">Partner</option>
             </select>
           </div>

@@ -15,7 +15,7 @@ interface FlyerImage {
 
 // Configuration for the scheme cards to be displayed
 const PLAN_CONFIG = [
-  { title: "Digi Gold SIP Plan", type: "SIP_PLAN" },
+  { title: "Cashback Gold", type: "SIP_PLAN" },
   { title: "Gold Plant Scheme", type: "GOLD_PLANT" },
   { title: "Saving Scheme", type: "SAVING_PLAN" },
 ];

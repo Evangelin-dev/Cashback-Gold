@@ -215,7 +215,7 @@ export const schemes=[
   },
   {
     "id": "sip",
-    "title": "Digi Gold SIP Plan",
+    "title": "Cashback Gold",
     "image": "/assets/sip_plant.png",
     "link": "/goldsip"
   },
@@ -235,7 +235,7 @@ export const lschemes=[
   },
   {
     "id": "sip",
-    "title": "Digi Gold SIP Plan",
+    "title": "Cashback Gold",
     "image": "/assets/sip_plant.png",
     "link": "/lgoldsip"
   },
@@ -334,7 +334,7 @@ export const feedbacks = [
     img: "/home/user4.png",
     name: "Rahul K",
     location: "Mumbai",
-    text: "I started a gold SIP with Greenheap and it’s been a great way to build my savings. The app is user-friendly and the rates are competitive. Very happy with my experience.",
+    text: "I started a Cashback Gold Plan with Greenheap and it’s been a great way to build my savings. The app is user-friendly and the rates are competitive. Very happy with my experience.",
   },
   {
     img: "/home/user5.png",

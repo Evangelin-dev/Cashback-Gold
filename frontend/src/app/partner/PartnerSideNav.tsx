@@ -6,7 +6,6 @@ const menuItems = [
   { to: "/preferral", label: "Referral Link", icon: <FaLink className="w-5 h-5 mr-2" /> },
   { to: "/pcommission", label: "Commission", icon: <FaRupeeSign className="w-5 h-5 mr-2" /> },
   { to: "/ppayout", label: "Payout", icon: <FaWallet className="w-5 h-5 mr-2" /> },
-  { to: "/pcampaigns", label: "Campaigns", icon: <FaGift className="w-5 h-5 mr-2" /> },
   { to: "/psupport", label: "Support", icon: <FaQuestionCircle className="w-5 h-5 mr-2" /> },
   { to: "/pprofile", label: "Profile & KYC", icon: <FaUserCircle className="w-5 h-5 mr-2" /> },
   { to: "/pnotifications", label: "Notification", icon: <FaUserCircle className="w-5 h-5 mr-2" /> },

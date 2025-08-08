@@ -80,15 +80,12 @@ export interface Ornament {
   id: number;
   name: string;
   totalGram: number; // total gram
-  price: number; // legacy field for backend compatibility
-  gramPrice?: number; // per gram price (optional for backward compatibility)
   totalPrice?: number; // calculated (optional for backward compatibility)
   meta: string;
   category: string;
   subCategory: string;
   item: string;
   customItem?: string;
-  gender: 'Male' | 'Female' | 'Unisex';
   description: string;
   description1?: string;
   description2?: string;
@@ -161,6 +158,8 @@ export interface Product {
   priceBreakups: PriceBreakup[];
   totalPrice?: number;
   totalGram?: number;
+  grossWeight?: number;
+  totalPriceAfterDiscount?: number;
 }
 
 export interface CartItem {
