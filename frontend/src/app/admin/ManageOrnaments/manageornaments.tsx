@@ -53,6 +53,7 @@ const emptyFormState = {
   warrantyYears: "",
   details: "",
   itemType: "", // Keep itemType for edit logic
+  gender: "Unisex", // Default gender
 };
 
 const emptyBreakup = { component: "", netWeight: "", value: "" };
@@ -212,11 +213,18 @@ const ManageOrnaments: React.FC = () => {
     const warrantyValue = form.warranty === 'other' ? `${form.warrantyYears} years` : form.warranty;
     const originValue = mainCategory.split(' ')[0].toUpperCase();
 
+    // Calculate totalGram and price
+    const totalGram = form.priceBreakups.reduce((sum: number, p: any) => sum + (parseFloat(p.netWeight) || 0), 0);
+    const price = form.priceBreakups.reduce((sum: number, p: any) => sum + (parseFloat(p.value) || 0), 0);
+
     const data = {
       name: form.name,
       goldPerGramPrice: form.gramPrice ? parseFloat(form.gramPrice) : 0,
+      totalGram,
+      price,
       category: mainCategory,
       subCategory: subCategory,
+      gender: form.gender,
       itemType: item === "Other" ? customItem : item,
       details: form.details,
       description: form.description,
@@ -233,7 +241,9 @@ const ManageOrnaments: React.FC = () => {
       priceBreakups: form.priceBreakups.map((p: any) => ({
         component: p.component,
         netWeight: p.netWeight === "" || p.netWeight === undefined ? null : parseFloat(p.netWeight),
-        value: p.value === "" || p.value === undefined ? null : parseFloat(p.value)
+        grossWeight: null, // You can add a field for grossWeight in the form if needed
+        discount: null, // You can add a field for discount in the form if needed
+        finalValue: p.value === "" || p.value === undefined ? null : parseFloat(p.value)
       }))
     };
 
@@ -387,6 +397,13 @@ const ManageOrnaments: React.FC = () => {
               <input type="text" name="purity" placeholder="Gold Purity *" value={form.purity} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               <input type="text" name="quality" placeholder="Quality *" value={form.quality} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               <input type="text" name="details" placeholder="Details *" value={form.details} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
+              <select name="gender" value={form.gender} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required>
+                <option value="">Select Gender *</option>
+                <option value="Men">Men</option>
+                <option value="Women">Women</option>
+                <option value="Kid">Kid</option>
+                <option value="Unisex">Unisex</option>
+              </select>
               <input type="text" name="description" placeholder="Description Title *" value={form.description} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               <input type="text" name="description1" placeholder="Description Point 1 *" value={form.description1} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />
               <input type="text" name="description2" placeholder="Description Point 2 *" value={form.description2} onChange={handleChange} className="mb-3 px-3 py-2 border rounded w-full" required />

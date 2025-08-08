@@ -31,6 +31,7 @@ interface ProcessedPlan {
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
 
 const LGoldPlantScheme = () => {
+  const [sellPopup, setSellPopup] = useState<{ message: string; success: boolean } | null>(null);
   const navigate = useNavigate();
 
   // --- STATE MANAGEMENT ---
@@ -73,21 +74,21 @@ const LGoldPlantScheme = () => {
 
   // --- DYNAMIC STATS BASED ON USER ORDERS ---
   const stats = useMemo(() => {
-    const active = userSchemePlans.filter(p => p.status === 'enrolled').length;
-    const pending = userSchemePlans.filter(p => p.status === 'pending').length;
-    const rejected = userSchemePlans.filter(p => p.status === 'rejected').length;
+    const active = userSchemePlans.filter(p => p.status === 'enrolled' && !p.recalled).length;
+    const pending = userSchemePlans.filter(p => p.status === 'pending' && !p.recalled).length;
+    const recalled = userSchemePlans.filter(p => p.recalled).length;
     return [
       { label: 'Active', count: active, color: 'from-emerald-400 to-emerald-600', icon:  CheckCircle },
       { label: 'Pending', count: pending, color: 'from-blue-400 to-blue-600', icon: TrendingUp },
-      { label: 'Rejected', count: rejected, color: 'from-red-400 to-red-600', icon: ShieldX },
+      { label: 'Recalled', count: recalled, color: 'from-red-400 to-red-600', icon: ShieldX },
     ];
   }, [userSchemePlans]);
 
   const plansToShow = useMemo(() => {
-    if (selectedTab === 'active') return userSchemePlans.filter(p => p.status === 'enrolled');
-    if (selectedTab === 'pending') return userSchemePlans.filter(p => p.status === 'pending');
-    if (selectedTab === 'rejected') return userSchemePlans.filter(p => p.status === 'rejected');
-    return [];
+  if (selectedTab === 'active') return userSchemePlans.filter(p => p.status === 'enrolled' && !p.recalled);
+  if (selectedTab === 'pending') return userSchemePlans.filter(p => p.status === 'pending' && !p.recalled);
+  if (selectedTab === 'recalled') return userSchemePlans.filter(p => p.recalled);
+  return [];
   }, [selectedTab, userSchemePlans]);
 
   return (
@@ -167,20 +168,52 @@ const LGoldPlantScheme = () => {
                       setSellLoading(plan.id);
                       setSellMessage((prev) => ({ ...prev, [plan.id]: '' }));
                       try {
-                        const res = await axiosInstance.post('/api/bank-accounts', {
+                        // 1. Recall gold
+                        const recallRes = await axiosInstance.post('/api/cashback-gold-user/recall', {
                           enrollmentId: Number(plan.id),
                           mode: 'SELL'
                         });
-                        if (res.data?.status === 'SUCCESS') {
-                          setSellMessage((prev) => ({ ...prev, [plan.id]: res.data.message || 'Gold recalled and sold successfully.' }));
+                        if (recallRes.data?.status === 'SUCCESS') {
+                          // 2. Send amount to user's bank account
+                          const amount = recallRes.data?.amount;
+                          const bankRes = await axiosInstance.get('/api/bank-accounts');
+                          const bank = bankRes.data?.[0];
+                          if (bank && bank.account && bank.ifsc) {
+                            await axiosInstance.post('/api/bank-accounts', {
+                              enrollmentId: Number(plan.id),
+                              mode: 'SELL',
+                              accountNumber: bank.account,
+                              ifscCode: bank.ifsc,
+                              holderName: bank.holderName,
+                              bankName: bank.bank,
+                              amount: amount
+                            });
+                            setSellPopup({ message: 'Gold selled successfully!', success: true });
+                          } else {
+                            setSellPopup({ message: 'Gold selled successfully! Please fill your bank account details.', success: true });
+                          }
                         } else {
-                          setSellMessage((prev) => ({ ...prev, [plan.id]: res.data?.message || 'Failed to sell gold.' }));
+                          setSellPopup({ message: recallRes.data?.message || 'Failed to sell gold.', success: false });
                         }
                       } catch (err) {
-                        setSellMessage((prev) => ({ ...prev, [plan.id]: 'Failed to sell gold. Please try again.' }));
+                        setSellPopup({ message: 'Failed to sell gold. Please try again.', success: false });
                       } finally {
                         setSellLoading(null);
                       }
+  {/* Sell Gold Result Popup */}
+  {sellPopup && (
+    <Portal>
+      <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2">
+        <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full mx-auto p-8 flex flex-col items-center justify-center">
+          <h3 className={`text-xl font-bold mb-4 text-center ${sellPopup.success ? 'text-green-700' : 'text-red-700'}`}>{sellPopup.message}</h3>
+          <button
+            className="mt-4 bg-[#6a0822] text-white py-2 px-6 rounded hover:bg-[#7a1335] font-semibold"
+            onClick={() => setSellPopup(null)}
+          >Close</button>
+        </div>
+      </div>
+    </Portal>
+  )}
                     }}
                   >{sellLoading === plan.id ? 'Selling...' : 'Sell Gold'}</button>
                 </div>
@@ -207,7 +240,7 @@ const LGoldPlantScheme = () => {
               <button onClick={() => setViewedPlan(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
               <div className="text-center"><h3 className="text-lg font-bold text-[#6a0822] mb-2">{viewedPlan.name}</h3></div>
               <div className="space-y-2 bg-gray-50 p-2 rounded text-xs text-gray-600">
-                <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'enrolled' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.status}</span></div>
+                <div className="flex justify-between items-center"><span>Status:</span><span className={`font-bold px-2 py-0.5 rounded capitalize ${viewedPlan.status === 'pending' ? 'bg-yellow-100 text-yellow-800' : viewedPlan.status === 'enrolled' ? 'bg-green-100 text-green-800' : viewedPlan.recalled ? 'bg-blue-100 text-blue-800' : 'bg-red-100 text-red-800'}`}>{viewedPlan.recalled ? 'Recalled' : viewedPlan.status}</span></div>
                 <div className="flex justify-between items-center"><span>Invested Amount:</span><span className="font-semibold">{viewedPlan.investedAmount}</span></div>
                 <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{viewedPlan.goldAccumulated}</span></div>
                 <div className="flex justify-between items-center"><span>Lock-in Completed:</span><span className="font-semibold">{viewedPlan.lockinCompleted ? 'Yes' : 'No'}</span></div>

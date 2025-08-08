@@ -1,15 +1,14 @@
 import {
-  ArrowUpRight,
   Calendar,
   Coins,
   DollarSign,
-  Eye,
   EyeOff,
   Shield,
   Star,
   TrendingUp
 } from 'lucide-react';
-import { JSX, useState } from 'react';
+import { JSX, useEffect, useState } from 'react';
+import axiosInstance from '../../../utils/axiosInstance';
 
 type InvestmentPlan = {
   id: number;
@@ -77,8 +76,32 @@ const LMyDashboard = () => {
     planType: 'gold'
   });
 
-  const totalPortfolioValue = '₹1,41,920';
-  const totalMonthlyInvestment = '₹7,000';
+  const [totalPortfolioValue, setTotalPortfolioValue] = useState('₹0');
+  const [totalMonthlyInvestment, setTotalMonthlyInvestment] = useState('₹0');
+
+  useEffect(() => {
+    // Fetch total portfolio value
+    axiosInstance.get<{ total: number }>('/user/my-investment/total')
+      .then((res: { data: { total: number } }) => {
+        if (res.data && typeof res.data.total === 'number') {
+          setTotalPortfolioValue(`₹${res.data.total}`);
+        }
+      })
+      .catch(() => {
+        setTotalPortfolioValue('₹0');
+      });
+
+    // Fetch current month investment value
+    axiosInstance.get<{ currentMonth: number }>('/user/my-investment/current-month')
+      .then((res: { data: { currentMonth: number } }) => {
+        if (res.data && typeof res.data.currentMonth === 'number') {
+          setTotalMonthlyInvestment(`₹${res.data.currentMonth}`);
+        }
+      })
+      .catch(() => {
+        setTotalMonthlyInvestment('₹0');
+      });
+  }, []);
 
   const formatAmount = (amount: string) => {
     return hideAmounts ? '₹****' : amount;
@@ -167,7 +190,7 @@ const LMyDashboard = () => {
 
         {/* Portfolio Overview Cards */}
         <div className="grid md:grid-cols-2 gap-3 mb-4">
-          <div className="bg-white rounded-xl p-4 shadow border border-gray-100">
+          <div className="bg-white rounded-xl p-4 shadow border border-gray-100 min-h-[140px] flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-base font-semibold text-gray-800">Total Portfolio Value</h3>
               <DollarSign className="w-5 h-5 text-[#6a0822]" />
@@ -176,7 +199,7 @@ const LMyDashboard = () => {
             
           </div>
 
-          <div className="bg-white rounded-xl p-4 shadow border border-gray-100">
+          <div className="bg-white rounded-xl p-4 shadow border border-gray-100 min-h-[140px] flex flex-col justify-between">
             <div className="flex items-center justify-between mb-2">
               <h3 className="text-base font-semibold text-gray-800">Monthly Investment</h3>
               <Calendar className="w-5 h-5 text-[#6a0822]" />
@@ -187,7 +210,7 @@ const LMyDashboard = () => {
         </div>
 
         {/* Investment Plans */}
-        <div className="mb-4">
+        {/* <div className="mb-4">
           <div className="flex items-center justify-between mb-3">
             <h2 className="text-lg font-bold text-gray-800">Your Investment Plans</h2>
           </div>
@@ -199,29 +222,29 @@ const LMyDashboard = () => {
                 className={`bg-white rounded-xl p-4 shadow border border-gray-100 relative cursor-pointer hover:shadow-lg transition-all duration-200`}
                 onClick={() => setSelectedPlan(selectedPlan === plan.id ? null : plan.id)}
               >
-                <div className="relative z-10">
+                <div className="relative z-10"> */}
                   {/* Plan Header */}
-                  <div className="flex items-center justify-between mb-2">
+                  {/* <div className="flex items-center justify-between mb-2">
                     <div className="bg-[#6a0822] p-2 rounded text-white shadow">
                       {plan.icon}
                     </div>
                     <button className="bg-white p-1 rounded-full hover:bg-gray-100 transition-colors">
                       <Eye className="w-4 h-4 text-gray-600" />
                     </button>
-                  </div>
+                  </div> */}
 
                   {/* Plan Info */}
-                  <h3 className="text-base font-bold text-gray-800 mb-1">{plan.name}</h3>
-                  <p className="text-gray-600 text-xs mb-2 leading-relaxed">{plan.description}</p>
+                  {/* <h3 className="text-base font-bold text-gray-800 mb-1">{plan.name}</h3>
+                  <p className="text-gray-600 text-xs mb-2 leading-relaxed">{plan.description}</p> */}
 
                   {/* Current Value */}
-                  <div className="bg-gray-50 rounded p-2 mb-2">
+                  {/* <div className="bg-gray-50 rounded p-2 mb-2">
                     <div className="text-lg font-bold text-[#6a0822] mb-0.5">{formatAmount(plan.currentValue)}</div>
                     <div className="text-xs text-gray-600">Current Value</div>
-                  </div>
+                  </div> */}
 
                   {/* Plan Stats */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  {/* <div className="grid grid-cols-2 gap-2 text-xs">
                     <div className="bg-white rounded p-2 border border-gray-100">
                       <div className="font-semibold text-gray-800">{formatAmount(plan.monthlyContribution)}</div>
                       <div className="text-gray-600">Monthly SIP</div>
@@ -230,15 +253,15 @@ const LMyDashboard = () => {
                       <div className="font-semibold text-gray-800">{plan.returns}</div>
                       <div className="text-gray-600">Returns</div>
                     </div>
-                  </div>
+                  </div> */}
 
                   {/* Duration Badge */}
-                  <div className="mt-2 inline-flex items-center bg-[#6a0822] text-white px-2 py-0.5 rounded-full text-xs font-medium">
+                  {/* <div className="mt-2 inline-flex items-center bg-[#6a0822] text-white px-2 py-0.5 rounded-full text-xs font-medium">
                     {plan.duration} plan
-                  </div>
+                  </div> */}
 
                   {/* Expanded View */}
-                  {selectedPlan === plan.id && (
+                  {/* {selectedPlan === plan.id && (
                     <div className="mt-2 bg-gray-50 rounded p-2 border border-gray-100">
                       <div className="grid grid-cols-2 gap-2 text-xs">
                         <div>
@@ -262,18 +285,18 @@ const LMyDashboard = () => {
                         View Detailed Report
                       </button>
                     </div>
-                  )}
+                  )} */}
                 </div>
               </div>
-            ))}
-          </div>
-        </div>
+        //     ))}
+        //   </div>
+        // </div>
 
         
-      </div>
+    //   </div>
 
 
-    </div>
+    // </div>
   );
 };
 

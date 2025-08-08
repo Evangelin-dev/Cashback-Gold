@@ -187,9 +187,9 @@ const ChitJewelsPlans = () => {
 
   // --- JSX (RETURN STATEMENT) ---
   return (
-    <div className="container pt-6 md:pt-16 px-0 md:px-0">
+    <div className="px-0 md:px-0">
       <div className="min-h-screen bg-gray-50">
-        <div className="bg-gradient-to-r from-[#7a1335] to-[#991313] text-black">
+        <section className="relative bg-yellow-100 text-yellow-900 py-8 px-2 sm:px-4 select-none">
           <div className="max-w-7xl mx-auto px-2 py-8 sm:px-4 lg:px-6 flex flex-col items-center justify-center min-h-[220px] relative">
             <Gem className="h-7 w-7 text-[#f7c873] mx-auto mb-1" />
             <div className="w-full max-w-md mx-auto text-center relative">
@@ -212,7 +212,7 @@ const ChitJewelsPlans = () => {
               </div>
             </div>
           </div>
-        </div>
+        </section>
         <div className="max-w-7xl mx-auto px-4 pt-2 pb-10 sm:px-6 lg:px-8">
           <div className="text-center mb-8 mt-0">
             <h2 className="text-xl md:text-2xl font-bold text-gray-800 mb-3">Why Choose Chit Jewels?</h2>
@@ -247,45 +247,22 @@ const ChitJewelsPlans = () => {
               {error && <div className="text-center text-red-500 text-xs">{error}</div>}
            <div className="w-full flex flex-wrap justify-center items-center gap-8">
                 
-                {/* All Plans Centered, Larger Cards & Description */}
-                <div className="flex flex-wrap justify-center items-center w-full gap-8">
-                  {/* Saving Scheme Card (first plan, if exists) */}
-                  {plans.length > 0 && (
-                    <div className="relative bg-white rounded-2xl shadow-lg border-2 border-[#bf7e1a] flex flex-col justify-between h-full min-h-[260px] transition-all duration-300 hover:shadow-xl hover:scale-105 text-[11px] p-3 mx-auto items-center" style={{ minWidth: '220px', maxWidth: '260px' }}>
-                      <div className="w-full flex justify-center items-center absolute -top-3 left-0">
-                        <span className="bg-[#bf7e1a] text-yellow-800 px-2 py-0.5 rounded-full text-xs font-bold whitespace-nowrap leading-tight">Saving Scheme</span>
-                      </div>
-                      <div className="flex-1 flex flex-col pt-5">
-                        <div className="text-center mb-2">
-                          <h3 className="text-lg font-bold text-gray-900 mb-1">{plans[0].name}</h3>
-                          <div className="text-[#7a1335] font-bold mb-1">{plans[0].amount}</div>
-                          <div className="text-gray-600 mb-1">{plans[0].duration}</div>
-                          <div className="bg-yellow-50 px-2 py-1 rounded-lg inline-block text-[12px] font-semibold text-yellow-800">Monthly: {plans[0].monthlyPayment}</div>
+                {/* Cards aligned from the left, similar to GoldSchemes */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 w-full justify-start">
+                  {plans.map((plan, idx) => (
+                    <div key={plan.id} className={`relative bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-200 flex flex-col h-full p-4 ${plan.popular ? 'ring-2 ring-yellow-500' : ''}`}> 
+                      {plan.popular && <div className="absolute top-0 right-0 bg-yellow-500 text-white px-3 py-1 rounded-bl-lg text-xs font-semibold">Popular</div>}
+                      <div className="flex-1 flex flex-col">
+                        <div>
+                          <div className="flex items-center mb-2"><Award className="w-6 h-6 mr-2 text-[#7a1335]" /><h3 className="text-base font-bold text-yellow-900">{plan.name}</h3></div>
+                          <div className="space-y-2 mb-4">
+                            <div className="flex items-center"><Shield className="w-4 h-4 mr-1 text-yellow-700" /><span className="text-gray-600 text-xs">{plan.duration}</span></div>
+                            <div className="flex items-center"><Calendar className="w-4 h-4 mr-1 text-green-600" /><span className="text-gray-600 text-xs">{plan.amount}</span></div>
+                            <div className="flex items-center"><Gem className="w-4 h-4 mr-1 text-yellow-600" /><span className="text-gray-600 text-xs">Monthly: {plan.monthlyPayment}</span></div>
+                          </div>
+                          <p className="text-gray-600 text-xs mb-4 line-clamp-3">{plan.description}</p>
                         </div>
-                        {/* Description removed from card, only shown in popup */}
-                        <div className="space-y-1 mb-2">{plans[0].features.slice(0, 3).map((feature, index) => (<div key={index} className="flex items-center text-[12px]"><div className="h-2 w-2 bg-[#bf7e1a] rounded-full mr-2"></div><span className="text-gray-700">{feature}</span></div>))}</div>
-                        <div className="mt-auto flex justify-center">
-                          <button onClick={() => setSelectedPlan(plans[0])} className={`bg-[#7a1335] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#991313] transition-colors w-full`}>Start Saving</button>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  {/* Other Plans */}
-                  {plans.slice(1).map((plan) => (
-                    <div key={plan.id} className={`relative bg-white rounded-2xl shadow-lg border-2 flex flex-col justify-between h-full min-h-[260px] transition-all duration-300 hover:shadow-xl hover:scale-105 ${plan.popular ? 'border-[#bf7e1a]' : 'border-gray-200'} text-[11px] p-3`} style={{ minWidth: '220px', maxWidth: '260px' }}>
-                      {plan.popular && <div className="absolute -top-3 left-1/2 transform -translate-x-1/2"><span className="bg-[#bf7e1a] text-yellow-800 px-3 py-1 rounded-full text-[12px] font-bold">Most Popular</span></div>}
-                      <div className="flex-1 flex flex-col pt-5">
-                        <div className="text-center mb-2">
-                          <h3 className="text-lg font-bold text-gray-900 mb-1">{plan.name}</h3>
-                          <div className="text-[#7a1335] font-bold mb-1">{plan.amount}</div>
-                          <div className="text-gray-600 mb-1">{plan.duration}</div>
-                          <div className="bg-yellow-50 px-2 py-1 rounded-lg inline-block text-[12px] font-semibold text-yellow-800">Monthly: {plan.monthlyPayment}</div>
-                        </div>
-                        {/* Description removed from card, only shown in popup */}
-                        <div className="space-y-1 mb-2">{plan.features.slice(0, 3).map((feature, index) => (<div key={index} className="flex items-center text-[12px]"><div className="h-2 w-2 bg-[#bf7e1a] rounded-full mr-2"></div><span className="text-gray-700">{feature}</span></div>))}</div>
-                        <div className="mt-auto flex justify-center">
-                          <button onClick={() => setSelectedPlan(plan)} className={`bg-[#7a1335] text-white rounded-lg px-4 py-2 text-[13px] font-semibold hover:bg-[#991313] transition-colors w-full`}>Start Saving</button>
-                        </div>
+                        <div className="mt-auto"><button onClick={() => setSelectedPlan(plan)} className="w-full py-2 rounded-lg font-semibold transition-colors bg-[#7a1335] text-white hover:bg-[#5a1335] text-xs">View Details</button></div>
                       </div>
                     </div>
                   ))}

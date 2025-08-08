@@ -1,17 +1,19 @@
-import { Award, Check, Crown, Eye, Filter, Heart, Loader, Minus, Plus, Share2, Shield, ShoppingCart, Sparkles, Zap } from 'lucide-react';
-import React, { useEffect, useState } from "react";
-import { useDispatch, useSelector } from 'react-redux';
+
+import { Award, Heart, Loader, Minus, Plus, Share2, Shield, ShoppingCart, Sparkles, Zap } from 'lucide-react';
+import { useEffect, useState } from "react";
+import { useSelector } from 'react-redux';
 import { useNavigate, useParams } from "react-router-dom";
 import { RootState } from '../../../../store';
 import axiosInstance from '../../../../utils/axiosInstance';
 import Portal from '../../Portal';
 
-
+// --- Updated Interfaces to match the new API response ---
 // --- Updated Interfaces to match the new API response ---
 interface PriceBreakup {
   component: string;
   netWeight: number | null;
   value: number;
+  finalValue?: number;
 }
 
 interface Product {
@@ -43,6 +45,7 @@ interface Product {
 }
 
 const JewelryProductPage = () => {
+  const [isLiking, setIsLiking] = useState(false);
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { currentUser } = useSelector((state: RootState) => state.auth);
