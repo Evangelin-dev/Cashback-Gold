@@ -154,6 +154,38 @@ const JewelryProductPage = () => {
     }
   };
 
+ const handleBuyNow = () => {
+    if (!currentUser) {
+      navigate("/SignupPopup");
+      return;
+    }
+    if (!product) return;
+
+    const buyNowItem = {
+      id: product.id,
+      ornament: {
+        id: product.id,
+        name: product.name,
+        category: product.category,
+        mainImage: product.mainImage,
+        totalPrice: product.totalPrice,
+        totalPriceAfterDiscount: product.totalPriceAfterDiscount,
+      },
+      quantity: quantity,
+      userId: currentUser.id,
+      createdAt: new Date().toISOString(),
+    };
+
+    const finalTotalAmount = grandTotal * quantity;
+    
+    navigate('/buy-now-checkout', {
+      state: {
+        totalAmount: finalTotalAmount,
+        cartItems: [buyNowItem],
+      }
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center text-xl bg-gradient-to-br from-rose-50 via-white to-purple-50">
@@ -243,7 +275,7 @@ const JewelryProductPage = () => {
                     <ShoppingCart className="h-5 w-5" />
                     <span >{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
                   </button>
-                  <button className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#7a1335] py-4 px-6 font-bold text-white shadow-md transition-all duration-300 ease-in-out hover:bg-[#6b1130] hover:shadow-xl hover:-translate-y-0.5"><Zap className="h-5 w-5" /><span>Buy Now</span></button>
+                  <button onClick={handleBuyNow} className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#7a1335] py-4 px-6 font-bold text-white shadow-md transition-all duration-300 ease-in-out hover:bg-[#6b1130] hover:shadow-xl hover:-translate-y-0.5"><Zap className="h-5 w-5" /><span>Buy Now</span></button>
                 </div>
               </div>
             </div>

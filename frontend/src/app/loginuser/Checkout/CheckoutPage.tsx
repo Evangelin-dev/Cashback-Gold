@@ -210,7 +210,7 @@ const CheckoutPage = () => {
         </div>
       </div>
       
-      {showSuccessPopup && (<Portal><div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div className="m-4 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl"><h3 className="text-xl font-bold text-green-600">Order Placed!</h3><p className="mt-2 text-gray-600">Your order is confirmed. Thank you for your purchase!</p><div className="mt-6 flex justify-center gap-4"><button onClick={() => navigate('/users')} className="rounded-lg bg-green-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-green-700">View Orders</button></div></div></div></Portal>)}
+      {showSuccessPopup && (<Portal><div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"><div className="m-4 w-full max-w-sm rounded-2xl bg-white p-6 text-center shadow-xl"><h3 className="text-xl font-bold text-green-600">Order Placed!</h3><p className="mt-2 text-gray-600">Your order is confirmed. Thank you for your purchase!</p><div className="mt-6 flex justify-center gap-4"><button onClick={() => navigate('/user')} className="rounded-lg bg-green-600 px-6 py-2.5 font-semibold text-white transition-colors hover:bg-green-700">View Orders</button></div></div></div></Portal>)}
     </>
   );
 };
