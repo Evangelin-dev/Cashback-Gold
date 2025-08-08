@@ -3,7 +3,7 @@ package com.cashback.gold.service;
 import com.cashback.gold.dto.*;
 import com.cashback.gold.entity.User;
 import com.cashback.gold.exception.InvalidArgumentException;
-import com.cashback.gold.repository.UserRepository;
+import com.cashback.gold.repository.*;
 import com.cashback.gold.security.UserPrincipal;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
@@ -11,11 +11,16 @@ import org.springframework.stereotype.Service;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.math.BigDecimal;
+
 @RequiredArgsConstructor
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserCashbackGoldPaymentRepository userCashbackGoldPaymentRepository;
+    private final UserGoldPlantEnrollmentRepository userGoldPlantEnrollmentRepository;
+    private final UserSavingPaymentRepository userSavingPaymentRepository;
 
     public Page<UserResponse> getUsersByTypePaginated(String type, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
@@ -76,6 +81,22 @@ public class UserService {
                 user.getState(),
                 user.getCountry()
         );
+    }
+
+    public BigDecimal getTotalInvestment(Long userId) {
+        Double saving = userSavingPaymentRepository.getTotalSavingInvestment(userId);
+        Double cashback = userCashbackGoldPaymentRepository.getTotalCashbackGoldInvestment(userId);
+        Double plant = userGoldPlantEnrollmentRepository.getTotalGoldPlantInvestment(userId);
+
+        return BigDecimal.valueOf(saving + cashback + plant);
+    }
+
+    public BigDecimal getCurrentMonthInvestment(Long userId) {
+        Double saving = userSavingPaymentRepository.getCurrentMonthSavingInvestment(userId);
+        Double cashback = userCashbackGoldPaymentRepository.getCurrentMonthCashbackInvestment(userId);
+        Double plant = userGoldPlantEnrollmentRepository.getCurrentMonthGoldPlantInvestment(userId);
+
+        return BigDecimal.valueOf(saving + cashback + plant);
     }
 
 }
