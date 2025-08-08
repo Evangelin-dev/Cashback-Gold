@@ -68,6 +68,7 @@
 
 package com.cashback.gold.controller;
 
+import com.cashback.gold.dto.BuyNowRequest;
 import com.cashback.gold.dto.OrderRequest;
 import com.cashback.gold.dto.OrnamentCheckoutRequest;
 import com.cashback.gold.dto.OrnamentPaymentCallbackRequest;
@@ -166,4 +167,13 @@ public class OrderHistoryController {
             return ResponseEntity.badRequest().body(e.getMessage());
         }
     }
+
+    @PostMapping("/checkout/buy-now")
+    public ResponseEntity<?> buyNow(
+            @AuthenticationPrincipal UserPrincipal user,
+            @RequestBody BuyNowRequest request
+    ) {
+        return ResponseEntity.ok(orderHistoryService.initiateBuyNowOrnament(user, request));
+    }
+
 }

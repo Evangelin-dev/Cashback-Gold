@@ -184,6 +184,7 @@
 
 package com.cashback.gold.service;
 
+import com.cashback.gold.dto.BuyNowRequest;
 import com.cashback.gold.dto.OrderRequest;
 import com.cashback.gold.dto.OrnamentCheckoutRequest;
 import com.cashback.gold.dto.OrnamentPaymentCallbackRequest;
@@ -224,6 +225,7 @@ public class OrderHistoryService {
     private final CommissionRepository commissionRepo;
     private final MetalRateRepository metalRateRepository;
     private final RazorpayService razorpayService;
+    private final OrnamentRepository ornamentRepository;
 
     @Value("${razorpay.key.id}")
     private String razorpayKeyId;
@@ -675,4 +677,69 @@ public class OrderHistoryService {
             throw new InvalidArgumentException("Error verifying payment: " + e.getMessage());
         }
     }
+
+    @Transactional
+    public Map<String, Object> initiateBuyNowOrnament(UserPrincipal user, BuyNowRequest request) {
+        Ornament ornament = ornamentRepository.findById(request.getOrnamentId())
+                .orElseThrow(() -> new InvalidArgumentException("Invalid ornament"));
+
+        if (request.getQuantity() <= 0) {
+            throw new InvalidArgumentException("Invalid quantity");
+        }
+
+        double basePrice = ornament.getTotalPriceAfterDiscount() * request.getQuantity();
+        double itemGst = Math.round(basePrice * ornamentGstRate * 100.0) / 100.0;
+        double total = basePrice + itemGst;
+
+        String address = String.join(", ",
+                request.getAddressLine1(),
+                request.getAddressLine2() != null ? request.getAddressLine2() : "",
+                request.getCity(),
+                request.getState(),
+                request.getPostalCode()
+        );
+
+        boolean isFirstOrder = repository.countByUserId(user.getId()) == 0;
+        double discount = isFirstOrder ? Math.round(total * firstOrderDiscountRate * 100.0) / 100.0 : 0.0;
+        double subtotal = total - discount;
+        double cgst = Math.round(subtotal * cgstRate * 100.0) / 100.0;
+        double sgst = Math.round(subtotal * sgstRate * 100.0) / 100.0;
+        double gst = cgst + sgst;
+        double finalAmount = subtotal + gst;
+
+        String receiptId = "ORN-" + UUID.randomUUID();
+        Order razorpayOrder = razorpayService.createOrder(BigDecimal.valueOf(finalAmount), receiptId);
+        razorpayService.savePayment(razorpayOrder.get("id"), null, null, BigDecimal.valueOf(finalAmount), "ORNAMENTS", null);
+
+        OrderHistory order = OrderHistory.builder()
+                .orderId(receiptId)
+                .userId(user.getId())
+                .customerName(user.getUsername())
+                .razorpayOrderId(razorpayOrder.get("id").toString())
+                .customerType(user.getRole().toLowerCase())
+                .planType("ORNAMENT")
+                .planName(ornament.getName() + " x" + request.getQuantity())
+                .duration("-")
+                .amount(finalAmount)
+                .paymentMethod("PENDING")
+                .status("pending")
+                .address(address)
+                .createdAt(LocalDateTime.now())
+                .cgst(cgst)
+                .sgst(sgst)
+                .gst(gst)
+                .build();
+
+        repository.save(order);
+
+        Map<String, Object> response = new HashMap<>();
+        response.put("orderId", razorpayOrder.get("id"));
+        response.put("amount", finalAmount);
+        response.put("currency", "INR");
+        response.put("key", razorpayService.getKeyId());
+        response.put("receipt", receiptId);
+
+        return response;
+    }
+
 }
