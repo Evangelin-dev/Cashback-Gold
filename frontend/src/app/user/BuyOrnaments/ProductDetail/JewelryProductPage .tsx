@@ -72,13 +72,14 @@ const JewelryProductPage = () => {
       setSimilarProducts([]);
       try {
         const productResponse = await axiosInstance.get<Product>(`/admin/ornaments/${id}`);
+        console.log(productResponse.data, 'prd');
         const mainProduct = productResponse.data;
 
         setProduct(mainProduct);
         setSelectedImage(0);
         setQuantity(1);
 
-      
+
         if (currentUser) {
           try {
             const isInWishlist = await dispatch(checkIfInWishlist({ ornamentId: mainProduct.id })).unwrap();
@@ -166,9 +167,13 @@ const JewelryProductPage = () => {
     return (<div className="min-h-screen flex items-center justify-center text-xl text-red-500"><div>{error || "Product not found."}</div></div>);
   }
 
+
+  const makingCharges = product.makingChargePercent;
+
+  const grandTotal = product.totalPriceAfterDiscount;
   const productImages = [product.mainImage, ...product.subImages].filter(Boolean);
   const keyFeatures = [product.description1, product.description2, product.description3].filter(Boolean);
-  
+
   return (
     <div className="min-h-screen mt-3 bg-gradient-to-br from-rose-50 via-white to-purple-50 pt-16">
       <div className="relative overflow-hidden">
@@ -249,48 +254,76 @@ const JewelryProductPage = () => {
             <div className="p-6">
               {activeTab === 'details' && (<div className="grid md:grid-cols-2 gap-6"> <div> <h3 className="font-bold text-[#7a1335] mb-3">{product.description}</h3> <div className="space-y-2">{keyFeatures.map((point, idx) => (<div key={idx} className="flex items-start space-x-2 group"><div className="w-2 h-2 bg-[#7a1335] rounded-full mt-2 flex-shrink-0 group-hover:scale-125 transition-transform"></div><span className="text-sm text-[#7a1335]/80">{point}</span></div>))}</div></div><div className="bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-xl p-4"><h4 className="font-semibold text-[#7a1335] mb-2">Care Instructions</h4><ul className="text-sm text-[#7a1335]/80 space-y-1"><li>• Store in provided jewelry box</li><li>• Clean with soft cloth regularly</li><li>• Avoid exposure to chemicals</li><li>• Professional cleaning recommended</li></ul></div></div>)}
               {activeTab === 'pricing' && (
-                <div className="bg-gradient-to-br from-[#7a1335]/5 to-purple-100 rounded-xl p-4">
-                  <h3 className="font-bold text-[#7a1335] mb-4">Price Breakdown</h3>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
-                      <thead>
-                        <tr className="border-b border-[#7a1335]/20">
-                          <th className="text-left py-2 px-2 text-[#7a1335] font-semibold">Component</th>
-                          <th className="text-left py-2 px-2 text-[#7a1335] font-semibold">Net Weight</th>
-                          <th className="text-left py-2 px-2 text-[#7a1335] font-semibold">Value</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {product.priceBreakups.map((row, idx) => (
-                          <tr key={idx} className="hover:bg-white/50 transition-colors">
-                            <td className="py-2 px-2 font-medium text-[#7a1335]">{row.component}</td>
-                            <td className="py-2 px-2 text-[#7a1335]">{row.netWeight != null ? row.netWeight.toFixed(2) + 'g' : 'N/A'}</td>
-                            <td className="py-2 px-2 font-bold text-[#7a1335]">{row.value != null ? new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(row.value) : 'N/A'}</td>
+                <div className="overflow-x-auto">
+                  <table className="w-full min-w-[600px] text-sm text-left">
+                    <thead>
+                      <tr className="border-b-2 border-gray-200">
+                        <th className="py-3 px-2 font-semibold text-gray-500 uppercase tracking-wider">Product Details</th>
+                        <th className="py-3 px-2 font-semibold text-gray-500 uppercase tracking-wider text-right">Rate</th>
+                        <th className="py-3 px-2 font-semibold text-gray-500 uppercase tracking-wider text-right">Weight</th>
+                        <th className="py-3 px-2 font-semibold text-gray-500 uppercase tracking-wider text-right">Discount</th>
+                        <th className="py-3 px-2 font-semibold text-gray-500 uppercase tracking-wider text-right">Value</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-200">
+                      {product.priceBreakups.map((item, idx) => {
+                        const isGold = item.component.toLowerCase().includes('gold');
+                        return (
+                          <tr key={`item-${idx}`}>
+                            <td className="py-3 px-2">
+                              <div className="flex items-center gap-3">
+                                <div className={`w-6 h-6 rounded-full border-2 ${isGold ? 'bg-yellow-400 border-yellow-500' : 'bg-gray-300 border-gray-400'}`}></div>
+                                <div>
+                                  <div className="font-bold text-gray-800">{item.component}</div>
+                                  {isGold && <div className="text-xs text-gray-500">{product.purity}</div>}
+                                </div>
+                              </div>
+                            </td>
+                            <td className="py-3 px-2 text-right font-medium text-gray-700">{isGold ? `₹${product.goldPerGramPrice.toLocaleString('en-IN')}/g` : '-'}</td>
+                            <td className="py-3 px-2 text-right font-medium text-gray-700">{item.netWeight?.toFixed(3)}g</td>
+                            <td className="py-3 px-2 text-right font-medium text-gray-700">-</td>
+                            <td className="py-3 px-2 text-right font-bold text-gray-800">₹{item.value.toLocaleString('en-IN')}</td>
                           </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                    <div className="mt-4 pt-4 border-t border-[#7a1335]/20 text-right space-y-1">
-                       <div className="flex justify-end items-center gap-4">
-                            <span className="text-gray-600">Sub-total:</span>
-                            <span className="font-medium text-gray-700 w-32 text-left">
-                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.totalPrice)}
-                            </span>
-                        </div>
-                        <div className="flex justify-end items-center gap-4">
-                            <span className="text-green-600">Discount:</span>
-                            <span className="font-medium text-green-600 w-32 text-left">
-                                - {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.discount)}
-                            </span>
-                        </div>
-                        <div className="flex justify-end items-center gap-4 text-xl font-bold text-[#7a1335] mt-2">
-                            <span className="">Total:</span>
-                            <span className="w-32 text-left">
-                                {new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' }).format(product.totalPriceAfterDiscount)}
-                            </span>
-                        </div>
-                    </div>
-                  </div>
+                        );
+                      })}
+
+                      <tr>
+                        <td className="py-3 px-2 font-bold text-gray-800">Making Charges</td>
+                        <td className="py-3 px-2 text-right font-medium text-gray-700">-</td>
+                        <td className="py-3 px-2 text-right font-medium text-gray-700">-</td>
+                        <td className="py-3 px-2 text-right font-medium text-gray-700">-</td>
+                        <td className="py-3 px-2 text-right font-bold text-gray-800">{makingCharges.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}%</td>
+                      </tr>
+                    </tbody>
+                    
+                    <tfoot className="border-t-2 border-gray-300">
+                      <tr>
+                        <td colSpan={2} className="py-2 px-2 font-bold text-gray-800">Sub Total</td>
+                        <td className="py-2 px-2 text-right">
+                          <div className="font-medium text-gray-700">{product.grossWeight.toFixed(3)}g</div>
+                          <div className="text-xs text-gray-500">Gross Wt.</div>
+                        </td>
+                        <td className="py-2 px-2 text-right font-medium text-gray-700">-</td>
+                        <td className="py-2 px-2 text-right font-bold text-gray-800">₹{product.totalPrice.toLocaleString('en-IN')}</td>
+                      </tr>
+
+                      <tr>
+                        <td colSpan={3} className="py-2 px-2 font-bold text-gray-800">Discount</td>
+                        <td className="py-2 px-2 text-right font-bold text-green-600">- ₹{product.discount.toLocaleString('en-IN')}</td>
+                        <td className="py-2 px-2 text-right font-medium text-gray-700">-</td>
+                      </tr>
+                      
+                       <tr className="border-t border-gray-200">
+                        <td colSpan={4} className="py-2 px-2 font-bold text-gray-800">Subtotal after Discount</td>
+                        <td className="py-2 px-2 text-right font-bold text-gray-800">₹{product.totalPriceAfterDiscount.toLocaleString('en-IN')}</td>
+                      </tr>
+
+                      <tr className="border-t-2 border-gray-300 bg-gray-100">
+                        <td colSpan={4} className="py-4 px-2 text-xl font-bold text-[#7a1335]">Grand Total</td>
+                        <td className="py-4 px-2 text-xl font-bold text-[#7a1335] text-right">₹{grandTotal.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                      </tr>
+                    </tfoot>
+                  </table>
                 </div>
               )}
             </div>
