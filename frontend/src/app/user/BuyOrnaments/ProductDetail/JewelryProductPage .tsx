@@ -43,7 +43,7 @@ interface Product {
 }
 
 const JewelryProductPage = () => {
-  const [isLiking, setIsLiking] = useState(false);
+ 
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useDispatch<AppDispatch>();
