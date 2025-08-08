@@ -48,7 +48,7 @@ const Footer = () => {
             >
               <li>
                 <a
-                  href="/about-us"
+                  href="/aboutus"
                   className="text-dark text-decoration-none"
                 >
                   About Us

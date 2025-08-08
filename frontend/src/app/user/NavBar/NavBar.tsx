@@ -9,7 +9,7 @@ import { logoutUser } from "../../features/slices/authSlice";
 
 export const MENU = [
 	{ name: "Home", link: "/" },
-	{ name: "About Us", link: "/about-us" },
+	{ name: "About Us", link: "/aboutus" },
 	{ name: "Buy Ornaments", link: "buyornaments" },
 	{ name: "Contact Us", link: "/contactus" },
 ];
@@ -29,7 +29,6 @@ const NavBar = () => {
 
 	const userMenuRef = useRef<HTMLDivElement>(null);
 
-	// Handle clicking outside the user menu to close it
 	useEffect(() => {
 		const handleClickOutside = (event: MouseEvent) => {
 			if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
@@ -101,7 +100,7 @@ const NavBar = () => {
 				</div>
 			</div>
 			{/* Main nav, LNavBar style */}
-			<nav className={`fixed left-0 right-0 z-30 w-full border-b border-red-100/50 transition-all duration-300 ease-in-out top-8 md:top-10 bg-white shadow-md`}>
+			<nav className={`fixed left-0 right-0 z-40 w-full border-b border-red-100/50 transition-all duration-300 ease-in-out top-8 md:top-10 bg-white shadow-md`}>
 				<div className="max-w-[1200px] mx-auto flex items-center justify-between px-2 md:px-6 w-full relative h-12">
 					{/* Logo & All Categories */}
 					<div className="flex items-center gap-2 md:gap-4 min-w-[50px]">
@@ -112,14 +111,14 @@ const NavBar = () => {
 							type="button"
 							onClick={() => setHovered(hovered === "categories" ? null : "categories")}
 							onMouseEnter={() => setHovered("categories")}
-							className={`flex items-center gap-1 px-2 py-1 rounded-md font-semibold text-xs text-[#6a0822] bg-white border border-[#6a0822] hover:bg-[#6a0822] hover:text-white transition-all duration-200 focus:outline-none whitespace-nowrap`}
+							className={`flex items-center gap-1 px-2 py-1 rounded-md font-semibold text-xs text-[#6a0822] bg-white border border-[#6a0822] hover:bg-[#6a0822] hover:text-black transition-all duration-200 focus:outline-none whitespace-nowrap`}
 						>
 							All Categories
 							<ChevronDown size={12} className={`ml-1 transition-transform duration-200 ${hovered === "categories" ? "rotate-180" : "rotate-0"}`} />
 						</button>
 						{hovered === "categories" && (
 							<div
-								className="absolute left-0 top-12 bg-white rounded-xl shadow-lg border border-gray-200 w-[220px] md:w-[400px] z-50 p-2 md:p-4"
+								className="absolute left-0 top-12 z-50 bg-white rounded-xl shadow-lg border border-gray-200 w-[220px] md:w-[400px]  p-2 md:p-4"
 								onMouseLeave={() => setHovered(null)}
 							>
 								<h3 className="text-xs md:text-base font-semibold text-[#6a0822] mb-1 md:mb-2">Browse by Category</h3>

@@ -1,5 +1,5 @@
 import { Award, Check, Crown, Eye, Filter, Loader, ShoppingCart, Sparkles } from 'lucide-react';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { useNavigate } from "react-router-dom";
 import { CATEGORY_TREE, products } from '../../../../constants';
@@ -34,6 +34,33 @@ const BuyOrnamentsPage = () => {
   const [isAddingToCart, setIsAddingToCart] = useState<number | null>(null);
   const [addedToCart, setAddedToCart] = useState<Set<number>>(new Set());
 
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  // useEffect to handle clicks outside the dropdown
+  useEffect(() => {
+    // Function to call when a click is detected
+    const handleClickOutside = (event: MouseEvent) => {
+      // If the dropdown is open and the click is outside the ref's current element
+      if (dropdownOpen && dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setDropdownOpen(false); // Close the dropdown
+      }
+    };
+
+    // Add event listener when the component mounts
+    document.addEventListener("mousedown", handleClickOutside);
+
+    // Clean up the event listener when the component unmounts
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [dropdownOpen]);
+
+  useEffect(() => {
+    if (!dropdownOpen) { // a small addition to re-fetch when closing dropdown if needed. or remove
+      fetchOrnaments(0);
+    }
+  }, [dropdownOpen]);
+
 
   const fetchOrnaments = useCallback(async (pageToFetch: number) => {
     if (pageToFetch === 0) {
@@ -42,6 +69,7 @@ const BuyOrnamentsPage = () => {
       setLoadingMore(true);
     }
     setError(null);
+
 
     try {
       const response = await axiosInstance.get<Product[]>(`/admin/ornaments?page=${pageToFetch}&size=${itemsPerPage}`);
@@ -206,6 +234,11 @@ const BuyOrnamentsPage = () => {
             el.removeEventListener('touchend', onTouchEnd);
           };
         }, [heroIndex, heroSlides.length]);
+
+
+
+
+
         return (
           <div className="bg-[#7a1335] min-h-[50vh] flex items-center justify-center relative overflow-hidden pt-6 px-2 select-none" ref={heroRef} style={{ cursor: 'grab' }}>
             {/* Left Arrow */}
@@ -270,7 +303,7 @@ const BuyOrnamentsPage = () => {
               {dropdownMain === "All" ? "Select Category" : `${dropdownMain}${dropdownSub ? ` / ${dropdownSub}` : ""}${dropdownItem ? ` / ${dropdownItem}` : ""}`}
             </button>
             {dropdownOpen && (
-              <div className="absolute left-0 top-[110%] bg-white border border-[#eee] rounded-xl min-w-[260px] z-30 shadow-lg p-2">
+              <div ref={dropdownRef} className="custom-scrollbar absolute left-0 top-[110%] bg-white border border-[#eee] rounded-xl min-w-[260px] z-30 shadow-lg p-2 max-h-96 overflow-y-auto">
                 <div>
                   <div className="font-semibold text-[#7a1335] mb-2">Main Category</div>
                   {CATEGORY_TREE.map(main => (
@@ -300,15 +333,25 @@ const BuyOrnamentsPage = () => {
                 {dropdownMain !== "All" && dropdownSub && getItems().length > 0 && (
                   <div className="mt-4">
                     <div className="font-semibold text-[#7a1335] mb-2">Item</div>
-                    {getItems().map((item: string) => (
-                      <button
-                        key={item}
-                        className={`w-full text-left px-2 py-1.5 rounded-md cursor-pointer font-${dropdownItem === item ? 'bold' : 'medium'} text-xs ${dropdownItem === item ? 'text-[#7a1335] bg-[#f7f2f5]' : 'text-[#374151] bg-transparent'}`}
-                        onClick={() => { setDropdownItem(item); setDropdownOpen(false); }}
-                      >
-                        {item}
-                      </button>
-                    ))}
+                    {getItems().map((item: any) => {
+                      const isString = typeof item === 'string';
+                      const key = isString ? item : item.name;
+                      const value = isString ? item : item.name;
+
+                      return (
+                        <button
+                          key={key}
+                          className={`w-full text-left px-2 py-1.5 rounded-md cursor-pointer font-${dropdownItem === value ? 'bold' : 'medium'} text-xs ${dropdownItem === value ? 'text-[#7a1335] bg-[#f7f2f5]' : 'text-[#374151] bg-transparent'
+                            }`}
+                          onClick={() => {
+                            setDropdownItem(value);
+                            setDropdownOpen(false);
+                          }}
+                        >
+                          {value}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -523,6 +566,28 @@ const BuyOrnamentsPage = () => {
           </div>
         </div>
       </div>
+       <style>{`
+        .custom-scrollbar::-webkit-scrollbar {
+          width: 6px; /* Set the width of the scrollbar */
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+          background: #fdf8f9; /* Color of the tracking area */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+          background-color: #7a1335; /* The maroon color you want */
+          border-radius: 10px; /* Round the scrollbar thumb */
+          border: 1px solid #fdf8f9; /* Optional: adds a slight border around the thumb */
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+          background-color: #5e0d26; /* A darker maroon on hover */
+        }
+
+        /* For Firefox */
+        .custom-scrollbar {
+          scrollbar-width: thin;
+          scrollbar-color: #7a1335 #fdf8f9; /* thumb color and track color */
+        }
+      `}</style>
     </div>
   );
 };

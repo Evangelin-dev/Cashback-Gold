@@ -79,7 +79,7 @@ export interface LoginResponse extends ApiResponse {
 export interface Ornament {
   id: number;
   name: string;
-  totalGram: number;
+  totalGram?: number;
   totalPrice?: number;
   meta: string;
   category: string;
@@ -143,7 +143,7 @@ export interface PriceBreakup {
 export interface Product {
   id: number;
   name: string;
-  price: number;
+  price?: number;
   category: string;
   subCategory: string;
   gender: string;

@@ -5,11 +5,9 @@ import { useNavigate, useParams } from "react-router-dom";
 import { AppDispatch, RootState } from '../../../../store';
 import axiosInstance from '../../../../utils/axiosInstance';
 import { addToCart } from '../../../features/thunks/cartThunks';
-// --- IMPORT WISHLIST THUNKS ---
 import { addToWishlist, checkIfInWishlist, removeFromWishlist } from '../../../features/thunks/wishlistThunks';
 
 
-// --- Updated Interfaces to match the new API response ---
 interface PriceBreakup {
   component: string;
   netWeight: number | null;
@@ -35,13 +33,12 @@ interface Product {
   mainImage: string;
   subImages: string[];
   priceBreakups: PriceBreakup[];
-  // New detailed pricing fields
   goldPerGramPrice: number;
   makingChargePercent: number;
   grossWeight: number;
   discount: number;
-  totalPrice: number; // Price before discount
-  totalPriceAfterDiscount: number; // Final price
+  totalPrice: number;
+  totalPriceAfterDiscount: number;
 }
 
 const JewelryProductPage = () => {
@@ -59,9 +56,8 @@ const JewelryProductPage = () => {
   const [quantity, setQuantity] = useState(1);
   const [isAddingToCart, setIsAddingToCart] = useState(false);
 
-  // --- NEW WISHLIST STATES ---
   const [isWishlisted, setIsWishlisted] = useState(false);
-  const [isLiking, setIsLiking] = useState(false); // For loading state of the heart icon
+  const [isLiking, setIsLiking] = useState(false);
 
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -82,17 +78,17 @@ const JewelryProductPage = () => {
         setSelectedImage(0);
         setQuantity(1);
 
-        // --- NEW: Check wishlist status on load ---
+      
         if (currentUser) {
           try {
             const isInWishlist = await dispatch(checkIfInWishlist({ ornamentId: mainProduct.id })).unwrap();
             setIsWishlisted(isInWishlist);
           } catch (wishlistError) {
             console.error("Failed to check wishlist status:", wishlistError);
-            setIsWishlisted(false); // Default to not liked on error
+            setIsWishlisted(false);
           }
         } else {
-          setIsWishlisted(false); // Not logged in, so not liked
+          setIsWishlisted(false);
         }
 
         if (mainProduct?.itemType) {
@@ -133,7 +129,6 @@ const JewelryProductPage = () => {
     }
   };
 
-  // --- NEW: Function to handle adding/removing from wishlist ---
   const handleToggleWishlist = async () => {
     if (!currentUser) {
       navigate("/SignupPopup");
@@ -239,9 +234,9 @@ const JewelryProductPage = () => {
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">
-                  <button onClick={handleAddToCart} disabled={isAddingToCart} className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-[#7a1335] bg-transparent py-4 px-6 font-bold text-[#7a1335] transition-all duration-300 ease-in-out hover:bg-[#7a1335] hover:text-white hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
+                  <button onClick={handleAddToCart} disabled={isAddingToCart} className="flex w-full items-center justify-center gap-3 rounded-2xl border-2 border-[#7a1335] bg-transparent py-4 px-6 font-bold text-[#7a1335] transition-all duration-300 ease-in-out hover:bg-[#7a1335] hover:text-black hover:shadow-lg disabled:opacity-60 disabled:cursor-not-allowed">
                     <ShoppingCart className="h-5 w-5" />
-                    <span>{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
+                    <span >{isAddingToCart ? 'Adding...' : 'Add to Cart'}</span>
                   </button>
                   <button className="flex w-full items-center justify-center gap-3 rounded-2xl bg-[#7a1335] py-4 px-6 font-bold text-white shadow-md transition-all duration-300 ease-in-out hover:bg-[#6b1130] hover:shadow-xl hover:-translate-y-0.5"><Zap className="h-5 w-5" /><span>Buy Now</span></button>
                 </div>
