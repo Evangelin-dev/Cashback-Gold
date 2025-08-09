@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Entity
@@ -38,6 +39,11 @@ public class UserSavingEnrollment {
     private Double totalBonus;
 
     private Integer extraMonths = 0;
+
+    private String recallAction;               // SELL_GOLD or BUY_JEWEL
+    private Double recallServiceCharge;        // nullable for BUY_JEWEL
+    private Double recallFinalAmount;          // nullable for BUY_JEWEL
+    private LocalDateTime recallAt;            // when recall happened
 
     @OneToMany(mappedBy = "enrollment", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<UserSavingPayment> payments;

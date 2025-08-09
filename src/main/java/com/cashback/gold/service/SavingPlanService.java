@@ -2,9 +2,12 @@ package com.cashback.gold.service;
 
 import com.cashback.gold.dto.SavingPlanRequest;
 import com.cashback.gold.dto.SavingPlanResponse;
+import com.cashback.gold.dto.SavingPlanTerminationAdminRow;
 import com.cashback.gold.entity.SavingPlan;
+import com.cashback.gold.entity.UserSavingEnrollment;
 import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.SavingPlanRepository;
+import com.cashback.gold.repository.UserSavingEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -15,6 +18,7 @@ import java.util.List;
 public class SavingPlanService {
 
     private final SavingPlanRepository repository;
+    private final UserSavingEnrollmentRepository userSavingEnrollmentRepository;
 
     public List<SavingPlanResponse> getAllPlans() {
         return repository.findAll().stream()
@@ -89,6 +93,25 @@ public class SavingPlanService {
 
     public void deletePlan(Long id) {
         repository.deleteById(id);
+    }
+
+    public List<SavingPlanTerminationAdminRow> listTerminated() {
+        return userSavingEnrollmentRepository.findByStatus(UserSavingEnrollment.EnrollmentStatus.TERMINATED)
+                .stream()
+                .map(e -> SavingPlanTerminationAdminRow.builder()
+                        .enrollmentId(e.getId())
+                        .userName(e.getUser().getFullName())
+                        .userEmail(e.getUser().getEmail())
+                        .planName(e.getSavingPlan().getName())
+                        .accumulatedAmount(e.getAccumulatedAmount())
+                        .accumulatedGoldGrams(e.getAccumulatedGoldGrams())
+                        .serviceCharge(e.getRecallServiceCharge())
+                        .finalAmount(e.getRecallFinalAmount())
+                        .status(e.getStatus().name())
+                        .recallAt(e.getRecallAt())
+                        .recallAction(e.getRecallAction())
+                        .build())
+                .toList();
     }
 }
 

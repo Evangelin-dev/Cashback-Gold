@@ -6,11 +6,13 @@ import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.*;
 import com.cashback.gold.security.UserPrincipal;
 import com.razorpay.Order;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.*;
 
 @Service
@@ -196,6 +198,41 @@ public class UserSavingPlanService {
 
 
 
+//    public SavingPlanRecallResponse recall(SavingPlanRecallRequest request, UserPrincipal principal) {
+//        User user = userRepo.findById(principal.getId()).orElseThrow();
+//        UserSavingEnrollment enrollment = enrollRepo.findById(request.getEnrollmentId()).orElseThrow();
+//
+//        if (!enrollment.getUser().getId().equals(user.getId()))
+//            throw new InvalidArgumentException("Unauthorized");
+//
+//        if (request.getAction().equals("SELL_GOLD")) {
+//            double serviceCharge = enrollment.getAccumulatedAmount() * 0.04;
+//            double finalAmount = enrollment.getAccumulatedAmount() - serviceCharge;
+//
+//            enrollment.setStatus(UserSavingEnrollment.EnrollmentStatus.TERMINATED);
+//            enrollRepo.save(enrollment);
+//
+//            return SavingPlanRecallResponse.builder()
+//                    .action("SELL_GOLD")
+//                    .accumulatedAmount(enrollment.getAccumulatedAmount())
+//                    .accumulatedGoldGrams(enrollment.getAccumulatedGoldGrams())
+//                    .serviceCharge(serviceCharge)
+//                    .finalReturnAmount(finalAmount)
+//                    .build();
+//
+//        } else if (request.getAction().equals("BUY_JEWEL")) {
+//            return SavingPlanRecallResponse.builder()
+//                    .action("BUY_JEWEL")
+//                    .accumulatedAmount(enrollment.getAccumulatedAmount())
+//                    .accumulatedGoldGrams(enrollment.getAccumulatedGoldGrams())
+//                    .redirectTo("/buy-ornaments")
+//                    .build();
+//        } else {
+//            throw new InvalidArgumentException("Invalid action");
+//        }
+//    }
+
+    @Transactional
     public SavingPlanRecallResponse recall(SavingPlanRecallRequest request, UserPrincipal principal) {
         User user = userRepo.findById(principal.getId()).orElseThrow();
         UserSavingEnrollment enrollment = enrollRepo.findById(request.getEnrollmentId()).orElseThrow();
@@ -203,11 +240,16 @@ public class UserSavingPlanService {
         if (!enrollment.getUser().getId().equals(user.getId()))
             throw new InvalidArgumentException("Unauthorized");
 
-        if (request.getAction().equals("SELL_GOLD")) {
-            double serviceCharge = enrollment.getAccumulatedAmount() * 0.04;
-            double finalAmount = enrollment.getAccumulatedAmount() - serviceCharge;
+        if ("SELL_GOLD".equalsIgnoreCase(request.getAction())) {
+            double serviceCharge = round2(enrollment.getAccumulatedAmount() * 0.04);
+            double finalAmount = round2(enrollment.getAccumulatedAmount() - serviceCharge);
 
+            // Persist recall details
             enrollment.setStatus(UserSavingEnrollment.EnrollmentStatus.TERMINATED);
+            enrollment.setRecallAction("SELL_GOLD");
+            enrollment.setRecallServiceCharge(serviceCharge);
+            enrollment.setRecallFinalAmount(finalAmount);
+            enrollment.setRecallAt(LocalDateTime.now());
             enrollRepo.save(enrollment);
 
             return SavingPlanRecallResponse.builder()
@@ -218,7 +260,12 @@ public class UserSavingPlanService {
                     .finalReturnAmount(finalAmount)
                     .build();
 
-        } else if (request.getAction().equals("BUY_JEWEL")) {
+        } else if ("BUY_JEWEL".equalsIgnoreCase(request.getAction())) {
+            // BUY_JEWEL mein terminate NAHI kar rahe ho (as per current logic)
+            enrollment.setRecallAction("BUY_JEWEL");
+            enrollment.setRecallAt(LocalDateTime.now());
+            enrollRepo.save(enrollment);
+
             return SavingPlanRecallResponse.builder()
                     .action("BUY_JEWEL")
                     .accumulatedAmount(enrollment.getAccumulatedAmount())
@@ -229,6 +276,11 @@ public class UserSavingPlanService {
             throw new InvalidArgumentException("Invalid action");
         }
     }
+
+    private double round2(double v) {
+        return new java.math.BigDecimal(v).setScale(2, java.math.RoundingMode.HALF_UP).doubleValue();
+    }
+
 
     public List<SavingPlanEnrollmentResponse> getMyEnrollments(UserPrincipal principal) {
         User user = userRepo.findById(principal.getId()).orElseThrow();

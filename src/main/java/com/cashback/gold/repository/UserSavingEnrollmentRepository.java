@@ -8,4 +8,6 @@ import java.util.List;
 
 public interface UserSavingEnrollmentRepository extends JpaRepository<UserSavingEnrollment, Long> {
     List<UserSavingEnrollment> findByUser(User user);
+    List<UserSavingEnrollment> findByStatus(UserSavingEnrollment.EnrollmentStatus status);
+
 }

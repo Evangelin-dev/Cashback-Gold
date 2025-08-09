@@ -1,6 +1,7 @@
 package com.cashback.gold.controller;
 import com.cashback.gold.dto.SavingPlanRequest;
 import com.cashback.gold.dto.SavingPlanResponse;
+import com.cashback.gold.dto.SavingPlanTerminationAdminRow;
 import com.cashback.gold.service.SavingPlanService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
@@ -39,6 +40,11 @@ public class SavingPlanController {
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         service.deletePlan(id);
         return ResponseEntity.noContent().build();
+    }
+
+    @GetMapping("/terminations")
+    public List<SavingPlanTerminationAdminRow> listTerminations() {
+        return service.listTerminated();
     }
 }
 
