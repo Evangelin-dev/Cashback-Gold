@@ -6,6 +6,8 @@ import com.cashback.gold.dto.OrderResponse;
 import com.cashback.gold.entity.GoldPurchaseOrder;
 import com.cashback.gold.security.UserPrincipal;
 import com.cashback.gold.service.GoldPurchaseOrderService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -17,32 +19,36 @@ import java.util.Map;
 @RestController
 @RequestMapping("/api/gold")
 @RequiredArgsConstructor
+@Tag(name = "Gold Purchase Order Controller", description = "Manage gold purchase orders (Deprecated)")
+@Deprecated
 public class GoldPurchaseOrderController {
 
     private final GoldPurchaseOrderService service;
 
-    // User creates a new purchase order
+    @Operation(summary = "Create a new gold purchase order (User)", deprecated = true)
     @PostMapping("/purchase")
     public ResponseEntity<GoldPurchaseOrder> purchaseGold(
             @RequestBody GoldPurchaseRequest request,
             @AuthenticationPrincipal UserPrincipal userPrincipal
-            ) {
+    ) {
         return ResponseEntity.ok(service.createOrder(userPrincipal, request));
     }
 
-    // Admin views all orders
+    @Operation(summary = "Get all gold purchase orders (Admin)", deprecated = true)
     @GetMapping("/admin/all")
     public ResponseEntity<List<GoldPurchaseOrder>> getAllOrders() {
         return ResponseEntity.ok(service.getAllOrders());
     }
 
-    // User views their own orders
+    @Operation(summary = "Get logged-in user's gold purchase orders (User)", deprecated = true)
     @GetMapping("/user")
-    public ResponseEntity<List<GoldPurchaseOrder>> getUserOrders(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+    public ResponseEntity<List<GoldPurchaseOrder>> getUserOrders(
+            @AuthenticationPrincipal UserPrincipal userPrincipal
+    ) {
         return ResponseEntity.ok(service.getUserOrders(userPrincipal.getId()));
     }
 
-    // Admin changes status of an order
+    @Operation(summary = "Update status of a gold purchase order (Admin)", deprecated = true)
     @PutMapping("/admin/{id}/status")
     public ResponseEntity<GoldPurchaseOrder> updateStatus(
             @PathVariable Long id,
@@ -51,17 +57,18 @@ public class GoldPurchaseOrderController {
         return ResponseEntity.ok(service.updateStatus(id, request.getStatus()));
     }
 
-    // Get current gold rate
+    @Operation(summary = "Get current gold rate", deprecated = true)
     @GetMapping("/rate")
     public ResponseEntity<Map<String, Double>> getGoldRate() {
         return ResponseEntity.ok(Map.of("ratePerGram", service.getCurrentGoldRate()));
     }
 
+    @Operation(summary = "Get my gold purchase orders", deprecated = true)
     @GetMapping("/orders/my")
-    public ResponseEntity<List<OrderResponse>> getMyOrders(@AuthenticationPrincipal UserPrincipal user) {
+    public ResponseEntity<List<OrderResponse>> getMyOrders(
+            @AuthenticationPrincipal UserPrincipal user
+    ) {
         List<OrderResponse> orders = service.getOrdersByUserId(user.getId());
         return ResponseEntity.ok(orders);
     }
-
 }
-
