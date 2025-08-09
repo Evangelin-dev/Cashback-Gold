@@ -935,6 +935,17 @@
         </addColumn>
     </changeSet>
 
+    <!-- 30-2: Store recall details -->
+    <changeSet id="30-2" author="azeem">
+        <addColumn tableName="user_saving_enrollments">
+            <column name="recall_action" type="VARCHAR(20)"/>
+            <column name="recall_service_charge" type="DECIMAL(10,2)"/>
+            <column name="recall_final_amount" type="DECIMAL(10,2)"/>
+            <column name="recall_at" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
+
 
     <changeSet id="31" author="azeem">
         <createTable tableName="user_saving_payments">
