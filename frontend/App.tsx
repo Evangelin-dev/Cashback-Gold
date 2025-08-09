@@ -80,6 +80,7 @@ import GoldPlantSchemes from "./src/app/user/GoldSchemes/goldschemes.tsx";
 import SignupPopup from "./src/app/user/SignupPopup";
 import UserLayout from "./src/app/user/UserLayout";
 import AdminLogin from "./src/app/admin/AdminLogin";
+import ManageSellRequest from "./src/app/admin/ManageSellRequest/managesellRequest";
 import { useDispatch, useSelector } from "react-redux";
 import { AppDispatch, RootState } from "./src/store.ts";
 import { useEffect } from "react";
@@ -120,6 +121,9 @@ const dispatch = useDispatch<AppDispatch>();
           <Route path="/orderhistory" element={<AOrderHistory />} />
           <Route path="/faq" element={<FAQManagement />} />
           <Route path="/support-ticket" element={<SupportTicket />} />
+          <Route path="/sell-request" element={<ManageSellRequest />} />
+
+          
         </Route>
       </Route>
 

@@ -59,6 +59,7 @@ const ChitJewelsPlans = () => {
   const [showPaymentSummary, setShowPaymentSummary] = useState(false);
   // Final payment result popup state
   const [finalPaymentResult, setFinalPaymentResult] = useState<any | null>(null);
+  const [showSupportPopup, setShowSupportPopup] = useState(false);
   const [enrollmentId, setEnrollmentId] = useState<number | null>(null);
 
   // --- DATA FETCHING (Unchanged) ---
@@ -138,7 +139,8 @@ const ChitJewelsPlans = () => {
             setFinalPaymentResult(paymentCallbackRes.data);
             setShowPaymentSummary(false);
           } catch (err) {
-            setSubmitError("Payment succeeded but callback failed. Please contact support.");
+            setSubmitError(null);
+            setShowSupportPopup(true);
           }
         },
         prefill: {
@@ -374,6 +376,19 @@ const ChitJewelsPlans = () => {
                 <div className="flex justify-center">
                   <button onClick={() => { setFinalPaymentResult(null); setSelectedPlan(null); }} className="py-2 px-6 rounded bg-[#7a1335] text-white font-semibold transition-transform hover:scale-105">Close</button>
                 </div>
+              </div>
+            </div>
+          </Portal>
+        )}
+        {showSupportPopup && (
+          <Portal>
+            <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-[1100] p-4 backdrop-blur-sm">
+              <div className="bg-white rounded-2xl p-8 max-w-md w-full flex flex-col items-center">
+                <h3 className="text-xl font-bold mb-4 text-center text-red-700">Payment succeeded but enrollment failed. Please contact support.</h3>
+                <button
+                  className="mt-4 bg-[#7a1335] text-white py-2 px-6 rounded hover:bg-[#991313] font-semibold"
+                  onClick={() => setShowSupportPopup(false)}
+                >Close</button>
               </div>
             </div>
           </Portal>

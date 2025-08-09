@@ -50,6 +50,7 @@ const GoldSIPPlansPage = () => {
   // --- NEW STATE FOR ORDER SUBMISSION ---
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showSupportPopup, setShowSupportPopup] = useState(false);
   const [enrollmentResult, setEnrollmentResult] = useState<any | null>(null);
   // State for custom payment amount
   const [customAmount, setCustomAmount] = useState<string>("");
@@ -137,7 +138,8 @@ const GoldSIPPlansPage = () => {
             setEnrollmentResult(callbackRes.data);
             setShowModal(false);
           } catch (err) {
-            setSubmitError('Payment succeeded but enrollment failed. Please contact support.');
+            setSubmitError(null);
+            setShowSupportPopup(true);
           }
         },
         prefill: {
@@ -407,6 +409,19 @@ const GoldSIPPlansPage = () => {
                 </div>
               </div>
               {submitError && <div className="text-center text-red-600 mb-2 bg-red-50 p-2 rounded-lg text-xs">{submitError}</div>}
+              {showSupportPopup && (
+                <Portal>
+                  <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2">
+                    <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full mx-auto p-8 flex flex-col items-center justify-center">
+                      <h3 className="text-xl font-bold mb-4 text-center text-red-700">Payment succeeded but enrollment failed. Please contact support.</h3>
+                      <button
+                        className="mt-4 bg-yellow-700 text-white py-2 px-6 rounded hover:bg-yellow-800 font-semibold"
+                        onClick={() => setShowSupportPopup(false)}
+                      >Close</button>
+                    </div>
+                  </div>
+                </Portal>
+              )}
               <div className="space-y-2">
                 <button onClick={handleMakePayment} className="w-full bg-yellow-700 text-white py-2 rounded-lg font-semibold hover:bg-yellow-800 transition-colors duration-200 disabled:opacity-60 disabled:cursor-not-allowed text-xs" disabled={isSubmitting}>
                   {isSubmitting ? 'Processing...' : 'Start Cashback Gold Now'}

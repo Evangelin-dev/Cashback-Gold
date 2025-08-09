@@ -30,9 +30,11 @@ interface ProcessedPlan {
 // --- HELPER FUNCTION ---
 const formatCurrency = (amount: number) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', minimumFractionDigits: 0 }).format(amount);
 
+
 const LGoldPlantScheme = () => {
   const [sellPopup, setSellPopup] = useState<{ message: string; success: boolean } | null>(null);
   const [recallResult, setRecallResult] = useState<any | null>(null);
+  const [confirmSell, setConfirmSell] = useState<string | null>(null); // plan id for confirmation
   const navigate = useNavigate();
 
   // --- STATE MANAGEMENT ---
@@ -91,6 +93,7 @@ const LGoldPlantScheme = () => {
   }, [selectedTab, userSchemePlans]);
 
   // Example recall handler for a card
+  // Handles the actual recall API call
   const handleRecall = async (id: string) => {
     try {
       const res = await axiosInstance.post(`/user/gold-plant/recall/${id}`, { id });
@@ -98,6 +101,7 @@ const LGoldPlantScheme = () => {
     } catch (err) {
       setRecallResult({ message: 'Recall failed. Please try again.' });
     }
+    setConfirmSell(null); // Close confirmation popup
   };
 
   return (
@@ -174,9 +178,30 @@ const LGoldPlantScheme = () => {
                     <button
                       className="flex-1 bg-yellow-100 text-yellow-800 py-1.5 px-2 rounded hover:bg-yellow-200 transition-colors text-xs font-semibold"
                       disabled={sellLoading === plan.id}
-                      onClick={() => handleRecall(plan.id)}
+                      onClick={() => setConfirmSell(plan.id)}
                     >{sellLoading === plan.id ? 'Selling...' : 'Sell Gold'}</button>
                   )}
+      {/* --- SELL CONFIRMATION POPUP --- */}
+      {confirmSell && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[9999] p-2">
+            <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full mx-auto p-6 flex flex-col items-center justify-center">
+              <h3 className="text-lg font-bold text-[#6a0822] mb-4 text-center">Confirm to Sell</h3>
+              <p className="text-gray-700 text-sm mb-6 text-center">Are you sure you want to sell this gold plan? This action cannot be undone.</p>
+              <div className="flex gap-4 w-full">
+                <button
+                  className="flex-1 bg-gray-200 text-gray-700 py-2 px-4 rounded hover:bg-gray-300 font-semibold"
+                  onClick={() => setConfirmSell(null)}
+                >Cancel</button>
+                <button
+                  className="flex-1 bg-[#6a0822] text-white py-2 px-4 rounded hover:bg-[#7a1335] font-semibold"
+                  onClick={() => handleRecall(confirmSell)}
+                >Sell Gold</button>
+              </div>
+            </div>
+          </div>
+        </Portal>
+      )}
                 </div>
                 {sellMessage[plan.id] && (
                   <div className="mt-2 text-xs text-center text-green-600">{sellMessage[plan.id]}</div>

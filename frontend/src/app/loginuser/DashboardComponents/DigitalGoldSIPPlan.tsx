@@ -81,17 +81,14 @@ const LDigitalGoldSIPPlan = () => {
   const stats = useMemo(() => {
     const active = userSIPPlans.filter(p => p.status === 'enrolled').length;
     const recalled = userSIPPlans.filter(p => p.recalled).length;
-    const activated = userSIPPlans.filter(p => p.activated).length;
     return [
       { label: 'Active', count: active, icon: CheckCircle },
-      { label: 'Activated', count: activated, icon: Sparkles },
       { label: 'Recalled', count: recalled, icon: ShieldX }
     ];
   }, [userSIPPlans]);
 
   const plansToShow = useMemo(() => {
     if (selectedTab === 'active') return userSIPPlans.filter(p => p.status === 'enrolled');
-    if (selectedTab === 'activated') return userSIPPlans.filter(p => p.activated);
     if (selectedTab === 'recalled') return userSIPPlans.filter(p => p.recalled);
     return [];
   }, [selectedTab, userSIPPlans]);
@@ -206,11 +203,8 @@ const LDigitalGoldSIPPlan = () => {
                       enrollmentId: Number(buyModalPlan.id),
                       amountPaid: Number(buyAmount)
                     };
-                    console.log('Sending payload to /api/cashback-gold-user/pay/initiate:', payload);
                     const initiateRes = await axiosInstance.post('/api/cashback-gold-user/pay/initiate', payload);
-                    // Debug: Log full response
-                    console.log('Initiate API response:', initiateRes.data);
-                    const { razorpayOrderId } = initiateRes.data;
+                    const { razorpayOrderId, amount } = initiateRes.data;
                     if (!razorpayOrderId) {
                       setApiMessage('Payment initiation failed. Missing Razorpay order ID.');
                       setApiLoading(false);
@@ -223,11 +217,48 @@ const LDigitalGoldSIPPlan = () => {
                       name: 'Gold SIP Buy',
                       description: buyModalPlan.schemeName,
                       order_id: razorpayOrderId,
-                      handler: function (response: any) {
-                        setApiMessage('Buy request successful!');
-                        setBuyModalPlan(null);
-                        setBuyAmount('');
-                        window.location.reload();
+                      handler: async function (response: any) {
+                        try {
+                          await axiosInstance.post('/api/cashback-gold-user/pay/callback', {
+                            enrollmentId: Number(buyModalPlan.id),
+                            amountPaid: Number(buyAmount),
+                            razorpayOrderId,
+                            razorpayPaymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature
+                          });
+                          setBuyModalPlan(null);
+                          setBuyAmount('');
+                          setApiMessage(null);
+                          // Show payment success popup and reload dashboard state
+                          setTimeout(() => {
+                            setApiMessage('Payment successful');
+                            // Refetch plans to update dashboard state
+                            (async () => {
+                              setLoading(true);
+                              setError(null);
+                              try {
+                                const response = await axiosInstance.get('/api/cashback-gold-user/my-enrollments');
+                                const enrollments = response.data || [];
+                                const processed = enrollments.map((enrollment: any): ProcessedSIPPlan => ({
+                                  id: enrollment.enrollmentId?.toString() || '',
+                                  schemeName: enrollment.schemeName || '',
+                                  totalPaid: formatCurrency(enrollment.totalPaid || 0),
+                                  goldAccumulated: (enrollment.goldAccumulated || 0).toFixed(4) + 'g',
+                                  activated: !!enrollment.activated && !enrollment.recalled,
+                                  recalled: !!enrollment.recalled,
+                                  status: (enrollment.status || '').toLowerCase(),
+                                }));
+                                setUserSIPPlans(processed);
+                              } catch (err) {
+                                setError("Could not load your SIP plans at this time.");
+                              } finally {
+                                setLoading(false);
+                              }
+                            })();
+                          }, 500);
+                        } catch (err) {
+                          setApiMessage('Payment succeeded but enrollment failed. Please contact support.');
+                        }
                       },
                       prefill: {},
                       theme: { color: '#6a0822' }
@@ -236,7 +267,6 @@ const LDigitalGoldSIPPlan = () => {
                       const rzp = new window.Razorpay(options);
                       rzp.open();
                     } else {
-                      // Dynamically load Razorpay SDK
                       setApiMessage('Loading payment gateway...');
                       const script = document.createElement('script');
                       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
@@ -304,7 +334,7 @@ const LDigitalGoldSIPPlan = () => {
                     // Call recall API for selling
                     const sellRes = await axiosInstance.post('/api/cashback-gold-user/recall', {
                       enrollmentId: Number(sellModalPlan.id),
-                      mode: 'SELL'
+                      recallType: 'SELL'
                     });
                     setSellResult(sellRes.data);
                     setSellModalPlan(null);
@@ -332,13 +362,14 @@ const LDigitalGoldSIPPlan = () => {
               <button onClick={() => setSellResult(null)} className="absolute top-2 right-2 text-gray-400 hover:text-gray-600"><X size={18} /></button>
               <h3 className="text-lg font-bold text-[#6a0822] mb-2">Sell Successful</h3>
               <div className="space-y-2 bg-gray-50 p-3 rounded text-xs text-gray-600 w-full">
-                <div className="flex justify-between items-center"><span>Scheme Name:</span><span className="font-semibold">{sellResult.scheme?.name}</span></div>
+                <div className="flex justify-between items-center"><span>User Name:</span><span className="font-semibold">{sellResult.userName}</span></div>
+                <div className="flex justify-between items-center"><span>User Email:</span><span className="font-semibold">{sellResult.userEmail}</span></div>
+                <div className="flex justify-between items-center"><span>Scheme Name:</span><span className="font-semibold">{sellResult.schemeName}</span></div>
                 <div className="flex justify-between items-center"><span>Total Amount Paid:</span><span className="font-semibold">₹{sellResult.totalAmountPaid}</span></div>
                 <div className="flex justify-between items-center"><span>Gold Accumulated:</span><span className="font-semibold">{sellResult.goldAccumulated}g</span></div>
+                <div className="flex justify-between items-center"><span>Recall Type:</span><span className="font-semibold">{sellResult.recallType}</span></div>
+                <div className="flex justify-between items-center"><span>Recall Final Amount:</span><span className="font-semibold">₹{sellResult.recallFinalAmount}</span></div>
                 <div className="flex justify-between items-center"><span>Status:</span><span className="font-semibold capitalize">{sellResult.status}</span></div>
-                <div className="flex justify-between items-center"><span>Activated:</span><span className="font-semibold">{sellResult.activated ? 'Yes' : 'No'}</span></div>
-                <div className="flex justify-between items-center"><span>Recalled:</span><span className="font-semibold">{sellResult.recalled ? 'Yes' : 'No'}</span></div>
-                <div className="flex justify-between items-center"><span>Sell Date:</span><span className="font-semibold">{sellResult.createdAt?.slice(0,10)}</span></div>
               </div>
               <div className="mt-4 w-full flex justify-center">
                 <button onClick={() => setSellResult(null)} className="py-2 px-6 rounded bg-yellow-700 text-white font-semibold transition-transform hover:scale-105">Close</button>

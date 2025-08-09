@@ -213,8 +213,139 @@ const LChitJewelsSavingPlan = () => {
                       </div>
                     ) : (
                       <div className="flex items-center space-x-2 mt-3 pt-2 border-t">
-                        <button className="flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold" onClick={() => handleSell(plan)}>Sell Gold</button>
-                        <button className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold" onClick={() => handleNextPay(plan)}>Buy Jewel</button>
+                        <button className="flex-1 bg-yellow-600 text-white py-1.5 px-2 rounded hover:bg-yellow-700 transition-colors text-xs font-semibold" onClick={async () => {
+                          setApiLoading(true);
+                          setApiMessage(null);
+                          try {
+                            const res = await axiosInstance.post('/api/user-savings/recall', {
+                              enrollmentId: Number(plan.id),
+                              action: 'SELL_GOLD'
+                            });
+                            setSuccessPopup({
+                              message: 'Gold sold successfully!',
+                              sellResult: res.data
+                            });
+                            setSelectedTab('selled');
+                            fetchUserPlans();
+                          } catch (err: any) {
+                            setApiMessage('Sell failed. Please try again.');
+                          } finally {
+                            setApiLoading(false);
+                          }
+                        }}>Sell Gold</button>
+                        <button className="flex-1 bg-green-700 text-white py-1.5 px-2 rounded hover:bg-green-800 transition-colors text-xs font-semibold" onClick={async () => {
+                          setApiLoading(true);
+                          setApiMessage(null);
+                          try {
+                            const res = await axiosInstance.post('/api/user-savings/recall', {
+                              enrollmentId: Number(plan.id),
+                              action: 'BUY_JEWEL'
+                            });
+                            // If no jewels available, show popup
+                            if (res.data && res.data.noJewels === true) {
+                              setSuccessPopup({
+                                message: 'For the current amount there is no jewels.'
+                              });
+                            } else if (res.data && res.data.filteredJewels && Array.isArray(res.data.filteredJewels) && res.data.filteredJewels.length > 0) {
+                              // Redirect to buyornaments with filtered jewels
+                              const amountNum = typeof plan.totalAmountPaid === 'string'
+                                ? Number(plan.totalAmountPaid.replace(/[^\d.]/g, ''))
+                                : plan.totalAmountPaid;
+                              setSuccessPopup({
+                                message: 'Redirecting to buy ornaments...',
+                                amount: amountNum
+                              });
+                              setTimeout(() => {
+                                setSuccessPopup(null);
+                                navigate(`/buyornaments?amount=${amountNum}&jewels=${encodeURIComponent(JSON.stringify(res.data.filteredJewels))}`);
+                              }, 1200);
+                            } else {
+                              setSuccessPopup({
+                                message: 'No valid jewel data found.'
+                              });
+                            }
+                          } catch (err: any) {
+                            setApiMessage('Buy failed. Please try again.');
+                          } finally {
+                            setApiLoading(false);
+                          }
+                        }}>Buy Jewel</button>
+                        <button
+                          className="flex-1 bg-blue-700 text-white py-1.5 px-2 rounded hover:bg-blue-800 transition-colors text-xs font-semibold"
+                          disabled={(() => {
+                            // Find the current month (today)
+                            const today = new Date();
+                            const currentMonth = today.getMonth() + 1;
+                            // Check if payment for current month is already done
+                            return plan.payments && plan.payments.some(p => p.month === currentMonth && p.amountPaid && p.amountPaid > 0);
+                          })() || apiLoading}
+                          onClick={async () => {
+                            setApiLoading(true);
+                            setApiMessage(null);
+                            try {
+                              const { amount } = getNextPaymentInfo(plan);
+                              if (!amount || amount === 0) {
+                                setApiMessage('Payment amount is not available for this plan. Please contact support.');
+                                setApiLoading(false);
+                                return;
+                              }
+                              const initiateRes = await axiosInstance.post('/api/user-savings/pay-monthly/initiate', {
+                                enrollmentId: Number(plan.id),
+                                amountPaid: amount
+                              });
+                              const razorpayOrderId = initiateRes.data.razorpayOrderId;
+                              const options = {
+                                key: window.RAZORPAY_KEY_ID,
+                                amount: amount * 100,
+                                currency: 'INR',
+                                name: 'Chit Jewels Next Pay',
+                                description: plan.name,
+                                order_id: razorpayOrderId,
+                                handler: async function (response: any) {
+                                  try {
+                                    await axiosInstance.post('/api/user-savings/pay-monthly/callback', {
+                                      enrollmentId: Number(plan.id),
+                                      amountPaid: amount,
+                                      razorpayOrderId,
+                                      razorpayPaymentId: response.razorpay_payment_id,
+                                      razorpaySignature: response.razorpay_signature
+                                    });
+                                    setApiMessage('Next payment successful!');
+                                    fetchUserPlans();
+                                    setApiLoading(false);
+                                  } catch (err) {
+                                    setApiMessage('Payment succeeded but callback failed. Please contact support.');
+                                    setApiLoading(false);
+                                  }
+                                },
+                                prefill: { name: '', email: '', contact: '' },
+                                theme: { color: '#6a0822' },
+                                modal: { ondismiss: function () { setApiLoading(false); } }
+                              };
+                              if (!window.Razorpay) {
+                                const script = document.createElement('script');
+                                script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+                                script.async = true;
+                                script.onload = () => { const rzp = new window.Razorpay(options); rzp.open(); };
+                                document.body.appendChild(script);
+                              } else {
+                                const rzp = new window.Razorpay(options);
+                                rzp.open();
+                              }
+                            } catch (err: any) {
+                              let apiError = 'Payment failed. Please try again.';
+                              if (err?.response) {
+                                if (typeof err.response.data === 'string' && err.response.data) {
+                                  apiError = err.response.data;
+                                } else if (err.response.data?.message) {
+                                  apiError = err.response.data.message;
+                                }
+                              }
+                              setApiMessage(apiError);
+                              setApiLoading(false);
+                            }
+                          }}
+                        >Next Pay</button>
                       </div>
                     )}
                   </div>
@@ -308,7 +439,6 @@ const LChitJewelsSavingPlan = () => {
                       setApiLoading(false);
                       return;
                     }
-                    // Only initiate payment and open Razorpay, no callback
                     const initiateRes = await axiosInstance.post('/api/user-savings/pay-monthly/initiate', {
                       enrollmentId: Number(buyModalPlan.id),
                       amountPaid: amount
@@ -321,10 +451,22 @@ const LChitJewelsSavingPlan = () => {
                       name: 'Chit Jewels',
                       description: buyModalPlan.name,
                       order_id: razorpayOrderId,
-                      handler: function (response: any) {
-                        setApiMessage('Payment successful!');
-                        fetchUserPlans();
-                        setApiLoading(false);
+                      handler: async function (response: any) {
+                        try {
+                          await axiosInstance.post('/api/user-savings/pay-monthly/callback', {
+                            enrollmentId: Number(buyModalPlan.id),
+                            amountPaid: amount,
+                            razorpayOrderId,
+                            razorpayPaymentId: response.razorpay_payment_id,
+                            razorpaySignature: response.razorpay_signature
+                          });
+                          setApiMessage('Payment successful!');
+                          fetchUserPlans();
+                          setApiLoading(false);
+                        } catch (err) {
+                          setApiMessage('Payment succeeded but enrollment failed. Please contact support.');
+                          setApiLoading(false);
+                        }
                       },
                       prefill: { name: '', email: '', contact: '' },
                       theme: { color: '#6a0822' },

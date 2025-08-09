@@ -34,6 +34,7 @@ const menuItems = [
   { label: 'Payout Request', icon: Wallet, path: '/payoutrequest' },
   { label: 'Order History', icon: Clock, path: '/orderhistory' },
   { label: 'KYC', icon: ClipboardList, path: '/kyc' },
+  { label: 'Sell Request', icon: ClipboardList, path: '/sell-request' },
   { label: 'Saving Scheme ', icon: BadgeDollarSign, path: '/savingplan' },
   { label: 'CashBack Gold', icon: Medal, path: '/spiplan' },
   { label: 'Gold Plant', icon: Sprout, path: '/plantscheme' },

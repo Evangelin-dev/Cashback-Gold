@@ -60,6 +60,7 @@ const GoldPlantSchemes = () => {
   // --- NEW STATE FOR ORDER SUBMISSION ---
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
+  const [showSupportPopup, setShowSupportPopup] = useState(false);
 
   // --- DATA FETCHING (Unchanged) ---
   useEffect(() => {
@@ -157,7 +158,8 @@ const GoldPlantSchemes = () => {
             setEnrollmentResult(callbackRes.data);
             closePlanDetails();
           } catch (err) {
-            setSubmitError('Payment succeeded but enrollment failed. Please contact support.');
+            setSubmitError(null);
+            setShowSupportPopup(true);
           }
         },
         prefill: {
@@ -451,6 +453,19 @@ const GoldPlantSchemes = () => {
             </div>
           </div>
           <style>{`.animate-fade-in-fast { animation: fadeIn 0.2s ease-out; } @keyframes fadeIn { from { opacity: 0; transform: scale(0.95); } to { opacity: 1; transform: scale(1); } }`}</style>
+        </Portal>
+      )}
+      {showSupportPopup && (
+        <Portal>
+          <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-[2200] p-2">
+            <div className="bg-white rounded-xl shadow-2xl max-w-xs w-full mx-auto p-8 flex flex-col items-center justify-center">
+              <h3 className="text-xl font-bold mb-4 text-center text-red-700">Payment succeeded but enrollment failed. Please contact support.</h3>
+              <button
+                className="mt-4 bg-[#7a1335] text-white py-2 px-6 rounded hover:bg-[#991313] font-semibold"
+                onClick={() => setShowSupportPopup(false)}
+              >Close</button>
+            </div>
+          </div>
         </Portal>
       )}
     </div>
