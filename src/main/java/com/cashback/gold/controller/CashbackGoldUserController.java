@@ -1,9 +1,6 @@
 package com.cashback.gold.controller;
 
-import com.cashback.gold.dto.CashbackGoldEnrollmentRequest;
-import com.cashback.gold.dto.CashbackGoldPaymentCallbackRequest;
-import com.cashback.gold.dto.CashbackGoldPaymentRequest;
-import com.cashback.gold.dto.CashbackGoldRecallRequest;
+import com.cashback.gold.dto.*;
 import com.cashback.gold.entity.UserCashbackGoldEnrollment;
 import com.cashback.gold.security.UserPrincipal;
 import com.cashback.gold.service.CashbackGoldUserService;
@@ -13,6 +10,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -59,6 +57,11 @@ public class CashbackGoldUserController {
     @GetMapping("/my-enrollments")
     public ResponseEntity<?> myEnrollments(@AuthenticationPrincipal UserPrincipal principal) {
         return ResponseEntity.ok(userService.getMyEnrollments(principal));
+    }
+
+    @GetMapping("/recalls")
+    public List<CashbackGoldRecallResponse> getAllRecalls() {
+        return userService.getAllRecalledEnrollments();
     }
 }
 

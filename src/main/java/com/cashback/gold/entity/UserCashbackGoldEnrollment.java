@@ -48,6 +48,9 @@ public class UserCashbackGoldEnrollment {
     @Column(name = "status", nullable = false)
     private String status = "ENROLLED"; // ENROLLED, COMPLETED, CANCELLED
 
+    @Column(name = "recall_final_amount")
+    private BigDecimal recallFinalAmount;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;

@@ -1124,6 +1124,13 @@
                 referencedColumnNames="id"/>
     </changeSet>
 
+    <changeSet id="34-2" author="azeem">
+        <addColumn tableName="user_cashback_gold_enrollments">
+            <column name="recall_final_amount" type="DECIMAL(10,2)"/>
+        </addColumn>
+    </changeSet>
+
+
     <changeSet id="35" author="azeem">
         <createTable tableName="user_cashback_gold_payments">
             <column name="id" type="BIGINT" autoIncrement="true">

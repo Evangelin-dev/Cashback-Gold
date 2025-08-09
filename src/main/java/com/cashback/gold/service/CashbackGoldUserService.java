@@ -101,6 +101,7 @@ public class CashbackGoldUserService {
 
             Order order = razorpayService.createOrder(
                     BigDecimal.valueOf(request.getAmountPaid()), "PAY_" + UUID.randomUUID());
+            razorpayService.savePayment(order.get("id"), null, null, BigDecimal.valueOf(request.getAmountPaid()), "Cashback_Gold_Plan", null);
 
             Map<String, Object> response = new HashMap<>();
             response.put("razorpayOrderId", order.get("id"));
@@ -169,18 +170,16 @@ public class CashbackGoldUserService {
     }
 
     @Transactional
-    public Object recall(CashbackGoldRecallRequest request, UserPrincipal principal) {
+    public CashbackGoldRecallResponse recall(CashbackGoldRecallRequest request, UserPrincipal principal) {
         UserCashbackGoldEnrollment enrollment = enrollmentRepo.findById(request.getEnrollmentId())
                 .orElseThrow(() -> new InvalidArgumentException("Enrollment not found"));
 
         if (!enrollment.getUser().getId().equals(principal.getId())) {
             throw new InvalidArgumentException("Unauthorized");
         }
-
         if (!enrollment.isActivated()) {
             throw new InvalidArgumentException("Scheme not activated yet (less than 1 gm gold accumulated)");
         }
-
         if (enrollment.isRecalled()) {
             throw new InvalidArgumentException("Already recalled");
         }
@@ -190,16 +189,28 @@ public class CashbackGoldUserService {
         enrollment.setRecallType(request.getRecallType());
 
         if ("SELL".equalsIgnoreCase(request.getRecallType())) {
-            // Apply 4% deduction
             BigDecimal deduction = enrollment.getTotalAmountPaid().multiply(BigDecimal.valueOf(0.04));
             BigDecimal finalAmount = enrollment.getTotalAmountPaid().subtract(deduction);
-            // Simulate payment to user
-            System.out.println("Refund ₹" + finalAmount + " will be credited in 3 days.");
-        } else if ("COIN".equalsIgnoreCase(request.getRecallType())) {
-            System.out.println("1 gm coin (999) will be dispatched");
+            enrollment.setRecallFinalAmount(finalAmount);
+        }
+        else if ("COIN".equalsIgnoreCase(request.getRecallType())) {
+            BigDecimal oneGramGoldValue = BigDecimal.valueOf(goldRateService.getCurrentGoldRate());
+            enrollment.setRecallFinalAmount(oneGramGoldValue);
         }
 
-        return enrollmentRepo.save(enrollment);
+        enrollmentRepo.save(enrollment);
+
+        return CashbackGoldRecallResponse.builder()
+                .enrollmentId(enrollment.getId())
+                .userName(enrollment.getUser().getFullName())
+                .userEmail(enrollment.getUser().getEmail())
+                .schemeName(enrollment.getScheme().getName())
+                .totalAmountPaid(enrollment.getTotalAmountPaid())
+                .goldAccumulated(enrollment.getGoldAccumulated())
+                .recallType(enrollment.getRecallType())
+                .recallFinalAmount(enrollment.getRecallFinalAmount())
+                .status(enrollment.getStatus())
+                .build();
     }
 
     public Object getMyEnrollments(UserPrincipal principal) {
@@ -215,4 +226,22 @@ public class CashbackGoldUserService {
                         .build())
                 .collect(Collectors.toList());
     }
+
+    public List<CashbackGoldRecallResponse> getAllRecalledEnrollments() {
+        return enrollmentRepo.findByRecalledTrue()
+                .stream()
+                .map(e -> CashbackGoldRecallResponse.builder()
+                        .enrollmentId(e.getId())
+                        .userName(e.getUser().getFullName())
+                        .userEmail(e.getUser().getEmail())
+                        .schemeName(e.getScheme().getName())
+                        .totalAmountPaid(e.getTotalAmountPaid())
+                        .goldAccumulated(e.getGoldAccumulated())
+                        .recallType(e.getRecallType())
+                        .recallFinalAmount(e.getRecallFinalAmount())
+                        .status(e.getStatus())
+                        .build())
+                .toList();
+    }
+
 }

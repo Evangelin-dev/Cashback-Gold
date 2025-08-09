@@ -112,6 +112,7 @@ public class SecurityConfig {
                                 .requestMatchers("/user/gold-plant/**").hasAnyAuthority("USER")
                                 .requestMatchers(HttpMethod.GET, "/api/cashback-gold-schemes").hasAnyAuthority("USER", "ADMIN")
                                 .requestMatchers("/api/cashback-gold-schemes/**").hasAnyAuthority("ADMIN")
+                                .requestMatchers("/api/cashback-gold-user/recalls").hasAnyAuthority("ADMIN")
                                 .requestMatchers("/api/cashback-gold-user/**").hasAnyAuthority("USER")
                                 .requestMatchers("/partner").hasAnyAuthority("PARTNER")
                                 .requestMatchers("/user/**").hasAnyAuthority("USER", "PARTNER")
