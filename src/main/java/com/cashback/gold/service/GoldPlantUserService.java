@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.temporal.ChronoUnit;
 import java.util.HashMap;
 import java.util.List;
@@ -143,6 +144,46 @@ public class GoldPlantUserService {
     }
 
 
+//    public RecallResponse recall(Long enrollmentId, UserPrincipal principal) {
+//        User user = userRepository.findById(principal.getId()).orElseThrow();
+//        UserGoldPlantEnrollment enrollment = userGoldPlantEnrollmentRepository.findById(enrollmentId)
+//                .orElseThrow(() -> new InvalidArgumentException("Enrollment not found"));
+//
+//        if (!enrollment.getUser().getId().equals(user.getId())) {
+//            throw new InvalidArgumentException("Unauthorized");
+//        }
+//
+//        if (enrollment.getStatus().equals("RECALLED") || enrollment.getStatus().equals("COMPLETED")) {
+//            throw new InvalidArgumentException("Already recalled or completed");
+//        }
+//
+//        BigDecimal refundAmount;
+//        boolean penalty;
+//
+//        long months = ChronoUnit.MONTHS.between(enrollment.getStartDate(), LocalDate.now());
+//        if (months < 36) {
+//            // Penalty 50%
+//            refundAmount = enrollment.getAmountInvested().multiply(BigDecimal.valueOf(0.5));
+//            penalty = true;
+//        } else {
+//            refundAmount = enrollment.getAmountInvested();
+//            penalty = false;
+//        }
+//
+//        enrollment.setStatus("RECALLED");
+//        userGoldPlantEnrollmentRepository.save(enrollment);
+//
+//        return new RecallResponse(
+//                enrollment.getId(),
+//                "RECALLED",
+//                refundAmount.setScale(2, RoundingMode.HALF_UP).doubleValue(),
+//                penalty,
+//                penalty
+//                        ? "Emergency recall done with 50% penalty"
+//                        : "Recall successful. Full refund issued."
+//        );
+//    }
+
     public RecallResponse recall(Long enrollmentId, UserPrincipal principal) {
         User user = userRepository.findById(principal.getId()).orElseThrow();
         UserGoldPlantEnrollment enrollment = userGoldPlantEnrollmentRepository.findById(enrollmentId)
@@ -151,37 +192,36 @@ public class GoldPlantUserService {
         if (!enrollment.getUser().getId().equals(user.getId())) {
             throw new InvalidArgumentException("Unauthorized");
         }
-
-        if (enrollment.getStatus().equals("RECALLED") || enrollment.getStatus().equals("COMPLETED")) {
+        if ("RECALLED".equals(enrollment.getStatus()) || "COMPLETED".equals(enrollment.getStatus())) {
             throw new InvalidArgumentException("Already recalled or completed");
         }
 
-        BigDecimal refundAmount;
-        boolean penalty;
-
         long months = ChronoUnit.MONTHS.between(enrollment.getStartDate(), LocalDate.now());
-        if (months < 36) {
-            // Penalty 50%
-            refundAmount = enrollment.getAmountInvested().multiply(BigDecimal.valueOf(0.5));
-            penalty = true;
-        } else {
-            refundAmount = enrollment.getAmountInvested();
-            penalty = false;
-        }
+        boolean penalty = months < 36;
+        BigDecimal refundAmount = penalty
+                ? enrollment.getAmountInvested().multiply(BigDecimal.valueOf(0.5))
+                : enrollment.getAmountInvested();
 
+        refundAmount = refundAmount.setScale(2, RoundingMode.HALF_UP);
+
+        // persist
         enrollment.setStatus("RECALLED");
+        enrollment.setRecalled(true);
+        enrollment.setRecallRefundAmount(refundAmount);
+        enrollment.setRecallPenalty(penalty);
+        enrollment.setRecallAt(LocalDateTime.now());
         userGoldPlantEnrollmentRepository.save(enrollment);
 
         return new RecallResponse(
                 enrollment.getId(),
                 "RECALLED",
-                refundAmount.setScale(2, RoundingMode.HALF_UP).doubleValue(),
+                refundAmount.doubleValue(),
                 penalty,
-                penalty
-                        ? "Emergency recall done with 50% penalty"
+                penalty ? "Emergency recall done with 50% penalty"
                         : "Recall successful. Full refund issued."
         );
     }
+
 
     public List<GoldPlantEnrollmentResponse> getMyEnrollments(UserPrincipal principal) {
         List<UserGoldPlantEnrollment> enrollments = userGoldPlantEnrollmentRepository.findByUserId(principal.getId());

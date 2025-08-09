@@ -58,6 +58,15 @@ public class UserGoldPlantEnrollment {
     @Column(name = "razorpay_signature", length = 255)
     private String razorpaySignature;
 
+    @Column(name = "recall_refund_amount")
+    private BigDecimal recallRefundAmount;
+
+    @Column(name = "recall_penalty")
+    private Boolean recallPenalty;
+
+    @Column(name = "recall_at")
+    private LocalDateTime recallAt;
+
     @CreatedDate
     @Column(updatable = false)
     private LocalDateTime createdAt;

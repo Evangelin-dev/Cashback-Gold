@@ -18,4 +18,6 @@ public interface UserGoldPlantEnrollmentRepository extends JpaRepository<UserGol
     @Query("SELECT COALESCE(SUM(e.amountInvested), 0) FROM UserGoldPlantEnrollment e WHERE e.user.id = :userId AND MONTH(e.startDate) = MONTH(CURRENT_DATE) AND YEAR(e.startDate) = YEAR(CURRENT_DATE)")
     Double getCurrentMonthGoldPlantInvestment(@Param("userId") Long userId);
 
+    List<UserGoldPlantEnrollment> findByStatusOrderByRecallAtDesc(String status);
+
 }

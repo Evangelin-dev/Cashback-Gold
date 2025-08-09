@@ -1040,6 +1040,15 @@
         </addColumn>
     </changeSet>
 
+    <!-- 32-3: store recall audit -->
+    <changeSet id="32-3" author="azeem">
+        <addColumn tableName="user_gold_plant_enrollments">
+            <column name="recall_refund_amount" type="DECIMAL(15,2)"/>
+            <column name="recall_penalty" type="BOOLEAN"/>
+            <column name="recall_at" type="TIMESTAMP"/>
+        </addColumn>
+    </changeSet>
+
 
     <changeSet id="33" author="azeem">
         <createTable tableName="cashback_gold_schemes">

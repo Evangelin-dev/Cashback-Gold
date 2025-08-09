@@ -1,5 +1,6 @@
 package com.cashback.gold.controller;
 
+import com.cashback.gold.dto.GoldPlantRecallAdminRow;
 import com.cashback.gold.dto.GoldPlantSchemeRequest;
 import com.cashback.gold.entity.GoldPlantScheme;
 import com.cashback.gold.service.GoldPlantSchemeService;
@@ -64,5 +65,10 @@ public class GoldPlantSchemeController {
     ) {
         service.changeStatus(id, status);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/recalls")
+    public List<GoldPlantRecallAdminRow> listRecalls() {
+        return service.listRecalled();
     }
 }

@@ -1,9 +1,11 @@
 package com.cashback.gold.service;
 
+import com.cashback.gold.dto.GoldPlantRecallAdminRow;
 import com.cashback.gold.dto.GoldPlantSchemeRequest;
 import com.cashback.gold.entity.GoldPlantScheme;
 import com.cashback.gold.exception.InvalidArgumentException;
 import com.cashback.gold.repository.GoldPlantSchemeRepository;
+import com.cashback.gold.repository.UserGoldPlantEnrollmentRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
@@ -14,6 +16,7 @@ import java.util.List;
 public class GoldPlantSchemeService {
 
     private final GoldPlantSchemeRepository repository;
+    private final UserGoldPlantEnrollmentRepository userGoldPlantEnrollmentRepository;
 
     public List<GoldPlantScheme> getAll() {
         return repository.findAll();
@@ -62,5 +65,20 @@ public class GoldPlantSchemeService {
         repository.save(scheme);
     }
 
+    public List<GoldPlantRecallAdminRow> listRecalled() {
+        return userGoldPlantEnrollmentRepository.findByStatusOrderByRecallAtDesc("RECALLED").stream()
+                .map(e -> GoldPlantRecallAdminRow.builder()
+                        .enrollmentId(e.getId())
+                        .userName(e.getUser().getFullName())
+                        .userEmail(e.getUser().getEmail())
+                        .schemeName(e.getGoldPlantScheme().getName())
+                        .amountInvested(e.getAmountInvested())
+                        .refundAmount(e.getRecallRefundAmount())
+                        .penalty(Boolean.TRUE.equals(e.getRecallPenalty()))
+                        .recallAt(e.getRecallAt())
+                        .status(e.getStatus())
+                        .build())
+                .toList();
+    }
 }
 
