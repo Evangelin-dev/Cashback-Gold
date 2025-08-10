@@ -139,27 +139,32 @@ const ManageSellRequest = () => {
 					];
 
 					// Saving Plan columns (API: /api/saving-plans/terminations)
-					const spColumns: TableColumn[] = [
-						{ label: 'Enrollment ID', key: 'enrollmentId' },
-						{ label: 'Plan Name', key: 'planName' },
-						{ label: 'Start Date', key: 'startDate', format: (v: any) => v ? v : '-' },
-						{ label: 'Status', key: 'status' },
-						{ label: 'Invested Amount', key: 'investedAmount', format: (v: any) => v !== undefined ? `₹${v?.toLocaleString?.() ?? v}` : '-' },
-						{ label: 'Gold Accumulated', key: 'goldAccumulated', format: (v: any) => v !== undefined ? `${v}g` : '-' },
-						{ label: 'Lock-in Completed', key: 'lockinCompleted', format: (v: any) => v ? 'Yes' : 'No' },
-						{ label: 'Recalled', key: 'recalled', format: (v: any) => v ? 'Yes' : 'No' },
-					];
+									const spColumns: TableColumn[] = [
+										{ label: 'Enrollment ID', key: 'enrollmentId' },
+										{ label: 'User Name', key: 'userName' },
+										{ label: 'User Email', key: 'userEmail' },
+										{ label: 'Plan Name', key: 'planName' },
+										{ label: 'Accumulated Amount', key: 'accumulatedAmount', format: (v: any) => v !== undefined ? `₹${v?.toLocaleString?.() ?? v}` : '-' },
+										{ label: 'Accumulated Gold (g)', key: 'accumulatedGoldGrams', format: (v: any) => v !== undefined ? `${v}g` : '-' },
+										{ label: 'Service Charge', key: 'serviceCharge', format: (v: any) => v !== undefined && v !== null ? `₹${v?.toLocaleString?.() ?? v}` : '-' },
+										{ label: 'Final Amount', key: 'finalAmount', format: (v: any) => v !== undefined && v !== null ? `₹${v?.toLocaleString?.() ?? v}` : '-' },
+										{ label: 'Status', key: 'status' },
+										{ label: 'Recall At', key: 'recallAt', format: (v: any) => v ? v : '-' },
+										{ label: 'Recall Action', key: 'recallAction', format: (v: any) => v ? v : '-' },
+									];
 
-					// Gold Plant columns (API: /api/gold-plants/recalls)
-					const gpColumns: TableColumn[] = [
-						{ label: 'Enrollment ID', key: 'enrollmentId' },
-						{ label: 'Plan Name', key: 'planName' },
-						{ label: 'Start Date', key: 'startDate', format: (v: any) => v ? v : '-' },
-						{ label: 'Status', key: 'status' },
-						{ label: 'Total Amount Paid', key: 'totalAmountPaid', format: (v: any) => v !== undefined ? `₹${v?.toLocaleString?.() ?? v}` : '-' },
-						{ label: 'Total Gold Accumulated', key: 'totalGoldAccumulated', format: (v: any) => v !== undefined ? `${v}g` : '-' },
-						{ label: 'Total Bonus', key: 'totalBonus', format: (v: any) => v !== undefined ? `₹${v?.toLocaleString?.() ?? v}` : '-' },
-					];
+									// Gold Plant columns (API: /api/gold-plants/recalls)
+									const gpColumns: TableColumn[] = [
+										{ label: 'Enrollment ID', key: 'enrollmentId' },
+										{ label: 'User Name', key: 'userName' },
+										{ label: 'User Email', key: 'userEmail' },
+										{ label: 'Scheme Name', key: 'schemeName' },
+										{ label: 'Amount Invested', key: 'amountInvested', format: (v: any) => v !== undefined ? `₹${v?.toLocaleString?.() ?? v}` : '-' },
+										{ label: 'Refund Amount', key: 'refundAmount', format: (v: any) => v !== undefined && v !== null ? `₹${v?.toLocaleString?.() ?? v}` : '-' },
+										{ label: 'Penalty', key: 'penalty', format: (v: any) => v ? 'Yes' : 'No' },
+										{ label: 'Recall At', key: 'recallAt', format: (v: any) => v ? v : '-' },
+										{ label: 'Status', key: 'status' },
+									];
 
 				// Filtered and paginated data for each section
 				const cbResult = filterAndPaginate(cashbackGold, cbFilter, cbPage, cbPageSize, cbColumns);

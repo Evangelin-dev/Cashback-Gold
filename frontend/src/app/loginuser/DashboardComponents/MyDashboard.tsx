@@ -81,10 +81,10 @@ const LMyDashboard = () => {
 
   useEffect(() => {
     // Fetch total portfolio value
-    axiosInstance.get<{ total: number }>('/user/my-investment/total')
-      .then((res: { data: { total: number } }) => {
-        if (res.data && typeof res.data.total === 'number') {
-          setTotalPortfolioValue(`₹${res.data.total}`);
+    axiosInstance.get<{ totalInvestment: number }>('/user/my-investment/total')
+      .then((res: { data: { totalInvestment: number } }) => {
+        if (res.data && typeof res.data.totalInvestment === 'number') {
+          setTotalPortfolioValue(`₹${res.data.totalInvestment}`);
         }
       })
       .catch(() => {
@@ -92,10 +92,10 @@ const LMyDashboard = () => {
       });
 
     // Fetch current month investment value
-    axiosInstance.get<{ currentMonth: number }>('/user/my-investment/current-month')
-      .then((res: { data: { currentMonth: number } }) => {
-        if (res.data && typeof res.data.currentMonth === 'number') {
-          setTotalMonthlyInvestment(`₹${res.data.currentMonth}`);
+    axiosInstance.get<{ currentMonthInvestment: number }>('/user/my-investment/current-month')
+      .then((res: { data: { currentMonthInvestment: number } }) => {
+        if (res.data && typeof res.data.currentMonthInvestment === 'number') {
+          setTotalMonthlyInvestment(`₹${res.data.currentMonthInvestment}`);
         }
       })
       .catch(() => {
@@ -205,7 +205,7 @@ const LMyDashboard = () => {
               <Calendar className="w-5 h-5 text-[#6a0822]" />
             </div>
             <div className="text-xl font-bold text-[#6a0822] mb-1">{formatAmount(totalMonthlyInvestment)}</div>
-            <div className="text-xs text-gray-600">Across {investmentPlans.length} active plans</div>
+            {/* <div className="text-xs text-gray-600">Across {investmentPlans.length} active plans</div> */}
           </div>
         </div>
 
